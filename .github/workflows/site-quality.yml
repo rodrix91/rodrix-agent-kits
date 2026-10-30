@@ -44,3 +44,6 @@ jobs:
 
       - name: Build and run site quality checks
         run: npm test
+
+      - name: Smoke test Lighthouse on local home page
+        run: LH_PAGES=/ LH_FORM_FACTORS=mobile node scripts/lighthouse.mjs
