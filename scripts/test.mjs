@@ -24,6 +24,30 @@ for (const k of kits) for (const l of ['', 'es/']) {
 ok(/FAQPage/.test(readFileSync('dist/pricing/index.html', 'utf8')), 'FAQPage JSON-LD on pricing');
 const n8n = JSON.parse(readFileSync('dist/files/n8n-lead-capture.json', 'utf8'));
 ok(n8n.nodes.every((n) => n.connections === undefined) && Object.keys(n8n.connections).every((k) => n8n.nodes.some((n) => n.name === k)), 'n8n workflow JSON valid & connections reference real nodes');
+
+const leadNormalizer = n8n.nodes.find((node) => node.name === 'Normalize & validate');
+ok(typeof leadNormalizer?.parameters?.jsCode === 'string', 'n8n lead-normalization code present');
+if (typeof leadNormalizer?.parameters?.jsCode === 'string') {
+  // Run the bundled Code-node logic with synthetic input only; no live n8n or Sheets.
+  const normalize = new Function('$input', leadNormalizer.parameters.jsCode);
+  const leads = [
+    { body: { email: '  ALICE@Example.com  ', name: '  Alice  ', source: '  newsletter  ' } },
+    { body: { email: 'formula@example.com', name: ' =IMPORTXML("https://invalid.example","//") ', source: ' +HYPERLINK("x") ' } },
+    { body: { email: 'invalid', name: 'No Email' } },
+    { body: { email: 'bot@example.com', name: 'Bot', website: 'spam' } },
+    { body: { email: 'long@example.com', name: '='.repeat(140), source: '@'.repeat(80) } },
+    { body: { email: 'controls@example.com', name: '\n=SUM(1,2)', source: '\t@cmd' } },
+    { body: { email: '=IMPORTXML@example.com', name: 'Unsafe email' } },
+  ];
+  const results = normalize({ all: () => leads.map((json) => ({ json })) }).map((row) => row.json);
+  ok(results.length === leads.length && results[0].valid === true && results[0].email === 'alice@example.com' && results[0].name === 'Alice' && results[0].source === 'newsletter', 'n8n accepts and normalizes valid leads');
+  ok(results[1].valid === true && results[1].name.startsWith("'=") && results[1].source.startsWith("'+"), 'n8n protects spreadsheet cells from leading formula operators');
+  ok(results[2].valid === false && results[3].valid === false, 'n8n rejects invalid email and honeypot submissions');
+  ok(results[4].name.startsWith("'=") && results[4].name.length <= 120 && results[4].source.startsWith("'@") && results[4].source.length <= 60, 'n8n preserves bounded string lengths after formula escaping');
+  ok(results[5].name.startsWith("'=") && results[5].source.startsWith("'@"), 'n8n strips leading control characters before formula checks');
+  ok(results[6].valid === false, 'n8n rejects leading formula operators in email addresses');
+}
+
 // secrets scan
 const secretRe = new RegExp(['gh' + 'o_[A-Za-z0-9]{20}', 'gh' + 'p_[A-Za-z0-9]{20}', 'sk' + '_live_', 'AK' + 'IA[0-9A-Z]{16}', '-----BEGIN [A-Z ]*PRIV' + 'ATE KEY'].join('|'));
 const { execSync } = await import('node:child_process');
