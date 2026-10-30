@@ -22,7 +22,7 @@ Live: https://rodrix91.github.io/rodrix-agent-kits/
 | `node scripts/lighthouse.mjs` | Lighthouse (mobile + desktop) → `lighthouse/scores.json` |
 | `node scripts/screenshots.mjs` | screenshots at 390/768/1440 → `screenshots/` |
 
-Headless checks use Playwright with system Chrome (`CHROME_PATH` to override).
+Headless checks use Playwright with system Chrome (`CHROME_PATH` to override). `npm test` also runs local static-server regression tests after the build and before the browser suite. These tests reject paths outside the exact `/rodrix-agent-kits/` base, encoded traversal, NUL/backslash paths, and malformed URL encodings. `scripts/serve.mjs` is a local preview/test server, **not** a public production server.
 
 ## Dependency security and maintenance
 
@@ -31,8 +31,6 @@ The GitHub Actions quality workflow uses **Node.js 24**, compatible with the loc
 After `npm ci`, the read-only `node scripts/audit-summary.mjs` command runs npm advisory checks separately for the production tree and the complete tree (including build and test tools). Reports list package names, severity, whether a dependency is direct or transitive, and npm's fix suggestion. **Audit findings are informational here** and do not block the accessibility/build checks. Registry access or audit parsing failures are reported as unknown, not as zero findings. Do not interpret a green workflow as proof of zero vulnerabilities. Avoid automated `npm audit fix --force` or major package upgrades without compatibility tests.
 
 The `.github/dependabot.yml` file requests weekly npm and GitHub Actions **version-update proposals**, limits outstanding version-update PRs to three and two respectively, and groups minor/patch npm updates separately for production and development dependencies. It does not auto-merge or deploy. Security-update PRs still depend on GitHub repository security settings and their separate limits. Review updated lockfiles and run `npm test` before manually merging any proposal.
-
- `npm test` also runs local static-server regression tests after the build and before the browser suite. These tests reject paths outside the exact `/rodrix-agent-kits/` base, encoded traversal, NUL/backslash paths, and malformed URL encodings. `scripts/serve.mjs` is a local preview/test server, **not** a public production server.
 
 ## Layout
 ```
