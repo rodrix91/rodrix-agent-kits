@@ -1,0 +1,25 @@
+{
+  "name": "rodrix-agent-kits",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/postbuild.mjs",
+    "preview": "astro preview",
+    "test": "npm run build && node scripts/test.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "astro": "^5.18.2"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "lighthouse": "^12.8.2",
+    "linkinator": "^7.6.1",
+    "playwright": "^1.64.1"
+  }
+}

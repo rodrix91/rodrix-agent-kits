@@ -1,0 +1,12 @@
+---
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/i18n';
+---
+<Base title="404 — Not found" description="This page does not exist." lang="en" path="/404/" noindex>
+  <div class="wrap page-head" style="text-align:center;min-height:50vh">
+    <span class="kicker">Error 404</span>
+    <h1 style="font-size:var(--t-hero)">Not found<span class="cursor-blink" aria-hidden="true"></span></h1>
+    <p style="margin:0 auto 2rem">That page wandered off. / Esta página no existe.</p>
+    <div class="hero-ctas" style="justify-content:center"><a class="btn btn-primary" href={url('/kits/')}>Browse kits</a><a class="btn" href={url('/', 'es')} lang="es">Inicio en español</a></div>
+  </div>
+</Base>

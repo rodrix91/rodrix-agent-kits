@@ -1,0 +1,32 @@
+---
+import Logo from './Logo.astro';
+import { t, url, asset, type Lang } from '../lib/i18n';
+import { BRAND } from '../config';
+const { lang } = Astro.props as { lang: Lang };
+const s = t[lang];
+---
+<footer class="ftr">
+  <div class="wrap">
+    <div class="ftr-grid">
+      <div><Logo /><p style="margin-top:1rem;max-width:32ch">{s.footer.tagline}</p></div>
+      <div><h2>{s.footer.product}</h2><ul>
+        <li><a href={url('/kits/', lang)}>{s.nav.kits}</a></li>
+        <li><a href={url('/pricing/', lang)}>{s.nav.pricing}</a></li>
+        <li><a href={url('/changelog/', lang)}>{s.nav.changelog}</a></li>
+        <li><a href={asset(lang === 'es' ? '/es/rss.xml' : '/rss.xml')}>{s.footer.rss}</a></li>
+      </ul></div>
+      <div><h2>{s.footer.company}</h2><ul>
+        <li><a href={url('/about/', lang)}>{s.nav.about}</a></li>
+        <li><a href={url('/sponsors/', lang)}>{s.nav.sponsors}</a></li>
+        <li><a href={BRAND.x} rel="me noopener">X</a></li>
+        <li><a href={BRAND.github} rel="noopener">GitHub</a></li>
+      </ul></div>
+      <div><h2>{s.footer.legal}</h2><ul>
+        <li><a href={url('/privacy/', lang)}>{s.footer.privacy}</a></li>
+        <li><a href={url('/terms/', lang)}>{s.footer.terms}</a></li>
+        <li><a href={asset('/llms.txt')}>llms.txt</a></li>
+      </ul></div>
+    </div>
+    <div class="ftr-bottom"><span>© {new Date().getFullYear()} Rodrix Agent Kits</span><span>{s.footer.made}</span></div>
+  </div>
+</footer>

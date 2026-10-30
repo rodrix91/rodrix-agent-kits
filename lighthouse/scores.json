@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-30T15:08:54.403Z",
+  "note": "Local static server, simulated throttling (Lighthouse defaults). SEO measured on localhost.",
+  "rows": [
+    {
+      "formFactor": "mobile",
+      "page": "/",
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "formFactor": "mobile",
+      "page": "/kits/",
+      "performance": 100,
+      "accessibility": 98,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "formFactor": "mobile",
+      "page": "/kits/nextjs-supabase-cursor-rules/",
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 96,
+      "seo": 100
+    },
+    {
+      "formFactor": "mobile",
+      "page": "/pricing/",
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "formFactor": "mobile",
+      "page": "/es/",
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "formFactor": "desktop",
+      "page": "/",
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "formFactor": "desktop",
+      "page": "/kits/",
+      "performance": 100,
+      "accessibility": 98,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "formFactor": "desktop",
+      "page": "/kits/nextjs-supabase-cursor-rules/",
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "formFactor": "desktop",
+      "page": "/pricing/",
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    {
+      "formFactor": "desktop",
+      "page": "/es/",
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    }
+  ]
+}

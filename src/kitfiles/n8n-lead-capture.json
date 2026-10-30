@@ -1,0 +1,79 @@
+{
+  "name": "Lead capture: webhook → validate → Google Sheets",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "lead", "responseMode": "responseNode", "options": {} },
+      "id": "a1f0c1e2-0001-4c1a-9a01-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "rodrix-lead-capture"
+    },
+    {
+      "parameters": {
+        "jsCode": "const out = [];\nfor (const item of $input.all()) {\n  const b = item.json.body ?? item.json;\n  const email = String(b.email ?? '').trim().toLowerCase();\n  const name = String(b.name ?? '').trim().slice(0, 120);\n  const valid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email) && !b.website; // `website` = honeypot\n  out.push({ json: { valid, email, name, source: String(b.source ?? 'site').slice(0, 60), created_at: new Date().toISOString() } });\n}\nreturn out;"
+      },
+      "id": "a1f0c1e2-0002-4c1a-9a01-000000000002",
+      "name": "Normalize & validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "c0ffee00-0000-4000-8000-000000000001", "leftValue": "={{ $json.valid }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1f0c1e2-0003-4c1a-9a01-000000000003",
+      "name": "Is valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": { "__rl": true, "mode": "url", "value": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit" },
+        "sheetName": { "__rl": true, "mode": "name", "value": "Leads" },
+        "columns": { "mappingMode": "autoMapInputData", "value": {} },
+        "options": {}
+      },
+      "id": "a1f0c1e2-0004-4c1a-9a01-000000000004",
+      "name": "Append to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [660, -100]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { ok: true } }}", "options": { "responseCode": 200 } },
+      "id": "a1f0c1e2-0005-4c1a-9a01-000000000005",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [880, -100]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { ok: false, error: 'invalid email' } }}", "options": { "responseCode": 422 } },
+      "id": "a1f0c1e2-0006-4c1a-9a01-000000000006",
+      "name": "Respond invalid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 100]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Normalize & validate", "type": "main", "index": 0 }]] },
+    "Normalize & validate": { "main": [[{ "node": "Is valid?", "type": "main", "index": 0 }]] },
+    "Is valid?": { "main": [[{ "node": "Append to Sheet", "type": "main", "index": 0 }], [{ "node": "Respond invalid", "type": "main", "index": 0 }]] },
+    "Append to Sheet": { "main": [[{ "node": "Respond OK", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

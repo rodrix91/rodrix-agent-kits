@@ -1,0 +1,87 @@
+---
+import Base from '../layouts/Base.astro';
+import KitCard from '../components/KitCard.astro';
+import BuyButton from '../components/BuyButton.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { t, url, asset, type Lang } from '../lib/i18n';
+import { getKits, kitFile, buyUrl, type Kit } from '../lib/kits';
+import { GUMROAD } from '../config';
+import { render } from 'astro:content';
+const { lang, kit } = Astro.props as { lang: Lang; kit: Kit };
+const s = t[lang], K = s.kit, d = kit.data, L = d[lang];
+const { Content } = await render(kit);
+const src = kitFile(kit);
+const lines = src.split('\n');
+const preview = d.tier === 'paid' ? lines.slice(0, d.previewLines).join('\n') : src;
+const fname = d.installPath.split('/').pop()!.replace(/^n8n.*/, d.file);
+const related = (await getKits()).filter((k) => k.id !== kit.id && (k.data.tool === d.tool || k.data.category === d.category || k.data.keywords.some((w) => d.keywords.includes(w)))).slice(0, 3);
+const href = buyUrl(kit);
+const origin = Astro.site!.origin;
+const pageUrl = origin + url(`/kits/${kit.id}/`, lang);
+const product = {
+  '@context': 'https://schema.org', '@type': 'Product', name: L.title, description: L.summary, url: pageUrl, image: origin + asset(`/og/${kit.id}.png`),
+  brand: { '@type': 'Brand', name: 'Rodrix Agent Kits' }, category: `${d.tool} / ${d.category}`,
+  offers: { '@type': 'Offer', price: d.tier === 'free' ? '0' : String(d.price), priceCurrency: 'USD', availability: d.tier === 'free' || href ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder', url: d.tier === 'free' ? pageUrl : href || pageUrl },
+};
+const crumbs = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: origin + url('/', lang) },
+  { '@type': 'ListItem', position: 2, name: s.nav.kits, item: origin + url('/kits/', lang) },
+  { '@type': 'ListItem', position: 3, name: L.title, item: pageUrl }] };
+const date = d.added.toISOString().slice(0, 10);
+---
+<Base title={L.title} description={L.summary} lang={lang} path={`/kits/${kit.id}/`} og={`/og/${kit.id}.png`} jsonLd={[product, crumbs]} type="article">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href={url('/', lang)}>Home</a><span aria-hidden="true">/</span><a href={url('/kits/', lang)}>{s.nav.kits}</a><span aria-hidden="true">/</span><span aria-current="page">{L.title}</span></nav>
+    <div class="kit-layout">
+      <article>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem">
+          <span class="tag">{d.tool}</span><span class="tag">{d.category}</span>
+          {d.languages.map((l) => <span class="tag">{l.toUpperCase()}</span>)}
+          <span class={d.tier === 'free' ? 'tag tag-accent' : 'tag'}>{d.tier === 'free' ? K.freeLabel : K.paidLabel}</span>
+        </div>
+        <h1>{L.title}</h1>
+        <p style="font-size:var(--t-md)">{L.summary}</p>
+        <div class="prose" lang="en"><Content /></div>
+        <h2 style="font-size:var(--t-lg);margin-top:2.5rem">{K.inside}</h2>
+        <ul class="check">{L.inside.map((i) => <li>{i}</li>)}</ul>
+        <h2 style="font-size:var(--t-lg);margin-top:2.5rem">{K.file}</h2>
+        <div class="code">
+          <div class="code-head"><span>{fname}</span>
+            <span style="display:flex;gap:.4rem">
+              <button class="btn btn-sm copy" type="button" data-target="kit-src" data-done={s.cta.copied}>{s.cta.copy}</button>
+              <a class="btn btn-sm" href={asset(`/files/${d.file}`)} download={d.file}>{s.cta.download}</a>
+            </span>
+          </div>
+          <pre tabindex="0" aria-label={K.file}><code id="kit-src">{preview}</code></pre>
+        </div>
+        {d.tier === 'paid' && <p class="muted" style="margin-top:1rem;font-size:var(--t-sm)">{K.paidNote}</p>}
+      </article>
+      <aside class="aside">
+        <div class="card">
+          {d.tier === 'free'
+            ? <><div class="price">$0 <small>MIT</small></div><p style="font-size:var(--t-sm)">{lang === 'es' ? 'Gratis para siempre. Copia el archivo y listo.' : 'Free forever. Copy the file and go.'}</p>
+                <button class="btn btn-primary copy" type="button" data-target="kit-src" data-done={s.cta.copied} style="width:100%">{s.cta.copy}</button></>
+            : <><div class="price">${d.price} <small>{lang === 'es' ? 'pago único' : 'one-time'}</small></div><p style="font-size:var(--t-sm)">{lang === 'es' ? 'O inclúyelo en Kit Club por $7/mes.' : 'Or get it in Kit Club for $7/mo.'}</p>
+                <div style="display:grid;gap:.5rem"><BuyButton href={href} label={s.cta.buy} lang={lang} /><BuyButton href={GUMROAD.kitClub} label={s.cta.club} lang={lang} primary={false} /></div></>}
+        </div>
+        <div class="card">
+          <dl class="dl">
+            <div><dt>{K.install}</dt><dd><code>{d.installPath}</code></dd></div>
+            <div><dt>{K.tested}</dt><dd>{d.tested}</dd></div>
+            <div><dt>{K.updated}</dt><dd><time datetime={date}>{date}</time></dd></div>
+          </dl>
+        </div>
+      </aside>
+    </div>
+    {related.length > 0 && <section class="section" aria-labelledby="rel-h" style="padding-bottom:0"><h2 id="rel-h">{K.related}</h2><div class="grid grid-3">{related.map((k) => <KitCard kit={k} lang={lang} />)}</div></section>}
+  </div>
+  <Newsletter lang={lang} />
+</Base>
+<script>
+  document.querySelectorAll<HTMLButtonElement>('button.copy').forEach((b) => b.addEventListener('click', async () => {
+    const txt = document.getElementById(b.dataset.target!)!.textContent!;
+    const orig = b.textContent;
+    try { await navigator.clipboard.writeText(txt); b.textContent = '✓ ' + b.dataset.done; } catch { b.textContent = 'Select & copy (Ctrl+C)'; }
+    setTimeout(() => (b.textContent = orig), 1800);
+  }));
+</script>

@@ -1,0 +1,43 @@
+---
+import { t, type Lang } from '../lib/i18n';
+import { NEWSLETTER } from '../config';
+const { lang } = Astro.props as { lang: Lang };
+const s = t[lang].news;
+const live = Boolean(NEWSLETTER.action);
+---
+<section class="section" id="newsletter" aria-labelledby="news-h">
+  <div class="wrap">
+    <div class="news reveal">
+      <div>
+        <span class="kicker">Newsletter</span>
+        <h2 id="news-h">{s.title}</h2>
+        <p style="margin:0">{s.sub}</p>
+      </div>
+      <div>
+        <form class="nl-form" action={NEWSLETTER.action || '#'} method="post" data-live={String(live)} data-ok={s.ok} data-err={s.err} data-soon={s.soon} novalidate>
+          <label class="sr-only" for={`nl-${lang}`}>{s.email}</label>
+          <input class="input" id={`nl-${lang}`} name={NEWSLETTER.emailField} type="email" autocomplete="email" required placeholder="you@domain.com" />
+          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
+          <button class="btn btn-primary" type="submit" style="--h:48px">{s.submit}</button>
+        </form>
+        <p class="status muted" role="status" aria-live="polite">{!live && s.soon}</p>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  document.querySelectorAll<HTMLFormElement>('.nl-form').forEach((f) => {
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const st = f.parentElement!.querySelector('.status')!;
+      const email = f.querySelector<HTMLInputElement>('input[type=email]')!;
+      if (!email.checkValidity()) { email.focus(); email.reportValidity(); return; }
+      if (f.dataset.live !== 'true') { st.textContent = f.dataset.soon!; return; }
+      if ((f.querySelector('input[name=website]') as HTMLInputElement).value) return;
+      try {
+        await fetch(f.action, { method: 'POST', body: new FormData(f), mode: 'no-cors' });
+        st.textContent = f.dataset.ok!; f.reset();
+      } catch { st.textContent = f.dataset.err!; }
+    });
+  });
+</script>

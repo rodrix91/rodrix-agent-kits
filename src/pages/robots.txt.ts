@@ -1,0 +1,2 @@
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+export const GET = ({ site }: { site: URL }) => new Response(`User-agent: *\nAllow: /\n\n# AI answer engines are welcome\nUser-agent: GPTBot\nAllow: /\nUser-agent: ClaudeBot\nAllow: /\nUser-agent: PerplexityBot\nAllow: /\nUser-agent: Google-Extended\nAllow: /\n\nSitemap: ${site.origin}${base}/sitemap-index.xml\n# LLM summary: ${site.origin}${base}/llms.txt\n`);

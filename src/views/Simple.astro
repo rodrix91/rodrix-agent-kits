@@ -1,0 +1,70 @@
+---
+/* About, Sponsors, Changelog, Privacy, Terms */
+import Base from '../layouts/Base.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { t, url, type Lang } from '../lib/i18n';
+import { BRAND } from '../config';
+const { lang, page } = Astro.props as { lang: Lang; page: 'about' | 'sponsors' | 'changelog' | 'privacy' | 'terms' };
+const es = lang === 'es';
+const meta = {
+  about: [es ? 'Nosotros' : 'About', es ? 'Quién construye Rodrix Agent Kits y por qué.' : 'Who builds Rodrix Agent Kits and why.'],
+  sponsors: [es ? 'Patrocina' : 'Sponsor us', es ? 'Llega a desarrolladores que construyen con agentes de IA.' : 'Reach developers who build with AI agents.'],
+  changelog: [es ? 'Novedades' : 'Changelog', es ? 'Todo lo que se agrega o cambia.' : 'Everything added or changed.'],
+  privacy: [es ? 'Privacidad' : 'Privacy', es ? 'Qué datos recogemos (casi ninguno).' : 'What data we collect (almost none).'],
+  terms: [es ? 'Términos' : 'Terms', es ? 'Términos de uso y licencias.' : 'Terms of use and licensing.'],
+}[page];
+const updated = '2026-10-30';
+---
+<Base title={meta[0]} description={meta[1]} lang={lang} path={`/${page}/`}>
+  <div class="wrap">
+    <header class="page-head"><span class="kicker">{meta[0]}</span><h1>{meta[1]}</h1></header>
+    <div class="legal prose">
+    {page === 'about' && (es ? <>
+      <p>Rodrix Agent Kits es una biblioteca de archivos de configuración probados para agentes de programación con IA. La creó Rodrigo Pantoja, gerente de ciencia de datos en Bolivia, cansado de repetirle lo mismo a cada agente en cada proyecto.</p>
+      <h2>Principios</h2><ul><li>Lo gratis es completo, no un señuelo.</li><li>Cada kit dice cómo se verificó. Si no estamos seguros, lo decimos.</li><li>Bilingüe: inglés y español desde el día uno.</li><li>Sin métricas infladas ni testimonios inventados.</li></ul>
+      <h2>Cómo se hace</h2><p>Los kits se redactan y mantienen con ayuda de agentes de IA y se revisan contra la documentación oficial de cada herramienta. El sitio es estático, de código abierto y se publica en GitHub.</p>
+      <p><a href={BRAND.github}>Código en GitHub</a> · <a href={BRAND.x}>X</a></p></> : <>
+      <p>Rodrix Agent Kits is a library of tested configuration files for AI coding agents. It was started by Rodrigo Pantoja, a data science manager in Bolivia, who got tired of re-explaining the same rules to every agent in every project.</p>
+      <h2>Principles</h2><ul><li>Free means complete, not a teaser.</li><li>Every kit says how it was checked. If we are not sure, we say so.</li><li>Bilingual: English and Spanish from day one.</li><li>No inflated numbers, no invented testimonials.</li></ul>
+      <h2>How it's made</h2><p>Kits are drafted and maintained with help from AI agents and reviewed against each tool's official documentation. The site is static, open source and published on GitHub.</p>
+      <p><a href={BRAND.github}>Source on GitHub</a> · <a href={BRAND.x}>X</a></p></>)}
+    {page === 'sponsors' && <>
+      <p>{es ? 'Aún no tenemos patrocinadores: somos un proyecto nuevo y lo decimos claramente. Si tu herramienta ayuda a quienes construyen con agentes, estos son los espacios disponibles. Publicaremos el tráfico real cuando tengamos datos.' : 'We have no sponsors yet: we are a new project and we say so plainly. If your tool helps people who build with agents, these are the placements available. We will publish real traffic numbers once we have them.'}</p>
+      <table class="table"><thead><tr><th>{es ? 'Espacio' : 'Placement'}</th><th>{es ? 'Qué incluye' : 'What you get'}</th><th>{es ? 'Formato' : 'Format'}</th></tr></thead><tbody>
+        <tr><td>{es ? 'Newsletter principal' : 'Newsletter primary'}</td><td>{es ? 'Bloque superior en un envío semanal' : 'Top slot in one weekly issue'}</td><td>{es ? 'Logo + 60 palabras + enlace' : 'Logo + 60 words + link'}</td></tr>
+        <tr><td>{es ? 'Kit patrocinado' : 'Sponsored kit'}</td><td>{es ? 'Un kit gratis para tu herramienta, marcado como patrocinado' : 'A free kit for your tool, clearly labeled sponsored'}</td><td>{es ? 'Página de kit + destacado' : 'Kit page + featured slot'}</td></tr>
+        <tr><td>{es ? 'Biblioteca' : 'Library banner'}</td><td>{es ? 'Tarjeta en la biblioteca durante 30 días' : 'Card in the library for 30 days'}</td><td>{es ? 'Texto, sin rastreadores' : 'Text, no trackers'}</td></tr>
+      </tbody></table>
+      <h2>{es ? 'Reglas' : 'Rules'}</h2><ul><li>{es ? 'Todo contenido patrocinado se etiqueta.' : 'All sponsored content is labeled.'}</li><li>{es ? 'Sin píxeles de rastreo ni cookies de terceros.' : 'No tracking pixels or third-party cookies.'}</li><li>{es ? 'Solo herramientas que probaríamos nosotros.' : 'Only tools we would use ourselves.'}</li></ul>
+      <p>{es ? 'Interesado? Escríbenos por ' : 'Interested? Reach out on '}<a href={BRAND.x}>X</a>.</p></>}
+    {page === 'changelog' && <div class="timeline">
+      <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? 'Lanzamiento' : 'Launch'}</h2><ul><li>{es ? 'Sitio bilingüe (EN/ES) con biblioteca, buscador local de kits y precios.' : 'Bilingual site (EN/ES) with library, local kit finder and pricing.'}</li><li>{es ? '5 kits gratis y 3 vistas previas de bundles.' : '5 free kits and 3 bundle previews.'}</li><li>RSS, llms.txt, sitemap.</li></ul></div>
+    </div>}
+    {page === 'privacy' && (es ? <>
+      <p class="muted">Actualizado: {updated}</p>
+      <h2>Resumen</h2><p>Este sitio es estático. No usa cookies de rastreo ni analítica de terceros.</p>
+      <h2>Qué guardamos</h2><ul><li><strong>Preferencia de tema</strong> en el almacenamiento local de tu navegador. Nunca sale de tu dispositivo.</li><li><strong>Email del newsletter</strong>, solo si te suscribes, guardado por nuestro proveedor de newsletter. Puedes darte de baja en cada envío.</li><li><strong>Compras</strong>: las procesa Gumroad, que actúa como vendedor responsable; aplica su política de privacidad.</li></ul>
+      <h2>Buscador de kits</h2><p>Funciona totalmente en tu navegador. Lo que escribes no se envía a ningún servidor.</p>
+      <h2>Hosting</h2><p>GitHub Pages puede registrar direcciones IP en logs técnicos según su propia política.</p>
+      <h2>Contacto</h2><p>Para pedir acceso o borrado de tus datos, contáctanos por <a href={BRAND.x}>X</a>.</p></> : <>
+      <p class="muted">Updated: {updated}</p>
+      <h2>Summary</h2><p>This is a static site. It uses no tracking cookies and no third-party analytics.</p>
+      <h2>What we store</h2><ul><li><strong>Theme preference</strong> in your browser's local storage. It never leaves your device.</li><li><strong>Newsletter email</strong>, only if you subscribe, stored by our newsletter provider. Every issue has an unsubscribe link.</li><li><strong>Purchases</strong> are processed by Gumroad as merchant of record; their privacy policy applies.</li></ul>
+      <h2>Kit finder</h2><p>Runs entirely in your browser. What you type is never sent to a server.</p>
+      <h2>Hosting</h2><p>GitHub Pages may log IP addresses in technical logs under its own policy.</p>
+      <h2>Contact</h2><p>To request access to or deletion of your data, contact us on <a href={BRAND.x}>X</a>.</p></>)}
+    {page === 'terms' && (es ? <>
+      <p class="muted">Actualizado: {updated}</p>
+      <h2>Kits gratis</h2><p>Se publican bajo licencia MIT: úsalos, modifícalos y compártelos, también en proyectos comerciales.</p>
+      <h2>Bundles y Kit Club</h2><p>Licencia personal o para un equipo de hasta 5 personas. No revendas ni redistribuyas los archivos de pago. Los pagos y suscripciones los gestiona Gumroad. Reembolso completo si lo pides dentro de 14 días.</p>
+      <h2>Sin garantía</h2><p>Los kits se ofrecen "tal cual". Revisa lo que tu agente genera antes de usarlo en producción.</p>
+      <h2>Cambios</h2><p>Podemos actualizar estos términos; los cambios aparecen en <a href={url('/changelog/', lang)}>Novedades</a>.</p></> : <>
+      <p class="muted">Updated: {updated}</p>
+      <h2>Free kits</h2><p>Released under the MIT license: use, modify and share them, including in commercial projects.</p>
+      <h2>Bundles and Kit Club</h2><p>Personal license, or one team of up to 5 people. Do not resell or redistribute paid files. Payments and subscriptions are handled by Gumroad. Full refund on request within 14 days.</p>
+      <h2>No warranty</h2><p>Kits are provided "as is". Review what your agent produces before using it in production.</p>
+      <h2>Changes</h2><p>We may update these terms; changes are listed in the <a href={url('/changelog/', lang)}>Changelog</a>.</p></>)}
+    </div>
+  </div>
+  {(page === 'changelog' || page === 'about') && <Newsletter lang={lang} />}
+</Base>

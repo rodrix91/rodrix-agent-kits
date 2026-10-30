@@ -1,0 +1,37 @@
+---
+description: Godot 4.x GDScript conventions for game projects
+globs: ["**/*.gd", "**/*.tscn", "project.godot"]
+alwaysApply: false
+---
+
+# Godot 4 + GDScript rules
+
+## Version
+Godot **4.x** only. Do NOT use Godot 3 APIs:
+- `KinematicBody2D` → `CharacterBody2D`; `move_and_slide()` takes no args and uses the built-in `velocity` property.
+- `onready var` → `@onready var`; `export var` → `@export var`; `tool` → `@tool`.
+- `yield(obj, "signal")` → `await obj.signal`.
+- `connect("pressed", self, "_on_pressed")` → `pressed.connect(_on_pressed)`.
+- `instance()` → `instantiate()`; `rand_range()` → `randf_range()`.
+
+## Style (official GDScript style guide)
+- `snake_case` for functions/variables/files, `PascalCase` for `class_name` and nodes, `CONSTANT_CASE` for constants.
+- Static typing everywhere: `var speed: float = 200.0`, `func take_damage(amount: int) -> void:`.
+- Order inside a script: `class_name`, `extends`, signals, enums, constants, `@export`, public vars, private vars (`_prefix`), `@onready`, built-in callbacks, public methods, private methods.
+
+## Architecture
+- One responsibility per scene; compose scenes instead of deep inheritance.
+- "Call down, signal up": parents call children's methods; children emit signals to parents.
+- Global state lives in Autoload singletons (e.g. `GameState`, `Events` signal bus) — keep them small.
+- Use `@export` for designer-tunable values instead of magic numbers.
+- Physics/movement in `_physics_process(delta)`; visuals/input polling in `_process(delta)`; one-shot input in `_unhandled_input(event)`.
+- Use the Input Map (`Input.is_action_pressed("move_left")`), never raw keycodes.
+
+## Performance
+- Cache node refs with `@onready var sprite: Sprite2D = $Sprite2D`; don't call `get_node()` every frame.
+- Pool frequently spawned objects (bullets, particles) instead of `instantiate()`/`queue_free()` every frame.
+- Free nodes with `queue_free()`, never `free()` during physics callbacks.
+
+## When generating code
+- Give the full script, including `extends`, and say which node type it attaches to and which child nodes it expects.
+- If a scene setup is needed, describe the node tree as an indented list.

@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import BuyButton from '../components/BuyButton.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { t, url, type Lang } from '../lib/i18n';
+import { GUMROAD, PRICES } from '../config';
+const { lang } = Astro.props as { lang: Lang };
+const s = t[lang]; const es = lang === 'es';
+const plans = [
+  { name: es ? 'Gratis' : 'Free', price: '$0', per: es ? 'para siempre' : 'forever', desc: es ? 'La biblioteca abierta.' : 'The open library.', feats: es ? ['Todos los kits gratis, completos', 'Copiar y descargar', 'Licencia MIT', 'Newsletter semanal'] : ['Every free kit, complete', 'Copy & download', 'MIT license', 'Weekly newsletter'], link: url('/kits/', lang), linkLabel: s.cta.browse },
+  { hot: true, name: 'Kit Club', price: `$${PRICES.kitClubMonthly}`, per: es ? '/mes' : '/month', desc: es ? 'Todo lo de pago, siempre actualizado.' : 'Everything paid, always updated.', feats: es ? ['Todos los bundles actuales y futuros', 'Actualizaciones cuando cambian las herramientas', 'Pedidos de kits con prioridad', 'Cancela cuando quieras'] : ['All current & future bundles', 'Updates when tools change', 'Priority kit requests', 'Cancel anytime'], href: GUMROAD.kitClub, label: s.cta.club },
+  { name: 'Bundles', price: `$${PRICES.bundleMin}–${PRICES.bundleMax}`, per: es ? 'pago único' : 'one-time', desc: es ? 'Compra solo el stack que usas.' : 'Buy just the stack you use.', feats: es ? ['Full-stack Pro (Next.js + Supabase)', 'Agent Skills Pack', 'n8n Automation Pack', 'Tuyo para siempre + updates menores'] : ['Full-stack Pro (Next.js + Supabase)', 'Agent Skills Pack', 'n8n Automation Pack', 'Yours forever + minor updates'], link: url('/kits/', lang) + '?tier=paid', linkLabel: es ? 'Ver bundles' : 'See bundles' },
+];
+const faq = es ? [
+  ['¿Los kits gratis son realmente gratis?', 'Sí. Licencia MIT, completos, sin registro. El dinero viene de bundles y Kit Club, no de esconder lo básico.'],
+  ['¿Qué es Kit Club?', 'Una membresía de $7/mes con acceso a todos los bundles de pago y sus actualizaciones. Se cobra a través de Gumroad.'],
+  ['¿Puedo cancelar?', 'Sí, en cualquier momento desde tu cuenta de Gumroad. Mantienes acceso hasta el final del periodo pagado.'],
+  ['¿Con qué herramientas funcionan?', 'Cursor, Claude Code, Codex y cualquier agente que lea AGENTS.md, además de n8n. Cada kit indica la ruta de instalación exacta.'],
+  ['¿Reembolsos?', 'Si un kit de pago no te sirve, escríbenos dentro de 14 días y te devolvemos el dinero.'],
+  ['¿Cómo pago?', 'Con tarjeta o PayPal en el checkout seguro de Gumroad. Nunca vemos los datos de tu tarjeta.'],
+] : [
+  ['Are the free kits really free?', 'Yes. MIT-licensed, complete, no signup. Revenue comes from bundles and Kit Club, not from hiding the basics.'],
+  ['What is Kit Club?', 'A $7/month membership that unlocks every paid bundle and its updates. Billed through Gumroad.'],
+  ['Can I cancel?', 'Anytime, from your Gumroad account. You keep access until the end of the paid period.'],
+  ['Which tools do kits work with?', 'Cursor, Claude Code, Codex and any agent that reads AGENTS.md, plus n8n. Every kit lists its exact install path.'],
+  ['Refunds?', 'If a paid kit does not help you, email us within 14 days for a full refund.'],
+  ['How do I pay?', 'Card or PayPal through Gumroad\'s secure checkout. We never see your card details.'],
+];
+const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) };
+---
+<Base title={es ? 'Precios' : 'Pricing'} description={es ? 'Kits gratis para siempre, bundles desde $9 y Kit Club por $7/mes.' : 'Free kits forever, bundles from $9, and Kit Club for $7/month.'} lang={lang} path="/pricing/" jsonLd={[faqLd]}>
+  <div class="wrap">
+    <header class="page-head" style="text-align:center;margin:0 auto;max-width:760px">
+      <span class="kicker">{s.nav.pricing}</span>
+      <h1>{es ? 'Gratis para empezar. Barato para escalar.' : 'Free to start. Cheap to scale.'}</h1>
+      <p style="margin:0 auto">{es ? 'Sin planes confusos. Usa la biblioteca gratis; paga solo si quieres los bundles profundos.' : 'No confusing tiers. Use the library free; pay only for the deep bundles.'}</p>
+    </header>
+    <div class="plans">
+      {plans.map((p) => (
+        <div class={`card plan reveal ${p.hot ? 'plan-hot' : ''}`}>
+          <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:var(--t-md);margin:0">{p.name}</h2>{p.hot && <span class="tag tag-accent">{es ? 'Mejor valor' : 'Best value'}</span>}</div>
+          <div class="price">{p.price} <small>{p.per}</small></div>
+          <p style="margin:0">{p.desc}</p>
+          <ul class="check">{p.feats.map((f) => <li>{f}</li>)}</ul>
+          {p.link ? <a class="btn" href={p.link}>{p.linkLabel}</a> : <BuyButton href={p.href!} label={p.label!} lang={lang} />}
+        </div>
+      ))}
+    </div>
+    <section class="section" aria-labelledby="faq-h">
+      <h2 id="faq-h">FAQ</h2>
+      <div class="faq">{faq.map(([q, a]) => <details><summary>{q}</summary><p>{a}</p></details>)}</div>
+    </section>
+  </div>
+  <Newsletter lang={lang} />
+</Base>

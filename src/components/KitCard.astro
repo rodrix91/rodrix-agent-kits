@@ -1,0 +1,16 @@
+---
+import { url, t, type Lang } from '../lib/i18n';
+import type { Kit } from '../lib/kits';
+const { kit, lang } = Astro.props as { kit: Kit; lang: Lang };
+const d = kit.data, L = d[lang], s = t[lang];
+---
+<article class="card kit-card reveal" data-slug={kit.id} data-tool={d.tool} data-category={d.category} data-langs={d.languages.join(',')} data-tier={d.tier}>
+  <div class="kit-top"><span>{d.tool}</span><span>{d.tier === 'free' ? s.library.free : `$${d.price}`}</span></div>
+  <h3><a href={url(`/kits/${kit.id}/`, lang)}>{L.title}</a></h3>
+  <p>{L.summary}</p>
+  <div class="meta">
+    <span class="tag">{d.category}</span>
+    {d.languages.map((l) => <span class="tag">{l.toUpperCase()}</span>)}
+    <span class={d.tier === 'free' ? 'tag tag-accent' : 'tag'}>{d.tier === 'free' ? s.library.free : s.library.paid}</span>
+  </div>
+</article>

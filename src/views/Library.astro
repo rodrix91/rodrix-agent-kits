@@ -1,0 +1,84 @@
+---
+import Base from '../layouts/Base.astro';
+import KitCard from '../components/KitCard.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { t, url, type Lang } from '../lib/i18n';
+import { getKits } from '../lib/kits';
+const { lang } = Astro.props as { lang: Lang };
+const s = t[lang], L = s.library;
+const kits = await getKits();
+const uniq = (a: string[]) => [...new Set(a)].sort();
+const groups = [
+  ['tool', L.tool, uniq(kits.map((k) => k.data.tool))],
+  ['category', L.category, uniq(kits.map((k) => k.data.category))],
+  ['langs', L.language, ['en', 'es']],
+  ['tier', L.tier, ['free', 'paid']],
+] as const;
+const label = (g: string, v: string) => g === 'tier' ? (v === 'free' ? L.free : L.paid) : g === 'langs' ? v.toUpperCase() : v;
+const crumbs = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+  { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site!.origin + url('/', lang) },
+  { '@type': 'ListItem', position: 2, name: L.title, item: Astro.site!.origin + url('/kits/', lang) }] };
+const list = { '@context': 'https://schema.org', '@type': 'ItemList', itemListElement: kits.map((k, i) => ({ '@type': 'ListItem', position: i + 1, url: Astro.site!.origin + url(`/kits/${k.id}/`, lang), name: k.data[lang].title })) };
+---
+<Base title={L.title} description={L.sub + ' Cursor rules, CLAUDE.md, AGENTS.md, agent skills, n8n.'} lang={lang} path="/kits/" jsonLd={[crumbs, list]}>
+  <div class="wrap">
+    <header class="page-head" style="padding-bottom:0">
+      <span class="kicker">{s.nav.kits}</span>
+      <h1>{L.title}</h1>
+      <p>{L.sub}</p>
+    </header>
+    <div class="filters" id="filters">
+      <div class="lib-bar">
+        <label class="sr-only" for="q">{L.search}</label>
+        <input class="input" id="q" type="search" placeholder={L.search + '…  (/)'} autocomplete="off" style="max-width:520px" />
+        <p class="muted" id="count" aria-live="polite" style="margin:0;font-family:var(--mono);font-size:var(--t-xs)" data-one={L.count(1)} data-many={L.count(2)}>{L.count(kits.length)}</p>
+      </div>
+      {groups.map(([g, name, vals]) => (
+        <fieldset class="chips" data-group={g}>
+          <legend>{name}</legend>
+          <button class="chip" type="button" data-v="" aria-pressed="true">{L.all}</button>
+          {vals.map((v) => <button class="chip" type="button" data-v={v} aria-pressed="false">{label(g, v)}</button>)}
+        </fieldset>
+      ))}
+    </div>
+    <h2 class="sr-only">{L.title}</h2>
+    <div class="grid grid-3" id="kits">{kits.map((k) => <KitCard kit={k} lang={lang} />)}</div>
+    <p id="empty" hidden style="padding:3rem 0;text-align:center">{L.empty}</p>
+  </div>
+  <Newsletter lang={lang} />
+</Base>
+<script>
+  const cards = [...document.querySelectorAll<HTMLElement>('#kits > article')];
+  const q = document.getElementById('q') as HTMLInputElement;
+  const count = document.getElementById('count')!;
+  const state: Record<string, string> = { tool: '', category: '', langs: '', tier: '' };
+  const params = new URLSearchParams(location.search);
+  q.value = params.get('q') ?? '';
+  for (const g of Object.keys(state)) state[g] = params.get(g) ?? '';
+  const text = (c: HTMLElement) => c.textContent!.toLowerCase();
+  function apply() {
+    const terms = q.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    let n = 0;
+    for (const c of cards) {
+      const ok = terms.every((t) => text(c).includes(t))
+        && (!state.tool || c.dataset.tool === state.tool)
+        && (!state.category || c.dataset.category === state.category)
+        && (!state.langs || c.dataset.langs!.split(',').includes(state.langs))
+        && (!state.tier || c.dataset.tier === state.tier);
+      c.hidden = !ok; if (ok) { n++; c.classList.add('in'); }
+    }
+    count.textContent = (n === 1 ? count.dataset.one! : count.dataset.many!).replace(/\d+/, String(n));
+    document.getElementById('empty')!.hidden = n > 0;
+    document.querySelectorAll<HTMLFieldSetElement>('fieldset[data-group]').forEach((fs) =>
+      fs.querySelectorAll<HTMLButtonElement>('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === state[fs.dataset.group!]))));
+    const p = new URLSearchParams();
+    if (q.value) p.set('q', q.value);
+    for (const [k, v] of Object.entries(state)) if (v) p.set(k, v);
+    history.replaceState(null, '', p.size ? '?' + p : location.pathname);
+  }
+  document.querySelectorAll<HTMLFieldSetElement>('fieldset[data-group]').forEach((fs) =>
+    fs.addEventListener('click', (e) => { const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip'); if (!b) return; state[fs.dataset.group!] = b.dataset.v!; apply(); }));
+  q.addEventListener('input', apply);
+  addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); } });
+  apply();
+</script>

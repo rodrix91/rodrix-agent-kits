@@ -1,0 +1,75 @@
+---
+import Base from '../layouts/Base.astro';
+import KitCard from '../components/KitCard.astro';
+import Finder from '../components/Finder.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { t, url, type Lang } from '../lib/i18n';
+import { getKits } from '../lib/kits';
+const { lang } = Astro.props as { lang: Lang };
+const s = t[lang];
+const kits = await getKits();
+const featured = kits.filter((k) => k.data.featured).slice(0, 6);
+const freeCount = kits.filter((k) => k.data.tier === 'free').length;
+const desc = lang === 'es'
+  ? 'Biblioteca gratuita y bilingüe de kits probados para agentes de IA: reglas de Cursor, CLAUDE.md, AGENTS.md, skills y flujos n8n.'
+  : 'Free, bilingual library of tested AI agent kits: Cursor rules, CLAUDE.md, AGENTS.md, agent skills and n8n flows. Copy, paste, ship.';
+const site = { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Rodrix Agent Kits', url: Astro.site!.origin + url('/', lang), inLanguage: lang };
+---
+<Base title={lang === 'es' ? 'Rodrix Agent Kits — Kits probados para agentes de IA' : 'Rodrix Agent Kits — Tested AI agent kits'} description={desc} lang={lang} path="/" jsonLd={[site]}>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">{s.hero.eyebrow}</span>
+        <h1><span>{s.hero.title[0]}</span><span class="dim">{s.hero.title[1]}</span></h1>
+        <p class="lead">{s.hero.sub}</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href={url('/kits/', lang)} style="--h:48px">{s.cta.browse} →</a>
+          <a class="btn" href={url('/pricing/', lang)} style="--h:48px">{s.cta.club} · $7/{lang === 'es' ? 'mes' : 'mo'}</a>
+        </div>
+        <p class="muted" style="font-size:var(--t-xs);margin-top:1.2rem;font-family:var(--mono)">{freeCount} {lang === 'es' ? 'kits gratis hoy · licencia MIT' : 'free kits today · MIT licensed'}</p>
+      </div>
+      <div class="term reveal" aria-hidden="true">
+        <div class="term-bar"><i></i><i></i><i></i><span>~/my-saas</span></div>
+<pre><span class="c"># 1. copy a kit from the library</span>
+<span class="k">$</span> <span class="w">mkdir -p .cursor/rules</span>
+<span class="k">$</span> <span class="w">pbpaste > .cursor/rules/nextjs-supabase.mdc</span>
+<span class="c"># 2. your agent now knows:</span>
+<span class="k">✓</span> @supabase/ssr, not auth-helpers
+<span class="k">✓</span> getUser() on the server
+<span class="k">✓</span> RLS on every new table
+<span class="k">✓</span> service_role never NEXT_PUBLIC_
+<span class="c"># 3. ship</span>
+<span class="k">$</span> <span class="w">git commit -m "feat: auth"</span> <span class="cursor-blink"></span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:1rem" aria-label={s.finder.title}>
+    <div class="wrap reveal"><Finder lang={lang} /></div>
+  </section>
+
+  <section class="section" aria-labelledby="how-h">
+    <div class="wrap">
+      <div class="section-head"><div><span class="kicker">01</span><h2 id="how-h">{s.how.title}</h2></div></div>
+      <div class="steps">
+        {s.how.steps.map(([h, p]) => <div class="card step reveal"><h3>{h}</h3><p style="margin:0">{p}</p></div>)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="feat-h">
+    <div class="wrap">
+      <div class="section-head"><div><span class="kicker">02</span><h2 id="feat-h">{s.featured}</h2></div><a class="btn btn-ghost" href={url('/kits/', lang)}>{s.allKits} →</a></div>
+      <div class="grid grid-3">{featured.map((k) => <KitCard kit={k} lang={lang} />)}</div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="proof-h">
+    <div class="wrap">
+      <div class="section-head"><div><span class="kicker">03</span><h2 id="proof-h">{s.proof.title}</h2></div><p>{s.proof.note}</p></div>
+      <div class="steps">{s.proof.items.map(([h, p]) => <div class="card reveal"><h3>{h}</h3><p style="margin:0">{p}</p></div>)}</div>
+    </div>
+  </section>
+
+  <Newsletter lang={lang} />
+</Base>

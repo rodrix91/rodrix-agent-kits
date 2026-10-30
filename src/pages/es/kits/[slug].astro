@@ -1,0 +1,6 @@
+---
+import KitPage from '../../../views/KitPage.astro';
+import { getKits } from '../../../lib/kits';
+export async function getStaticPaths() { return (await getKits()).map((kit) => ({ params: { slug: kit.id }, props: { kit } })); }
+---
+<KitPage lang="es" kit={Astro.props.kit} />
