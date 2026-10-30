@@ -26,9 +26,19 @@ Quality bar: verify every API/command against official docs; never invent featur
 - `NEWSLETTER.action` = provider form POST URL (Buttondown recommended: free ≤100 subscribers, embed-subscribe endpoint, field `email`). Until set, the form shows "opens soon".
 
 ## Tests & quality
-- `npm test` — must pass before every push (CI runs it too and blocks deploy on failure).
+- `npm test` — run locally and require a passing result before every push or deploy. **Important:** `ci/github-actions-ci.yml` is only a staged workflow template; GitHub Actions does not execute it from that location. Do not claim CI or deployment protection until an active workflow is installed in `.github/workflows/` and its checks are verified.
 - Weekly: `node scripts/lighthouse.mjs` (target ≥95 all categories) and `node scripts/screenshots.mjs`; check visuals.
 - Broken external links: `npx linkinator https://rodrix91.github.io/rodrix-agent-kits/ --recurse`.
+
+## Privacy and deployment safety
+
+- Treat every downloadable kit, agent instruction and n8n workflow as an **example to review**, not a production-ready or security-certified integration. Check versions and requested permissions before executing third-party code or granting access to connected apps.
+- The included `src/kitfiles/n8n-lead-capture.json` is **inactive on import** but exposes a POST webhook when activated. Its email check and honeypot are only basic input filters. Before accepting real leads, add appropriate request-size limits, abuse/rate limiting, consent and a privacy notice; verify regional privacy obligations.
+- That example appends contact data to Google Sheets. Restrict sheet sharing and connector permissions to the minimum needed, establish retention/deletion practices and avoid storing more personal information than required.
+- Assess spreadsheet formula injection for user-controlled fields (for example names or sources beginning with `=`, `+`, `-` or `@`), and verify how the Google Sheets node treats input. Do not rely on the example's current validation to prevent it.
+- Test with synthetic contacts first. Never commit live leads, API keys, OAuth tokens, production webhook URLs containing secrets or exported credential files. Review workflow execution logs for personal data before enabling persistent logging.
+- After deploying, verify the webhook's accepted/rejected response paths and error handling with a safe test, and monitor it for unwanted submissions. A successful local build does not prove production safety.
+
 
 ## Recurring CEO duties (Steve)
 - Monetize: fill Gumroad links when products exist; add bundles when a free kit gets traction.
