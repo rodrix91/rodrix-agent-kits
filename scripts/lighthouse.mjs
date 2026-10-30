@@ -6,8 +6,12 @@ const PORT = 4397, B = '/rodrix-agent-kits';
 const srv = await serve(PORT);
 const chrome = await chromeLauncher.launch({ chromePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', chromeFlags: ['--headless=new', '--no-sandbox'] });
 const pages = (process.env.LH_PAGES || '/,/kits/,/kits/nextjs-supabase-cursor-rules/,/pricing/,/es/').split(',');
+const formFactors = (process.env.LH_FORM_FACTORS || 'mobile,desktop').split(',');
+if (!formFactors.length || formFactors.some((mode) => !['mobile', 'desktop'].includes(mode))) {
+  throw new Error('LH_FORM_FACTORS must contain mobile and/or desktop');
+}
 const rows = [];
-for (const formFactor of ['mobile', 'desktop']) for (const p of pages) {
+for (const formFactor of formFactors) for (const p of pages) {
   const cfg = formFactor === 'desktop' ? { extends: 'lighthouse:default', settings: { formFactor: 'desktop', screenEmulation: { mobile: false, width: 1350, height: 940, deviceScaleFactor: 1, disabled: false }, throttlingMethod: 'simulate', throttling: { rttMs: 40, throughputKbps: 10240, cpuSlowdownMultiplier: 1 } } } : undefined;
   const r = await lighthouse(`http://localhost:${PORT}${B}${p}`, { port: chrome.port, output: 'json', logLevel: 'error' }, cfg);
   const c = r.lhr.categories; const s = (k) => Math.round(c[k].score * 100);
