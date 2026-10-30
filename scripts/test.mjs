@@ -30,6 +30,14 @@ const { execSync } = await import('node:child_process');
 const tracked = execSync('git ls-files -co --exclude-standard').toString().split('\n').filter((f) => f && !f.startsWith('node_modules') && !/\.(png|woff2|ttf)$/.test(f));
 ok(!tracked.some((f) => secretRe.test(readFileSync(f, 'utf8'))), 'no secrets in repo files');
 
+// newsletter: live action or a working fallback (RSS + X links) on EN/ES home
+for (const l of ['', 'es/']) {
+  const h = readFileSync(`dist/${l}index.html`, 'utf8');
+  const live = /class="nl-form"[^>]*data-live="true"/.test(h);
+  const rss = h.match(/data-nl-fallback[\s\S]*?href="[^"]*?\/((?:es\/)?rss\.xml)"/);
+  ok(live || (rss && existsSync('dist/' + rss[1]) && /data-nl-fallback[\s\S]*?href="https:\/\/x\.com\//.test(h)), `newsletter live or fallback ok: /${l}`);
+}
+
 // 2. links + 3. axe
 const srv = await serve(PORT);
 const checker = new LinkChecker();

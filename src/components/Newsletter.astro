@@ -1,6 +1,6 @@
 ---
-import { t, type Lang } from '../lib/i18n';
-import { NEWSLETTER } from '../config';
+import { t, asset, type Lang } from '../lib/i18n';
+import { NEWSLETTER, BRAND } from '../config';
 const { lang } = Astro.props as { lang: Lang };
 const s = t[lang].news;
 const live = Boolean(NEWSLETTER.action);
@@ -21,6 +21,13 @@ const live = Boolean(NEWSLETTER.action);
           <button class="btn btn-primary" type="submit" style="--h:48px">{s.submit}</button>
         </form>
         <p class="status muted" role="status" aria-live="polite">{!live && s.soon}</p>
+        {!live && (
+          <p class="nl-fallback muted" data-nl-fallback style="margin:.5rem 0 0">
+            {lang === 'es' ? 'Mientras tanto:' : 'Meanwhile:'}{' '}
+            <a href={asset(lang === 'es' ? '/es/rss.xml' : '/rss.xml')}>RSS</a>{' · '}
+            <a href={BRAND.x} rel="noopener">X</a>
+          </p>
+        )}
       </div>
     </div>
   </div>
