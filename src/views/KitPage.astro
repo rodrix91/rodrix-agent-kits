@@ -27,9 +27,26 @@ const crumbs = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', it
   { '@type': 'ListItem', position: 1, name: 'Home', item: origin + url('/', lang) },
   { '@type': 'ListItem', position: 2, name: s.nav.kits, item: origin + url('/kits/', lang) },
   { '@type': 'ListItem', position: 3, name: L.title, item: pageUrl }] };
+const compatDefault: Record<string, string> = {
+  'Cursor': 'It is written for Cursor. The rules are plain Markdown, so you can copy them into AGENTS.md or CLAUDE.md for other agents.',
+  'Claude Code': 'CLAUDE.md is read by Claude Code. The content is plain Markdown, so you can copy it into AGENTS.md for Codex and other agents.',
+  'Codex / any agent': 'Yes. AGENTS.md is an open format read by Codex, Cursor and other agents; Claude Code can import it from CLAUDE.md with a line @AGENTS.md.',
+  'n8n': 'It is an n8n workflow (JSON) you import into n8n, not an agent rules file.',
+  'Agent Skills': 'It follows the Agent Skills SKILL.md format; it works with agents that support skills.',
+};
+const bundleName = d.product ? d.product.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ') : '';
+const faq = [
+  [`Where do I put this ${d.tool} file?`, `Save it as ${d.installPath} in your project root and restart/reload ${d.tool}.`],
+  ['Is this kit free?', d.tier === 'free' ? 'Yes, MIT-licensed.' : `The preview is free; the full kit is part of ${bundleName} for $${d.price}.`],
+  ['Does it work with other agents?', d.compat ?? compatDefault[d.tool]],
+];
+const graph = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'SoftwareSourceCode', name: L.title, description: L.summary, programmingLanguage: d.file.endsWith('.json') ? 'JSON' : 'Markdown', codeRepository: 'https://github.com/rodrix91/rodrix-agent-kits', license: 'https://opensource.org/licenses/MIT', url: pageUrl,
+    targetProduct: { '@type': 'SoftwareApplication', name: d.tool, applicationCategory: 'DeveloperApplication', operatingSystem: 'Windows, macOS, Linux' } },
+  { '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }] };
 const date = d.added.toISOString().slice(0, 10);
 ---
-<Base title={L.title} description={L.summary} lang={lang} path={`/kits/${kit.id}/`} og={`/og/${kit.id}.png`} jsonLd={[product, crumbs]} type="article" gumroad={d.tier === 'paid'}>
+<Base title={L.title} description={L.summary} lang={lang} path={`/kits/${kit.id}/`} og={`/og/${kit.id}.png`} jsonLd={[product, crumbs, graph]} type="article" gumroad={d.tier === 'paid'}>
   <div class="wrap">
     <nav class="crumbs" aria-label="Breadcrumb"><a href={url('/', lang)}>Home</a><span aria-hidden="true">/</span><a href={url('/kits/', lang)}>{s.nav.kits}</a><span aria-hidden="true">/</span><span aria-current="page">{L.title}</span></nav>
     <div class="kit-layout">
@@ -54,6 +71,9 @@ const date = d.added.toISOString().slice(0, 10);
           </div>
           <pre tabindex="0" aria-label={K.file}><code id="kit-src">{preview}</code></pre>
         </div>
+        <section aria-labelledby="faq-h" lang="en"><h2 id="faq-h" style="font-size:var(--t-lg);margin-top:2.5rem">FAQ</h2>
+          <dl class="faq">{faq.map(([q, a]) => <><dt style="font-weight:600;margin-top:1rem">{q}</dt><dd style="margin:.25rem 0 0">{a}</dd></>)}</dl>
+        </section>
         {d.tier === 'paid' && <p class="muted" style="margin-top:1rem;font-size:var(--t-sm)">{K.paidNote}</p>}
       </article>
       <aside class="aside">

@@ -54,4 +54,6 @@ for (const f of walk(DIST).filter((f) => f.endsWith('.html'))) {
 // Netlify / Cloudflare Pages header file (GitHub Pages ignores it; CSP meta covers the essentials there).
 writeFileSync(join(DIST, '_headers'), `/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()\n  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload\n  Cross-Origin-Opener-Policy: same-origin\n\n/_astro/*\n  Cache-Control: public, max-age=31536000, immutable\n`);
 writeFileSync(join(DIST, '.nojekyll'), '');
+// /sitemap.xml alias (some tools guess this path)
+writeFileSync(join(DIST, 'sitemap.xml'), readFileSync(join(DIST, 'sitemap-index.xml')));
 console.log(`postbuild: ${kits.length + 1} OG images, CSP on ${pages} pages`);

@@ -22,6 +22,7 @@ const kits = defineCollection({
     featured: z.boolean().default(false),
     added: z.coerce.date(),
     updated: z.coerce.date().optional(),
+    compat: z.string().optional(), // FAQ: does it work with other agents?
   }),
 });
 

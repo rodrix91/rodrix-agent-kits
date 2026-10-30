@@ -7,7 +7,7 @@ import { BRAND } from '../config';
 const { lang, page } = Astro.props as { lang: Lang; page: 'about' | 'sponsors' | 'changelog' | 'privacy' | 'terms' };
 const es = lang === 'es';
 const meta = {
-  about: [es ? 'Nosotros' : 'About', es ? 'Quién construye Rodrix Agent Kits y por qué.' : 'Who builds Rodrix Agent Kits and why.'],
+  about: [es ? 'Nosotros' : 'About', es ? 'Rodrix Agent Kits lo crea Rodrigo Pantoja, data science manager, que prueba cada regla de Cursor, CLAUDE.md y AGENTS.md antes de publicarla. Gratis, MIT, EN/ES.' : 'Rodrix Agent Kits is built by Rodrigo Pantoja, a data science manager, who tests every Cursor rule, CLAUDE.md and AGENTS.md before publishing. Free, MIT, EN/ES.'],
   sponsors: [es ? 'Patrocina' : 'Sponsor us', es ? 'Llega a desarrolladores que construyen con agentes de IA.' : 'Reach developers who build with AI agents.'],
   changelog: [es ? 'Novedades' : 'Changelog', es ? 'Todo lo que se agrega o cambia.' : 'Everything added or changed.'],
   privacy: [es ? 'Privacidad' : 'Privacy', es ? 'Qué datos recogemos (casi ninguno).' : 'What data we collect (almost none).'],
@@ -38,6 +38,7 @@ const updated = '2026-10-30';
       <h2>{es ? 'Reglas' : 'Rules'}</h2><ul><li>{es ? 'Todo contenido patrocinado se etiqueta.' : 'All sponsored content is labeled.'}</li><li>{es ? 'Sin píxeles de rastreo ni cookies de terceros.' : 'No tracking pixels or third-party cookies.'}</li><li>{es ? 'Solo herramientas que probaríamos nosotros.' : 'Only tools we would use ourselves.'}</li></ul>
       <p>{es ? 'Interesado? Escríbenos por ' : 'Interested? Reach out on '}<a href={BRAND.x}>X</a>.</p></>}
     {page === 'changelog' && <div class="timeline">
+      <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? 'Nuevo kit gratis: una sola fuente de verdad' : 'New free kit: One source of truth'}</h2><ul><li>{es ? 'AGENTS.md maestro + import en CLAUDE.md + stub de regla de Cursor + GitHub Action de drift-check.' : 'Master AGENTS.md + CLAUDE.md import + Cursor rule stub + drift-check GitHub Action.'}</li><li>{es ? 'Respaldo del newsletter: RSS y X mientras abre la suscripción.' : 'Newsletter fallback: RSS and X until signup opens.'}</li></ul></div>
       <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? 'Checkout en vivo' : 'Checkout is live'}</h2><ul><li>{es ? 'Full-stack Pro ($19), Agent Skills Pack ($12), n8n Automation Pack ($15) y Kit Club ($7/mes) ya se pueden comprar vía Gumroad.' : 'Full-stack Pro ($19), Agent Skills Pack ($12), n8n Automation Pack ($15) and Kit Club ($7/mo) are now available via Gumroad.'}</li></ul></div>
       <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? 'Lanzamiento' : 'Launch'}</h2><ul><li>{es ? 'Sitio bilingüe (EN/ES) con biblioteca, buscador local de kits y precios.' : 'Bilingual site (EN/ES) with library, local kit finder and pricing.'}</li><li>{es ? '5 kits gratis y 3 vistas previas de bundles.' : '5 free kits and 3 bundle previews.'}</li><li>RSS, llms.txt, sitemap.</li></ul></div>
     </div>}

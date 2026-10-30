@@ -31,7 +31,7 @@ const club = { '@context': 'https://schema.org', '@type': 'Product', name: 'Kit 
     priceSpecification: { '@type': 'UnitPriceSpecification', price: String(PRICES.kitClubMonthly), priceCurrency: 'USD', billingDuration: 'P1M', unitCode: 'MON' } } };
 const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) };
 ---
-<Base title={es ? 'Precios' : 'Pricing'} description={es ? 'Kits gratis para siempre, bundles desde $9 y Kit Club por $7/mes.' : 'Free kits forever, bundles from $9, and Kit Club for $7/month.'} lang={lang} path="/pricing/" jsonLd={[faqLd, ...(GUMROAD.kitClub ? [club] : [])]} gumroad>
+<Base title={es ? 'Precios' : 'Pricing'} description={es ? 'Kits gratis para siempre, bundles desde $9 y Kit Club por $7/mes. Los kits gratis son MIT; las vistas previas de pago se leen gratis.' : 'Free kits forever, bundles from $9, and Kit Club for $7/month. Free kits are MIT-licensed; paid previews are free to read.'} lang={lang} path="/pricing/" jsonLd={[faqLd, ...(GUMROAD.kitClub ? [club] : [])]} gumroad>
   <div class="wrap">
     <header class="page-head" style="text-align:center;margin:0 auto;max-width:760px">
       <span class="kicker">{s.nav.pricing}</span>

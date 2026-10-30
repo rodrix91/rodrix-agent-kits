@@ -30,6 +30,19 @@ const { execSync } = await import('node:child_process');
 const tracked = execSync('git ls-files -co --exclude-standard').toString().split('\n').filter((f) => f && !f.startsWith('node_modules') && !/\.(png|woff2|ttf)$/.test(f));
 ok(!tracked.some((f) => secretRe.test(readFileSync(f, 'utf8'))), 'no secrets in repo files');
 
+// SEO checks (F-SEO-1..6)
+{ const sm = readFileSync('dist/sitemap-0.xml', 'utf8'); const n = (sm.match(/<loc>/g) || []).length, lm = (sm.match(/<lastmod>/g) || []).length;
+  ok(n > 0 && n === lm, `sitemap lastmod on every URL (${lm}/${n})`); ok(existsSync('dist/sitemap.xml'), 'sitemap.xml alias exists'); }
+for (const k of kits) for (const l of ['', 'es/']) {
+  const html = readFileSync(`dist/${l}kits/${k.slug}/index.html`, 'utf8');
+  ok(/"SoftwareSourceCode"/.test(html) && /"FAQPage"/.test(html) && /id="faq-h"/.test(html), `FAQ+SoftwareSourceCode visible+JSON-LD: /${l}kits/${k.slug}/`);
+}
+for (const f of ['about/index.html', 'pricing/index.html', 'es/about/index.html', 'es/pricing/index.html']) {
+  const m = readFileSync('dist/' + f, 'utf8').match(/<meta name="description" content="([^"]*)"/); const len = m ? m[1].replace(/&#39;|&amp;/g, 'x').length : 0;
+  ok(len >= 120 && len <= 160, `meta description 120-160 chars: ${f} (${len})`);
+}
+ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync('dist/llms-full.txt', 'utf8').includes('## Answers'), 'llms.txt has ## Answers; llms-full.txt unchanged');
+
 // newsletter: live action or a working fallback (RSS + X links) on EN/ES home
 for (const l of ['', 'es/']) {
   const h = readFileSync(`dist/${l}index.html`, 'utf8');

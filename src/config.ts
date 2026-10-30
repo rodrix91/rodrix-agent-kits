@@ -29,6 +29,10 @@ export const PAYHIP = {
   store: '',
 };
 
+/** Search engine verification tokens (HTML-tag method). Empty = no tag emitted. */
+export const GOOGLE_SITE_VERIFICATION = '';
+export const BING_SITE_VERIFICATION = '';
+
 export const NEWSLETTER = {
   /**
    * Provider-agnostic: any endpoint that accepts a POST form with an `email` field.
