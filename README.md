@@ -19,7 +19,7 @@ Live: https://rodrix91.github.io/rodrix-agent-kits/
 | `npm run build` | static build to `dist/` |
 | `npm test` | build + structure/SEO + secrets scan + link check + axe WCAG AA (dark & light) + functional checks |
 | `node scripts/serve.mjs` | serve `dist/` at http://localhost:4321/rodrix-agent-kits/ |
-| `node scripts/lighthouse.mjs` | Lighthouse (mobile + desktop) → `lighthouse/scores.json` |
+| `node scripts/lighthouse.mjs` | Lighthouse (mobile + desktop) → `lighthouse/scores.json`; set `LH_PAGES=/` and `LH_FORM_FACTORS=mobile` for a single-page mobile smoke test |
 | `node scripts/screenshots.mjs` | screenshots at 390/768/1440 → `screenshots/` |
 
 Headless checks use Playwright with system Chrome (`CHROME_PATH` to override). `npm test` also runs local static-server regression tests after the build and before the browser suite. These tests reject paths outside the exact `/rodrix-agent-kits/` base, encoded traversal, NUL/backslash paths, and malformed URL encodings. `scripts/serve.mjs` is a local preview/test server, **not** a public production server.
