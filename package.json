@@ -7,7 +7,7 @@
     "dev": "astro dev",
     "build": "astro build && node scripts/postbuild.mjs",
     "preview": "astro preview",
-    "test": "npm run build && node scripts/test.mjs"
+    "test": "npm run build && node --test scripts/serve.test.mjs && node scripts/test.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
