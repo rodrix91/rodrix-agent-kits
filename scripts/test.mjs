@@ -69,7 +69,7 @@ for (const locale of ['', 'es/']) {
   const html = readFileSync(`dist/${locale}index.html`, 'utf8');
   const logoLink = html.match(/<a class="logo"[^>]*aria-label="([^"]+)"/);
   ok(Boolean(logoLink && logoLink[1].toLowerCase().includes('rodrix/kits')), `logo accessible name contains visible brand: /${locale}`);
-  const languageLink = html.match(/<a class="icon-btn"[^>]*aria-label="([^"]+)"[^>]*>(EN|ES)<\\/a>/);
+  const languageLink = html.match(/<a class="icon-btn"[^>]*aria-label="([^"]+)"[^>]*>(EN|ES)<\/a>/);
   ok(Boolean(languageLink && languageLink[1].includes(languageLink[2])), `language-switch accessible name contains visible EN/ES text: /${locale}`);
 }
 
