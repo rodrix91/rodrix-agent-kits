@@ -10,7 +10,7 @@
    Optional: `keywords[]` (improves the kit finder), `featured: true`.
 3. New `tool`/`category` values must be added to the enum in `src/content.config.ts`.
 4. Add a line to `src/views/Simple.astro` changelog.
-5. `npm test` must pass. Commit → push to `main` → CI deploys. RSS, sitemap, llms.txt, OG image update automatically.
+5. `npm test` must pass. Commit → push to `main` → `bash scripts/deploy.sh`. RSS, sitemap, llms.txt, OG image update automatically.
 
 Quality bar: verify every API/command against official docs; never invent features; say what was NOT tested.
 
