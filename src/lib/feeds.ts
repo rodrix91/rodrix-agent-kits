@@ -14,7 +14,7 @@ export async function llms(full: boolean, site: URL) {
   const kits = await getKits();
   const o = site.origin;
   let s = `# ${BRAND.name}\n\n> Free, bilingual (English/Spanish) library of tested configuration files for AI coding agents: Cursor rules (.mdc), CLAUDE.md, AGENTS.md, Agent Skills (SKILL.md) and n8n workflows. Free kits are MIT-licensed. Paid bundles cost $${PRICES.bundleMin}-${PRICES.bundleMax}; the Kit Club membership is $${PRICES.kitClubMonthly}/month via Gumroad.\n\n`;
-  s += `## Key pages\n- [Kit library](${o}${url('/kits/')}): searchable list of all kits\n- [Pricing](${o}${url('/pricing/')}): Free, Bundles, Kit Club\n- [About](${o}${url('/about/')})\n- [Spanish version](${o}${url('/', 'es')})\n\n## Kits\n`;
+  s += `## Key pages\n- [Kit library](${o}${url('/kits/')}): searchable list of all kits\n- [Pricing](${o}${url('/pricing/')}): Free, Bundles, Kit Club\n- [About](${o}${url('/about/')})\n- [Spanish version](${o}${url('/', 'es')})\n- [X @RODRX_NOVA](${BRAND.x}): updates and feedback\n- [GitHub](${BRAND.github}): source\n\n## Kits\n`;
   for (const k of kits) {
     const d = k.data;
     s += `- [${d.en.title}](${o}${url(`/kits/${k.id}/`)}): ${d.en.summary} (${d.tool}; ${d.tier === 'free' ? 'free' : `paid $${d.price}, preview free`}; install at \`${d.installPath}\`; raw file: ${o}${asset(`/files/${d.file}`)})\n`;

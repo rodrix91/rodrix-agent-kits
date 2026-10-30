@@ -5,7 +5,7 @@ import { serve } from './serve.mjs';
 const PORT = 4397, B = '/rodrix-agent-kits';
 const srv = await serve(PORT);
 const chrome = await chromeLauncher.launch({ chromePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', chromeFlags: ['--headless=new', '--no-sandbox'] });
-const pages = ['/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/pricing/', '/es/'];
+const pages = (process.env.LH_PAGES || '/,/kits/,/kits/nextjs-supabase-cursor-rules/,/pricing/,/es/').split(',');
 const rows = [];
 for (const formFactor of ['mobile', 'desktop']) for (const p of pages) {
   const cfg = formFactor === 'desktop' ? { extends: 'lighthouse:default', settings: { formFactor: 'desktop', screenEmulation: { mobile: false, width: 1350, height: 940, deviceScaleFactor: 1, disabled: false }, throttlingMethod: 'simulate', throttling: { rttMs: 40, throughputKbps: 10240, cpuSlowdownMultiplier: 1 } } } : undefined;

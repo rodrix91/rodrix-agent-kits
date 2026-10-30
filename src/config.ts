@@ -6,7 +6,7 @@
 export const BRAND = {
   name: 'Rodrix Agent Kits',
   short: 'Rodrix',
-  x: 'https://x.com/rodrix91', // TODO(Rodrigo): confirm the X handle to show
+  x: 'https://x.com/RODRX_NOVA',
   github: 'https://github.com/rodrix91/rodrix-agent-kits',
   email: '', // TODO(Rodrigo): public contact email (optional)
 };

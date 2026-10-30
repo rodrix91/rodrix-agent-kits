@@ -1,6 +1,6 @@
 {
   "date": "2026-10-30T15:08:54.403Z",
-  "note": "Local static server, simulated throttling (Lighthouse defaults). SEO measured on localhost.",
+  "note": "Local static server, simulated throttling (Lighthouse defaults). SEO measured on localhost. /kits/ re-measured 2026-10-30T15:14:26.463Z after heading fix.",
   "rows": [
     {
       "formFactor": "mobile",
@@ -14,7 +14,7 @@
       "formFactor": "mobile",
       "page": "/kits/",
       "performance": 100,
-      "accessibility": 98,
+      "accessibility": 100,
       "bestPractices": 100,
       "seo": 100
     },
@@ -54,7 +54,7 @@
       "formFactor": "desktop",
       "page": "/kits/",
       "performance": 100,
-      "accessibility": 98,
+      "accessibility": 100,
       "bestPractices": 100,
       "seo": 100
     },
