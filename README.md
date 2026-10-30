@@ -5,7 +5,7 @@ Free, bilingual (EN/ES) library of tested AI agent kits — Cursor rules, `CLAUD
 Live: https://rodrix91.github.io/rodrix-agent-kits/
 
 ## Stack
-- **Astro 5** static output, content collections (`src/content/kits/*.md`), zero client framework.
+- **Astro 7.4.4** static output, content collections (`src/content/kits/*.md`), zero client framework.
 - Hand-written CSS design system (`src/styles/global.css`), self-hosted **Geist / Geist Mono** variable fonts, dark + light themes, `prefers-reduced-motion` respected.
 - Client JS only for: theme toggle, mobile menu, library filters, copy-to-clipboard, newsletter form, local kit finder (`src/lib/match.ts`, BM25 + synonyms, no network).
 - Post-build (`scripts/postbuild.mjs`): OG images (resvg), per-page CSP with script hashes, `_headers`, `.nojekyll`.
@@ -26,9 +26,9 @@ Headless checks use Playwright with system Chrome (`CHROME_PATH` to override). `
 
 ## Dependency security and maintenance
 
-The GitHub Actions quality workflow uses **Node.js 24**, compatible with the locked `undici@8.12.3` dependency (which requires Node `>=22.19.0`). This avoids the older Node 20 engine mismatch without changing the site content or dependency lockfile.
+The GitHub Actions quality workflow uses **Node.js 24**, which satisfies the pinned Astro 7.4.4 minimum Node.js engine (`>=22.23.4`) and the locked `undici@8.12.3` requirement (`>=22.19.0`). Major-version upgrades require full regression checks because a successful dependency installation does not guarantee unchanged site behavior.
 
-After `npm ci`, the read-only `node scripts/audit-summary.mjs` command runs npm advisory checks separately for the production tree and the complete tree (including build and test tools). Reports list package names, severity, whether a dependency is direct or transitive, and npm's fix suggestion. **Audit findings are informational here** and do not block the accessibility/build checks. Registry access or audit parsing failures are reported as unknown, not as zero findings. Do not interpret a green workflow as proof of zero vulnerabilities. Avoid automated `npm audit fix --force` or major package upgrades without compatibility tests.
+After `npm ci`, the read-only `node scripts/audit-summary.mjs` command runs npm advisory checks separately for the production tree and the complete tree (including build and test tools). Reports list package names, severity, whether a dependency is direct or transitive, and npm's fix suggestion. **The summary is diagnostic**, including for development tooling. Separately, `npm audit --omit=dev --audit-level=moderate` is a blocking CI gate: any reported moderate, high or critical production-tree advisory, or an audit execution failure, fails the check. The isolated Astro 7.4.4 migration test reported zero findings for both the production and full trees at test time. New advisories may arise later and a passing audit does not guarantee that application code or deployed services are vulnerability-free. Avoid automated `npm audit fix --force` or future major package upgrades without compatibility tests.
 
 The `.github/dependabot.yml` file requests weekly npm and GitHub Actions **version-update proposals**, limits outstanding version-update PRs to three and two respectively, and groups minor/patch npm updates separately for production and development dependencies. It does not auto-merge or deploy. Security-update PRs still depend on GitHub repository security settings and their separate limits. Review updated lockfiles and run `npm test` before manually merging any proposal.
 

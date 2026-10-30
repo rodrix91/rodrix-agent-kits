@@ -39,6 +39,9 @@ jobs:
         continue-on-error: true
         run: node scripts/audit-summary.mjs
 
+      - name: Block moderate or higher production dependency advisories
+        run: npm audit --omit=dev --audit-level=moderate
+
       - name: Install Chromium for browser and accessibility tests
         run: npx playwright install --with-deps chromium
 
