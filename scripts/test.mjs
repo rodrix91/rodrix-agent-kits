@@ -43,6 +43,26 @@ for (const f of ['about/index.html', 'pricing/index.html', 'es/about/index.html'
 }
 ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync('dist/llms-full.txt', 'utf8').includes('## Answers'), 'llms.txt has ## Answers; llms-full.txt unchanged');
 
+// guides (F-SEO-4)
+{ const guides = ['agents-md-vs-claude-md-vs-cursor-rules', 'one-agents-md-for-claude-code-cursor-codex', 'where-to-put-cursor-rules-mdc'];
+  const sm = readFileSync('dist/sitemap-0.xml', 'utf8'), llmsTxt = readFileSync('dist/llms.txt', 'utf8');
+  ok(llmsTxt.includes('## Guides'), 'llms.txt has ## Guides');
+  for (const g of guides) {
+    const f = `dist/guides/${g}/index.html`; ok(existsSync(f), `guide exists: /guides/${g}/`); if (!existsSync(f)) continue;
+    const h = readFileSync(f, 'utf8');
+    const lds = [...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+    ok(lds.some((x) => x['@type'] === 'Article') && lds.some((x) => x['@type'] === 'FAQPage'), `guide JSON-LD Article+FAQPage: ${g}`);
+    const kitLinks = new Set([...h.matchAll(/href="[^"]*\/kits\/([a-z0-9-]+)\/"/g)].map((m) => m[1]));
+    ok(kitLinks.size >= 2, `guide links >=2 kits (${kitLinks.size}): ${g}`);
+    ok(/<h1>/.test(h) && /data-answer/.test(h) && /id="faq-h"/.test(h), `guide H1 + answer + visible FAQ: ${g}`);
+    const ans = h.match(/data-answer[^>]*>([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '').replace('Short answer:', '').trim().split(/\s+/).length;
+    ok(ans >= 40 && ans <= 60, `guide answer 40-60 words (${ans}): ${g}`);
+    ok(!/rel="alternate" hreflang="es"/.test(h), `guide EN-only, no ES hreflang: ${g}`);
+    ok(sm.includes(`/guides/${g}/`) && llmsTxt.includes(`/guides/${g}/`), `guide in sitemap + llms.txt: ${g}`);
+  }
+  ok(/\/guides\/one-agents-md-for-claude-code-cursor-codex\//.test(readFileSync('dist/kits/one-source-of-truth/index.html', 'utf8')), 'kit page links to its guides');
+}
+
 // newsletter: live action or a working fallback (RSS + X links) on EN/ES home
 for (const l of ['', 'es/']) {
   const h = readFileSync(`dist/${l}index.html`, 'utf8');
@@ -61,7 +81,7 @@ await checker.check({ path: `${ORIGIN}${B}/es/`, recurse: true, linksToSkip: [`^
 ok(broken.length === 0, `internal links: ${broken.length} broken`); broken.forEach((b) => console.log('   ', b));
 
 const browser = await launch();
-const pages = ['/', '/es/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html'];
+const pages = ['/', '/es/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/'];
 for (const theme of ['dark', 'light']) {
   const ctx = await browser.newContext({ colorScheme: theme, reducedMotion: 'reduce' });
   for (const p of pages) {

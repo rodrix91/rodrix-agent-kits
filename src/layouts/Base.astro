@@ -4,8 +4,8 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { url, asset, type Lang } from '../lib/i18n';
 import { BRAND, GUMROAD, GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION } from '../config';
-interface Props { title: string; description: string; lang: Lang; path: string; og?: string; jsonLd?: object[]; noindex?: boolean; type?: string; gumroad?: boolean }
-const { title, description, lang, path, og = '/og/default.png', jsonLd = [], noindex = false, type = 'website', gumroad = false } = Astro.props;
+interface Props { title: string; description: string; lang: Lang; path: string; og?: string; jsonLd?: object[]; noindex?: boolean; type?: string; gumroad?: boolean; enOnly?: boolean }
+const { title, description, lang, path, og = '/og/default.png', jsonLd = [], noindex = false, type = 'website', gumroad = false, enOnly = false } = Astro.props;
 const site = Astro.site!.origin;
 const canonical = site + url(path, lang);
 const alt = (l: Lang) => site + url(path, l);
@@ -24,9 +24,9 @@ const ld = [org, ...jsonLd];
   <title>{fullTitle}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical} />
-  <link rel="alternate" hreflang="en" href={alt('en')} />
+  {!enOnly && <><link rel="alternate" hreflang="en" href={alt('en')} />
   <link rel="alternate" hreflang="es" href={alt('es')} />
-  <link rel="alternate" hreflang="x-default" href={alt('en')} />
+  <link rel="alternate" hreflang="x-default" href={alt('en')} /></>}
   <link rel="alternate" type="application/rss+xml" title="Rodrix Agent Kits" href={site + asset(lang === 'es' ? '/es/rss.xml' : '/rss.xml')} />
   <link rel="icon" href={asset('/favicon.svg')} type="image/svg+xml" />
   {GOOGLE_SITE_VERIFICATION && <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />}
@@ -51,7 +51,7 @@ const ld = [org, ...jsonLd];
 </head>
 <body>
   <a class="skip" href="#main">{lang === 'es' ? 'Saltar al contenido' : 'Skip to content'}</a>
-  <Header lang={lang} path={path} />
+  <Header lang={lang} path={path} enOnly={enOnly} />
   <main id="main"><slot /></main>
   <Footer lang={lang} />
 </body>

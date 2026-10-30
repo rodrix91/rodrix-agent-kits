@@ -29,13 +29,13 @@ Keep one rules file. `AGENTS.md` is the master; the tool-specific files only poi
 
 **1. `AGENTS.md`** (repo root): download the file above and fill in the placeholders.
 
-**2. `CLAUDE.md`** (repo root): Claude Code expands `@path` imports.
+**2. `CLAUDE.md`** (repo root): Claude Code expands `@path` imports. Recent Claude Code versions also read `AGENTS.md` directly when no `CLAUDE.md` exists; the import keeps it working when a `CLAUDE.md` is present.
 
 ```markdown
 @AGENTS.md
 ```
 
-**3. `.cursor/rules/agents.mdc`**: Cursor also reads a root `AGENTS.md`; this stub makes it explicit and always applied.
+**3. `.cursor/rules/agents.mdc`** (optional): Cursor already reads `AGENTS.md`, so this always-applied stub is only a reminder. Per Cursor's docs, an `@AGENTS.md` mention in a rule is not inlined; the agent reads the file when it needs it.
 
 ```markdown
 ---

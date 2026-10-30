@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import KitCard from '../components/KitCard.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { url } from '../lib/i18n';
+import { getKits } from '../lib/kits';
+import { render, type CollectionEntry } from 'astro:content';
+const { guide } = Astro.props as { guide: CollectionEntry<'guides'> };
+const g = guide.data;
+const { Content } = await render(guide);
+const all = await getKits();
+const kits = g.kits.map((id) => all.find((k) => k.id === id)).filter(Boolean) as typeof all;
+if (kits.length !== g.kits.length) throw new Error(`guide ${guide.id}: unknown kit in ${g.kits}`);
+const origin = Astro.site!.origin;
+const pageUrl = origin + url(`/guides/${guide.id}/`);
+const date = g.updated.toISOString().slice(0, 10);
+const ld = [
+  { '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.description, url: pageUrl, datePublished: date, dateModified: date, inLanguage: 'en',
+    author: { '@type': 'Organization', name: 'Rodrix Agent Kits', url: origin + url('/') }, publisher: { '@type': 'Organization', name: 'Rodrix Agent Kits' }, citation: g.sources },
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: g.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: origin + url('/') },
+    { '@type': 'ListItem', position: 2, name: 'Guides', item: pageUrl },
+    { '@type': 'ListItem', position: 3, name: g.title, item: pageUrl }] },
+];
+---
+<Base title={g.title} description={g.description} lang="en" path={`/guides/${guide.id}/`} jsonLd={ld} type="article" enOnly>
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href={url('/')}>Home</a><span aria-hidden="true">/</span><span>Guides</span><span aria-hidden="true">/</span><span aria-current="page">{g.title}</span></nav>
+    <article style="max-width:46rem">
+      <h1>{g.title}</h1>
+      <p class="answer" data-answer style="font-size:var(--t-md)"><strong>Short answer:</strong> {g.answer}</p>
+      <div class="prose"><Content /></div>
+      <h2 style="font-size:var(--t-lg);margin-top:2.5rem" id="faq-h">FAQ</h2>
+      <dl class="faq">{g.faq.map((f) => <><dt style="font-weight:600;margin-top:1rem">{f.q}</dt><dd style="margin:.25rem 0 0">{f.a}</dd></>)}</dl>
+      <h2 style="font-size:var(--t-lg);margin-top:2.5rem">Sources</h2>
+      <ul class="prose">{g.sources.map((s) => <li><a href={s} rel="noopener">{s}</a></li>)}</ul>
+      <p class="muted" style="font-size:var(--t-sm)">Checked against the official docs above on <time datetime={date}>{date}</time>.</p>
+    </article>
+    <section class="section" aria-labelledby="kits-h" style="padding-bottom:0"><h2 id="kits-h">Ready-made kits</h2><div class="grid grid-3">{kits.map((k) => <KitCard kit={k} lang="en" />)}</div></section>
+  </div>
+  <Newsletter lang="en" />
+</Base>
