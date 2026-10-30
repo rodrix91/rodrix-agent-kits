@@ -38,6 +38,15 @@ if (typeof leadNormalizer?.parameters?.jsCode === 'string') {
     { body: { email: 'long@example.com', name: '='.repeat(140), source: '@'.repeat(80) } },
     { body: { email: 'controls@example.com', name: '\n=SUM(1,2)', source: '\t@cmd' } },
     { body: { email: '=IMPORTXML@example.com', name: 'Unsafe email' } },
+    { body: { email: ['array@example.com'], name: 'Reject array email' } },
+    { body: { email: 'x'.repeat(246) + '@example.com', name: 'Too long' } },
+    { body: { email: 'false@example.com', website: false } },
+    { body: { email: 'zero@example.com', website: 0 } },
+    { body: { email: 'safe@example.com', name: ['Coerced name'], source: { nested: 'site' } } },
+    { body: [{ email: 'arraybody@example.com' }] },
+    { email: 'direct@example.com', name: 'Direct', source: 'form' },
+    { body: { email: 'x'.repeat(242) + '@example.com', name: 'Max valid length' } },
+    { body: { email: 1234, name: 'Numeric email' } },
   ];
   const results = normalize({ all: () => leads.map((json) => ({ json })) }).map((row) => row.json);
   ok(results.length === leads.length && results[0].valid === true && results[0].email === 'alice@example.com' && results[0].name === 'Alice' && results[0].source === 'newsletter', 'n8n accepts and normalizes valid leads');
@@ -46,6 +55,11 @@ if (typeof leadNormalizer?.parameters?.jsCode === 'string') {
   ok(results[4].name.startsWith("'=") && results[4].name.length <= 120 && results[4].source.startsWith("'@") && results[4].source.length <= 60, 'n8n preserves bounded string lengths after formula escaping');
   ok(results[5].name.startsWith("'=") && results[5].source.startsWith("'@"), 'n8n strips leading control characters before formula checks');
   ok(results[6].valid === false, 'n8n rejects leading formula operators in email addresses');
+  ok(results[7].valid === false && results[8].valid === false && results[15].valid === false, 'n8n rejects non-string or overlong email addresses');
+  ok(results[9].valid === false && results[10].valid === false, 'n8n rejects filled honeypot values regardless of their JSON type');
+  ok(results[11].valid === true && results[11].name === '' && results[11].source === 'site', 'n8n does not stringify structured name and source objects');
+  ok(results[12].valid === false && results[13].valid === true && results[13].name === 'Direct', 'n8n rejects array bodies and supports direct JSON input');
+  ok(results[14].valid === true && results[14].email.length === 254, 'n8n accepts email addresses up to the 254-character boundary');
 }
 
 // secrets scan
