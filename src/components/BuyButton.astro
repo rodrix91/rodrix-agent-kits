@@ -6,4 +6,3 @@ const s = t[lang];
 {href
   ? <a class={`btn ${primary ? 'btn-primary' : ''} gumroad-button`} href={href} data-gumroad-overlay-checkout="true" rel="noopener">{label}</a>
   : <a class={`btn ${primary ? 'btn-primary' : ''}`} href={url('/#newsletter', lang)} aria-disabled="true" title="Checkout not live yet">{s.cta.soon}</a>}
-{href && <script is:inline src="https://gumroad.com/js/gumroad.js" defer></script>}

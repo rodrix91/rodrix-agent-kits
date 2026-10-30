@@ -3,9 +3,9 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { url, asset, type Lang } from '../lib/i18n';
-import { BRAND } from '../config';
-interface Props { title: string; description: string; lang: Lang; path: string; og?: string; jsonLd?: object[]; noindex?: boolean; type?: string }
-const { title, description, lang, path, og = '/og/default.png', jsonLd = [], noindex = false, type = 'website' } = Astro.props;
+import { BRAND, GUMROAD } from '../config';
+interface Props { title: string; description: string; lang: Lang; path: string; og?: string; jsonLd?: object[]; noindex?: boolean; type?: string; gumroad?: boolean }
+const { title, description, lang, path, og = '/og/default.png', jsonLd = [], noindex = false, type = 'website', gumroad = false } = Astro.props;
 const site = Astro.site!.origin;
 const canonical = site + url(path, lang);
 const alt = (l: Lang) => site + url(path, l);
@@ -45,6 +45,7 @@ const ld = [org, ...jsonLd];
   <meta name="twitter:image" content={ogUrl} />
   <script is:inline>(function(){try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.dataset.theme=t}catch(e){}})()</script>
   {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}
+  {gumroad && GUMROAD.overlay && <script is:inline src="https://gumroad.com/js/gumroad.js" defer></script>}
 </head>
 <body>
   <a class="skip" href="#main">{lang === 'es' ? 'Saltar al contenido' : 'Skip to content'}</a>

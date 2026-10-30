@@ -26,9 +26,12 @@ const faq = es ? [
   ['Refunds?', 'If a paid kit does not help you, email us within 14 days for a full refund.'],
   ['How do I pay?', 'Card or PayPal through Gumroad\'s secure checkout. We never see your card details.'],
 ];
+const club = { '@context': 'https://schema.org', '@type': 'Product', name: 'Kit Club', description: es ? 'Membresía: todos los bundles y kits gratis, con kits nuevos.' : 'Membership: every bundle and free kit, plus new kits as they ship.', brand: { '@type': 'Brand', name: 'Rodrix Agent Kits' },
+  offers: { '@type': 'Offer', price: String(PRICES.kitClubMonthly), priceCurrency: 'USD', availability: 'https://schema.org/InStock', url: GUMROAD.kitClub,
+    priceSpecification: { '@type': 'UnitPriceSpecification', price: String(PRICES.kitClubMonthly), priceCurrency: 'USD', billingDuration: 'P1M', unitCode: 'MON' } } };
 const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) };
 ---
-<Base title={es ? 'Precios' : 'Pricing'} description={es ? 'Kits gratis para siempre, bundles desde $9 y Kit Club por $7/mes.' : 'Free kits forever, bundles from $9, and Kit Club for $7/month.'} lang={lang} path="/pricing/" jsonLd={[faqLd]}>
+<Base title={es ? 'Precios' : 'Pricing'} description={es ? 'Kits gratis para siempre, bundles desde $9 y Kit Club por $7/mes.' : 'Free kits forever, bundles from $9, and Kit Club for $7/month.'} lang={lang} path="/pricing/" jsonLd={[faqLd, ...(GUMROAD.kitClub ? [club] : [])]} gumroad>
   <div class="wrap">
     <header class="page-head" style="text-align:center;margin:0 auto;max-width:760px">
       <span class="kicker">{s.nav.pricing}</span>

@@ -29,7 +29,7 @@ const crumbs = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', it
   { '@type': 'ListItem', position: 3, name: L.title, item: pageUrl }] };
 const date = d.added.toISOString().slice(0, 10);
 ---
-<Base title={L.title} description={L.summary} lang={lang} path={`/kits/${kit.id}/`} og={`/og/${kit.id}.png`} jsonLd={[product, crumbs]} type="article">
+<Base title={L.title} description={L.summary} lang={lang} path={`/kits/${kit.id}/`} og={`/og/${kit.id}.png`} jsonLd={[product, crumbs]} type="article" gumroad={d.tier === 'paid'}>
   <div class="wrap">
     <nav class="crumbs" aria-label="Breadcrumb"><a href={url('/', lang)}>Home</a><span aria-hidden="true">/</span><a href={url('/kits/', lang)}>{s.nav.kits}</a><span aria-hidden="true">/</span><span aria-current="page">{L.title}</span></nav>
     <div class="kit-layout">

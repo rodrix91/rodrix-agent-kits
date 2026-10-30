@@ -13,12 +13,12 @@ export const BRAND = {
 
 export const GUMROAD = {
   /** Kit Club membership, $7/month recurring. TODO: e.g. 'https://rodrix.gumroad.com/l/kit-club' */
-  kitClub: '',
+  kitClub: 'https://rodrix91.gumroad.com/l/kit-club',
   /** Paid bundles keyed by kit `product` field. TODO: fill after creating products. */
   products: {
-    'fullstack-pro-bundle': '',
-    'agent-skills-pack': '',
-    'n8n-automation-pack': '',
+    'fullstack-pro-bundle': 'https://rodrix91.gumroad.com/l/full-stack-pro',
+    'agent-skills-pack': 'https://rodrix91.gumroad.com/l/agent-skills-pack',
+    'n8n-automation-pack': 'https://rodrix91.gumroad.com/l/n8n-automation-pack',
   } as Record<string, string>,
   /** Use Gumroad's free overlay checkout (gumroad.js) when links exist. */
   overlay: true,

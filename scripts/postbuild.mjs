@@ -34,9 +34,9 @@ const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return
 const policy = (hashes) => [
   "default-src 'self'",
   `script-src 'self' ${hashes.map((h) => `'sha256-${h}'`).join(' ')} https://gumroad.com https://assets.gumroad.com`,
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://assets.gumroad.com",
   "img-src 'self' data: https:",
-  "font-src 'self'",
+  "font-src 'self' https://assets.gumroad.com",
   "connect-src 'self' https:",
   "frame-src https://gumroad.com https://*.gumroad.com",
   "form-action 'self' https:",
