@@ -62,6 +62,17 @@ if (typeof leadNormalizer?.parameters?.jsCode === 'string') {
   ok(results[14].valid === true && results[14].email.length === 254, 'n8n accepts email addresses up to the 254-character boundary');
 }
 
+// Keep visible text in accessible names (WCAG 2.5.3): checked for both locales.
+// Do this structurally as well as via axe, so an accidental regression is
+// caught even if a later accessibility-tool version changes its rule set.
+for (const locale of ['', 'es/']) {
+  const html = readFileSync(`dist/${locale}index.html`, 'utf8');
+  const logoLink = html.match(/<a class="logo"[^>]*aria-label="([^"]+)"/);
+  ok(Boolean(logoLink && logoLink[1].toLowerCase().includes('rodrix/kits')), `logo accessible name contains visible brand: /${locale}`);
+  const languageLink = html.match(/<a class="icon-btn"[^>]*aria-label="([^"]+)"[^>]*>(EN|ES)<\\/a>/);
+  ok(Boolean(languageLink && languageLink[1].includes(languageLink[2])), `language-switch accessible name contains visible EN/ES text: /${locale}`);
+}
+
 // secrets scan
 const secretRe = new RegExp(['gh' + 'o_[A-Za-z0-9]{20}', 'gh' + 'p_[A-Za-z0-9]{20}', 'sk' + '_live_', 'AK' + 'IA[0-9A-Z]{16}', '-----BEGIN [A-Z ]*PRIV' + 'ATE KEY'].join('|'));
 const { execSync } = await import('node:child_process');
