@@ -37,6 +37,7 @@ if (typeof leadNormalizer?.parameters?.jsCode === 'string') {
     { body: { email: 'bot@example.com', name: 'Bot', website: 'spam' } },
     { body: { email: 'long@example.com', name: '='.repeat(140), source: '@'.repeat(80) } },
     { body: { email: 'controls@example.com', name: '\n=SUM(1,2)', source: '\t@cmd' } },
+    { body: { email: '=IMPORTXML@example.com', name: 'Unsafe email' } },
   ];
   const results = normalize({ all: () => leads.map((json) => ({ json })) }).map((row) => row.json);
   ok(results.length === leads.length && results[0].valid === true && results[0].email === 'alice@example.com' && results[0].name === 'Alice' && results[0].source === 'newsletter', 'n8n accepts and normalizes valid leads');
@@ -44,6 +45,7 @@ if (typeof leadNormalizer?.parameters?.jsCode === 'string') {
   ok(results[2].valid === false && results[3].valid === false, 'n8n rejects invalid email and honeypot submissions');
   ok(results[4].name.startsWith("'=") && results[4].name.length <= 120 && results[4].source.startsWith("'@") && results[4].source.length <= 60, 'n8n preserves bounded string lengths after formula escaping');
   ok(results[5].name.startsWith("'=") && results[5].source.startsWith("'@"), 'n8n strips leading control characters before formula checks');
+  ok(results[6].valid === false, 'n8n rejects leading formula operators in email addresses');
 }
 
 // secrets scan
