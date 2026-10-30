@@ -4,3 +4,4 @@ dist/
 .env
 .env.*
 lighthouse/*.html
+products/
