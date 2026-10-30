@@ -34,6 +34,6 @@ src/views/*            ← page templates (shared EN/ES)
 src/pages/**           ← thin routes (EN at /, ES at /es/)
 src/lib/i18n.ts        ← UI strings EN/ES
 ```
-Deploy: `bash scripts/deploy.sh` (tests, then pushes `dist/` to `gh-pages`). The CI workflow is in `ci/github-actions-ci.yml`; move it to `.github/workflows/` once a token with `workflow` scope is available, then switch Pages source to "GitHub Actions". Also works on Cloudflare Pages / Netlify (set `SITE_BASE=/` and `SITE_URL`).
+Deploy: `bash scripts/deploy.sh` (runs local tests, then pushes `dist/` to `gh-pages`). Pull-request and `main` quality checks are configured in `.github/workflows/site-quality.yml` (read-only permissions, pinned actions, Chromium accessibility tests); verify the latest run is green before merging or deploying. The older `ci/github-actions-ci.yml` is a **staged Pages deployment template**, not an active GitHub Actions workflow. GitHub Pages deployment remains manual; do not claim automatic deployments. Also works on Cloudflare Pages / Netlify (set `SITE_BASE=/` and `SITE_URL`).
 
 See **OPERATIONS.md** for how agents run the business day to day.
