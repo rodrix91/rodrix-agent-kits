@@ -26,7 +26,7 @@ Quality bar: verify every API/command against official docs; never invent featur
 - `NEWSLETTER.action` = provider form POST URL (Buttondown recommended: free ≤100 subscribers, embed-subscribe endpoint, field `email`). Until set, the form shows "opens soon".
 
 ## Tests & quality
-- `npm test` — run locally and require a passing result before every push or deploy. **Important:** `ci/github-actions-ci.yml` is only a staged workflow template; GitHub Actions does not execute it from that location. Do not claim CI or deployment protection until an active workflow is installed in `.github/workflows/` and its checks are verified.
+- `npm test` — run locally and require a passing result before each manual deploy. `.github/workflows/site-quality.yml` runs the build and browser quality checks on pull requests and `main`; require successful checks on the exact proposed commit before merging. `ci/github-actions-ci.yml` is a separate **inactive deployment template**. The site does not automatically deploy from this workflow.
 - Weekly: `node scripts/lighthouse.mjs` (target ≥95 all categories) and `node scripts/screenshots.mjs`; check visuals.
 - Broken external links: `npx linkinator https://rodrix91.github.io/rodrix-agent-kits/ --recurse`.
 
@@ -38,7 +38,6 @@ Quality bar: verify every API/command against official docs; never invent featur
 - Assess spreadsheet formula injection for user-controlled fields (for example names or sources beginning with `=`, `+`, `-` or `@`), and verify how the Google Sheets node treats input. Do not rely on the example's current validation to prevent it.
 - Test with synthetic contacts first. Never commit live leads, API keys, OAuth tokens, production webhook URLs containing secrets or exported credential files. Review workflow execution logs for personal data before enabling persistent logging.
 - After deploying, verify the webhook's accepted/rejected response paths and error handling with a safe test, and monitor it for unwanted submissions. A successful local build does not prove production safety.
-
 
 ## Recurring CEO duties (Steve)
 - Monetize: fill Gumroad links when products exist; add bundles when a free kit gets traction.
