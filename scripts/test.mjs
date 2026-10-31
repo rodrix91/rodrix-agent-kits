@@ -1,6 +1,7 @@
 // One-command test suite (run via `npm test`, which builds first):
 // 1) structural/SEO checks  2) internal link check (linkinator)  3) axe WCAG 2.1 AA on key pages, both themes.
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { kitModificationDates } from './sitemap-dates.mjs';
 import { LinkChecker } from 'linkinator';
 import AxeBuilder from '@axe-core/playwright';
 import { serve } from './serve.mjs';
@@ -80,8 +81,30 @@ const tracked = execSync('git ls-files -co --exclude-standard').toString().split
 ok(!tracked.some((f) => secretRe.test(readFileSync(f, 'utf8'))), 'no secrets in repo files');
 
 // SEO checks (F-SEO-1..6)
-{ const sm = readFileSync('dist/sitemap-0.xml', 'utf8'); const n = (sm.match(/<loc>/g) || []).length, lm = (sm.match(/<lastmod>/g) || []).length;
-  ok(n > 0 && n === lm, `sitemap lastmod on every URL (${lm}/${n})`); ok(existsSync('dist/sitemap.xml'), 'sitemap.xml alias exists'); }
+{
+  const xml = readFileSync('dist/sitemap-0.xml', 'utf8');
+  const urls = [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((match) => ({
+    loc: match[1].match(/<loc>([^<]+)<\/loc>/)?.[1] ?? '',
+    lastmod: match[1].match(/<lastmod>([^<]+)<\/lastmod>/)?.[1],
+  }));
+  const sourceFiles = readdirSync('src/content/kits').filter((filename) => filename.endsWith('.md'));
+  const dated = kitModificationDates(sourceFiles.map((filename) => ({
+    filename, content: readFileSync('src/content/kits/' + filename, 'utf8'),
+  })));
+  const kitPages = urls.filter((item) => /\/(?:es\/)?kits\/[a-z0-9-]+\/$/.test(item.loc));
+  const generalPages = urls.filter((item) => !kitPages.includes(item));
+  ok(urls.length > 0 && urls.every((item) => item.loc), 'sitemap includes valid location entries');
+  ok(kitPages.length === dated.size * 2, 'both language variants of each kit occur in sitemap');
+  ok(kitPages.every(({ loc, lastmod }) => {
+    const slug = loc.match(/\/kits\/([a-z0-9-]+)\/$/)?.[1];
+    const sourceDate = dated.get(slug);
+    // The sitemap serializer may render a date-only value in ISO form.
+    return Boolean(sourceDate && lastmod && lastmod.slice(0, 10) === sourceDate);
+  }), 'kit sitemap lastmod dates equal source frontmatter, not build dates');
+  ok(generalPages.length > 0 && generalPages.every((item) => item.lastmod === undefined),
+    'general sitemap pages do not claim an undocumented modification date');
+  ok(existsSync('dist/sitemap.xml'), 'sitemap.xml alias exists');
+}
 for (const k of kits) for (const l of ['', 'es/']) {
   const html = readFileSync(`dist/${l}kits/${k.slug}/index.html`, 'utf8');
   ok(/"SoftwareSourceCode"/.test(html) && /"FAQPage"/.test(html) && /id="faq-h"/.test(html), `FAQ+SoftwareSourceCode visible+JSON-LD: /${l}kits/${k.slug}/`);
