@@ -50,6 +50,17 @@ test('technical punctuation stays in file names, product names and programming t
   assert.deepEqual(searchTerms('¿!? / + # ...'), []);
 });
 
+test('hyphenated and underscored queries match whitespace-separated kit titles', () => {
+  const card = 'Code review agent skill for AGENTS.md in a TypeScript monorepo';
+  for (const query of ['code-review', 'code_review', 'code review']) {
+    assert.deepEqual(searchTerms(query), ['code', 'review'], query);
+    assert.equal(matchesSearch(card, searchTerms(query)), true, query);
+  }
+  assert.deepEqual(searchTerms('AGENTS.md-typescript'), ['agents.md', 'typescript']);
+  assert.equal(matchesSearch(card, searchTerms('AGENTS.md-typescript')), true);
+  assert.equal(matchesSearch(card, searchTerms('code-godot')), false);
+});
+
 test('punctuation-aware tokenization preserves non-Latin searches', () => {
   assert.deepEqual(searchTerms('Русский, язык!'), ['русскии', 'язык']);
   assert.equal(matchesSearch('Русский язык', searchTerms('Русский, язык!')), true);
