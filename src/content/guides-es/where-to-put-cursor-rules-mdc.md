@@ -41,7 +41,7 @@ alwaysApply: false
 ## Cómo elegir el frontmatter
 
 - `alwaysApply: true`: se incluye en todos los chats; `globs` y `description` se ignoran.
-- `globs` (con `alwaysApply: false`): se adjunta sola cuando hay un archivo que coincide en el contexto. Separa varios patrones con comas.
+- `globs` (con `alwaysApply: false`): se agrega automáticamente cuando un archivo del contexto coincide con el patrón. Separa varios patrones con comas.
 - Solo `description`: el agente lee la descripción y trae la regla cuando es relevante.
 - Ninguno: solo se incluye cuando mencionas la regla con @.
 
@@ -49,5 +49,5 @@ alwaysApply: false
 
 - Los comandos exactos funcionan mejor que los consejos generales.
 - Un tema por archivo; la documentación de Cursor sugiere que cada regla tenga menos de 500 líneas.
-- Mencionar un archivo como `@template.ts` en una regla no pega su contenido; el agente lo lee cuando lo necesita. Lo imprescindible ponlo en el cuerpo de la regla.
+- Mencionar un archivo como `@template.ts` en una regla no inserta su contenido; el agente lo lee cuando lo necesita. Pon lo imprescindible en el cuerpo de la regla.
 - ¿También usas Claude Code o Codex? Deja las reglas comunes en AGENTS.md ([guía](../one-agents-md-for-claude-code-cursor-codex/)).

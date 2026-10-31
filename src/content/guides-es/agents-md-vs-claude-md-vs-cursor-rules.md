@@ -13,7 +13,7 @@ faq:
   - q: "¿Cursor sigue leyendo .cursorrules?"
     a: "La documentación actual de reglas de Cursor solo describe .cursor/rules/*.mdc, AGENTS.md, User Rules y Team Rules. En proyectos nuevos usa .cursor/rules/*.mdc o AGENTS.md."
   - q: "¿Pueden convivir CLAUDE.md y AGENTS.md?"
-    a: "Sí. Pon @AGENTS.md en la primera línea de CLAUDE.md para que Claude Code lo importe. Por defecto, si existen los dos, Claude Code solo lee CLAUDE.md, así que el import es clave."
+    a: "Sí. Pon @AGENTS.md en la primera línea de CLAUDE.md para que Claude Code lo importe. Por defecto, si existen los dos, Claude Code solo lee CLAUDE.md, así que la importación es clave."
   - q: "¿Necesito los tres archivos?"
     a: "No. Agrega solo los archivos de los agentes que de verdad usas."
 ---
@@ -30,11 +30,11 @@ Muchos otros agentes también leen `AGENTS.md`; la lista está en [agents.md](ht
 ## Cuándo usar cada uno
 
 - **Un solo agente:** usa su archivo nativo.
-- **Dos agentes o más:** pon las reglas comunes en `AGENTS.md`. Deja los archivos de cada herramienta como simples punteros, y guarda en ellos solo lo que de verdad es propio de esa herramienta (como las reglas de Cursor acotadas por globs).
+- **Dos agentes o más:** pon las reglas comunes en `AGENTS.md`. Deja los archivos de cada herramienta solo como referencias a AGENTS.md, y guarda en ellos solo lo que de verdad es propio de esa herramienta (como las reglas de Cursor acotadas por globs).
 
 ## Qué poner en el archivo
 
-1. Comandos exactos (instalar, testear, lint, build).
+1. Comandos exactos (instalar, ejecutar tests, lint, build).
 2. Convenciones que el agente pueda comprobar (nombres, estructura de carpetas).
 3. Límites (archivos que nunca debe editar, secretos que nunca debe leer).
 4. Una definición de "terminado" ("los tests pasan y el lint está limpio").
