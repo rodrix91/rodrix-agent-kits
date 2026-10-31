@@ -1,0 +1,892 @@
+# Rodrix Agent Kits
+
+> Free, bilingual (English/Spanish) library of tested configuration files for AI coding agents: Cursor rules (.mdc), CLAUDE.md, AGENTS.md, Agent Skills (SKILL.md) and n8n workflows. Free kits are MIT-licensed. Paid bundles cost $9-29; the Kit Club membership is $7/month via Gumroad.
+
+## Key pages
+- [Kit library](https://rodrix91.github.io/rodrix-agent-kits/kits/): searchable list of all kits
+- [Pricing](https://rodrix91.github.io/rodrix-agent-kits/pricing/): Free, Bundles, Kit Club
+- [About](https://rodrix91.github.io/rodrix-agent-kits/about/)
+- [Spanish version](https://rodrix91.github.io/rodrix-agent-kits/es/)
+- [X @RODRX_NOVA](https://x.com/RODRX_NOVA): updates and feedback
+- [GitHub](https://github.com/rodrix91/rodrix-agent-kits): source
+
+## Kits
+- [Agent secrets & safety pack: keep .env away from Claude Code, Cursor and Codex](https://rodrix91.github.io/rodrix-agent-kits/kits/agent-secrets-safety-pack/): Enforced deny and ignore rules for Claude Code, Cursor and Codex, a gitleaks pre-commit scan, and a safe-extension checklist after the Oct 2026 fake extension. (Codex / any agent; free; install at `docs/agent-secrets-safety.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/agent-secrets-safety.md)
+- [AGENTS.md for a TypeScript monorepo](https://rodrix91.github.io/rodrix-agent-kits/kits/agents-md-typescript-monorepo/): One file every coding agent reads: pnpm + Turborepo commands, boundaries, and a done-checklist. (Codex / any agent; free; install at `AGENTS.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/AGENTS.ts-monorepo.md)
+- [CLAUDE.md for Python data projects](https://rodrix91.github.io/rodrix-agent-kits/kits/claude-md-python-data/): Reproducible analysis by default: no leakage, no touching raw data, tests and ruff before "done". (Claude Code; free; install at `CLAUDE.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/CLAUDE.python-data.md)
+- [Code review agent skill (Agent Skills Pack)](https://rodrix91.github.io/rodrix-agent-kits/kits/code-review-agent-skill/): A reusable SKILL.md that makes any agent review diffs like a senior engineer: prioritized, cited, no rewrites. (Agent Skills; paid $12, preview free; install at `.claude/skills/code-review/SKILL.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/code-review.SKILL.md)
+- [Godot 4 GDScript rules](https://rodrix91.github.io/rodrix-agent-kits/kits/godot-4-gdscript-rules/): Kills the #1 AI gamedev bug: Godot 3 code in a Godot 4 project. Typed GDScript, signals up, calls down. (Cursor; free; install at `.cursor/rules/godot.mdc`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/godot-gdscript.mdc)
+- [Next.js 15 + Supabase Cursor rules](https://rodrix91.github.io/rodrix-agent-kits/kits/nextjs-supabase-cursor-rules/): Stop your agent from using deprecated auth helpers and leaking the service key. App Router, @supabase/ssr, RLS-first. (Cursor; free; install at `.cursor/rules/nextjs-supabase.mdc`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/nextjs-supabase.mdc)
+- [Supabase RLS & security rules (Full-stack Pro)](https://rodrix91.github.io/rodrix-agent-kits/kits/supabase-rls-security-rules/): Production RLS patterns your agent applies to every migration. Part of the Full-stack Pro bundle. (Cursor; paid $19, preview free; install at `.cursor/rules/supabase-rls.mdc`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/supabase-rls.mdc)
+- [Agent handoff kit: HANDOFF.md + Claude Code Stop hook](https://rodrix91.github.io/rodrix-agent-kits/kits/agent-handoff-kit/): Switch between Claude Code, Codex and Cursor mid-task without losing context. The handoff records its commit SHA so the next agent diffs and reviews first. (Claude Code; paid $19, preview free; install at `HANDOFF.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/HANDOFF.template.md)
+- [CLAUDE.md for Spanish-speaking teams](https://rodrix91.github.io/rodrix-agent-kits/kits/claude-md-webapp-es/): Agent explains in Spanish, writes code in English. Small diffs, tests before done, clear hand-off. (Claude Code; free; install at `CLAUDE.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/CLAUDE.webapp-es.md)
+- [n8n lead-capture flow (Automation Pack)](https://rodrix91.github.io/rodrix-agent-kits/kits/n8n-lead-capture-flow/): Webhook → validation, honeypot and safer spreadsheet cells → Google Sheets. Review privacy and abuse controls before use. (n8n; paid $15, preview free; install at `n8n → Import from file`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/n8n-lead-capture.json)
+- [One source of truth: AGENTS.md for Claude Code, Cursor and Codex](https://rodrix91.github.io/rodrix-agent-kits/kits/one-source-of-truth/): Write agent rules once in AGENTS.md; CLAUDE.md and a Cursor rule stub point to it, and a GitHub Action catches drift. (Codex / any agent; free; install at `AGENTS.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/AGENTS.one-source-of-truth.md)
+
+## Optional
+- [llms.txt](https://rodrix91.github.io/rodrix-agent-kits/llms.txt)
+
+# Full kit contents
+
+---
+
+## Agent secrets & safety pack: keep .env away from Claude Code, Cursor and Codex
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/agent-secrets-safety-pack/
+Tool: Codex / any agent | Category: Security | Access: free
+Install path: docs/agent-secrets-safety.md
+How it was checked: All mechanisms checked against Claude Code, Cursor and Codex docs and the gitleaks README on 2026-10-31. Locally: settings.json parsed as JSON, all three TOML blocks parsed, gitleaks 8.30.1 plain git hook blocked a commit with a fake token generated at test time, passed a clean commit and passed the allowlisted fixture path. Not tested: the deny/ignore rules inside live Claude Code, Cursor or Codex sessions, and the pre-commit framework install.
+
+Enforced deny and ignore rules for Claude Code, Cursor and Codex, a gitleaks pre-commit scan, and a safe-extension checklist after the Oct 2026 fake extension.
+
+What's inside:
+- Claude Code .claude/settings.json deny rules for .env, keys and secrets/
+- .cursorignore entries plus Cursor's own limits, stated honestly
+- Codex config.toml: shell_environment_policy secret filtering + optional .env deny profile
+- AGENTS.md Boundaries block shared by all three tools
+- gitleaks pre-commit hook (framework or plain git hook) + fixture allowlist
+- Safe-extension checklist and exposed-key steps
+
+Your coding agent can read your `.env` unless a tool rule stops it. A line in `AGENTS.md` asking it not to is only a request. This pack uses the controls each tool actually enforces, and it says where they stop working.
+
+**Instructions vs. enforcement.** Claude Code's docs are explicit: permission rules are enforced by Claude Code, not by the model, and a `Read` deny rule doesn't cover a Python or Node script that opens the file itself. Cursor says its Agent terminal and MCP tools can't be blocked by `.cursorignore`. So keep production keys out of the working folder, and use the sandbox when it has to hold.
+
+**What goes where**
+
+| File | Tool | Enforced by |
+|---|---|---|
+| `.claude/settings.json` → `permissions.deny` | Claude Code | Claude Code (sandbox for OS level) |
+| `.cursorignore` | Cursor | Cursor (not the terminal or MCP) |
+| `~/.codex/config.toml` → `shell_environment_policy`, sandbox | Codex | Codex |
+| `AGENTS.md` → Boundaries | all | the model (a request) |
+| `.git/hooks/pre-commit` → gitleaks | git | your machine, at commit time |
+
+**Why now.** On 2026-10-29, Cursor's VS Code extension marketplace served a tampered `Anthropic.claude-code` (2.1.312 and 2.1.313, macOS and Windows) for about 11 hours. Anthropic didn't build it. It tried to install an SSH backdoor (Cursor's notice and Microsoft's analysis are in the sources). The checklist in the file covers that case.
+
+Every value in the file is a fake placeholder. To test the hook yourself, generate a fake token at test time; don't commit a real-looking one.
+
+Want more security rules? The [Full-stack Pro bundle](https://rodrix91.gumroad.com/l/full-stack-pro) includes the [Supabase RLS security rules](../supabase-rls-security-rules/) kit, and [Kit Club](https://rodrix91.gumroad.com/l/kit-club) unlocks every paid bundle. This pack stays free.
+
+**Sources (checked 2026-10-31)**
+
+- [Claude Code: Configure permissions](https://code.claude.com/docs/en/permissions)
+- [Cursor: Ignore file](https://cursor.com/docs/context/ignore-files)
+- [Codex: Configuration reference](https://developers.openai.com/codex/config-reference) · [Advanced config](https://developers.openai.com/codex/config-advanced) · [Permissions](https://developers.openai.com/codex/permissions)
+- [gitleaks README](https://github.com/gitleaks/gitleaks) · [gitleaks pre-commit hooks](https://github.com/gitleaks/gitleaks/blob/master/.pre-commit-hooks.yaml)
+- [Cursor security notice, 2026-10-29](https://cursor.com/blog/claude-code-extension-security-notice)
+- [Microsoft Security Blog, 2026-10-30](https://www.microsoft.com/en-us/security/blog/2026/10/30/inside-malicious-claude-code-branded-cursor-extension-persistent-ssh-backdoor/)
+
+```markdown
+# Agent secrets & safety pack (Claude Code, Cursor, Codex)
+
+Copy each block to the path in its heading. All values are FAKE placeholders.
+Checked against official docs on 2026-10-31 (sources at the end).
+
+Rule of thumb: instructions (AGENTS.md, CLAUDE.md, Cursor rules) are requests
+the model may ignore. Deny rules, ignore files and sandboxes are enforced by the
+tool. Neither stops a script or a terminal command that opens the file itself.
+Keep real production keys out of the working folder.
+
+## 1. Claude Code: .claude/settings.json (project, commit it)
+
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(secrets/**)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Bash(printenv *)",
+      "Bash(env)"
+    ]
+  }
+}
+
+Notes:
+- A Read deny also blocks Edit/Write on that path and applies to recognized
+  Bash file commands (cat, head, tail, sed, tee) and redirects.
+- It does NOT stop `grep -r` over a folder or a Python/Node script that opens
+  the file. For OS-level enforcement, enable Claude Code's sandbox.
+- If you have a .claudeignore file, it has no effect: move entries here.
+- Bash deny rules match command text only (`/usr/bin/env` or `sh -c` are not
+  matched). They reduce accidents; they are not a security boundary.
+
+## 2. Cursor: .cursorignore (repo root, .gitignore syntax)
+
+# Cursor already ignores .env* and files in .gitignore by default.
+# Listing them here keeps the intent explicit and covers other names.
+.env
+.env.*
+secrets/
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+Notes:
+- Blocks Agent, Tab and @-mentions from these files.
+- Cursor's docs: the Agent's terminal and MCP tools can still read them, and
+  protection "isn't guaranteed due to LLM unpredictability".
+- Also add **/.env and **/.env.* to the global ignore list in Cursor settings.
+
+## 3. Codex: ~/.codex/config.toml (or trusted-project .codex/config.toml)
+
+sandbox_mode = "workspace-write"
+
+[shell_environment_policy]
+inherit = "core"
+ignore_default_excludes = false   # drop vars whose names contain KEY, SECRET or TOKEN
+
+[shell_environment_policy.filters]
+"AWS_*" = "exclude"
+"AZURE_*" = "exclude"
+"STRIPE_*" = "exclude"
+
+Optional (permission profiles; do not combine with sandbox_mode):
+
+# default_permissions = "no-env"
+# [permissions.no-env]
+# extends = ":workspace"
+# [permissions.no-env.filesystem.":workspace_roots"]
+# "**/*.env" = "deny"
+
+## 4. AGENTS.md: Boundaries block (shared by all three tools)
+
+## Boundaries
+- Never open, print, copy or summarize .env*, secrets/, *.pem or *.key files.
+- Read config names from .env.example only. Ask me for any value you need.
+- Never run printenv/env or echo variables that look like keys or tokens.
+- Never paste a key into code, tests, logs, commits or chat. Use env vars.
+- Do not install extensions, MCP servers or packages without asking.
+
+## 5. Pre-commit secret scan with gitleaks (free, MIT)
+
+Option A, pre-commit framework: .pre-commit-config.yaml
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+Option B, plain git hook: .git/hooks/pre-commit (chmod +x)
+
+#!/bin/sh
+exec gitleaks git --pre-commit --redact --staged --verbose
+
+Optional .gitleaks.toml (keeps default rules, allows clearly fake fixtures):
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "fake test fixtures"
+paths = ['''^tests/fixtures/fake-secrets/''']
+
+Bypass for one commit (pre-commit framework): SKIP=gitleaks git commit ...
+A hook only checks new commits. Scan history once with: gitleaks git -v
+
+## 6. Safe-extension checklist (after the Oct 29, 2026 Cursor marketplace incident)
+
+What happened (per Cursor's security notice): between about 2:27am and 1:35pm
+PT on 2026-10-29, malicious versions 2.1.312 and 2.1.313 of Anthropic.claude-code,
+not built by Anthropic, were served by the Cursor VS Code Extension Marketplace
+for macOS and Windows. The code collected host info and tried to install an SSH
+backdoor with persistence. Uninstalling alone may not remove it.
+
+Before installing or updating an extension:
+- [ ] Publisher and extension ID are exactly the vendor's (check the vendor's own docs).
+- [ ] A version that just appeared: wait, or compare with the vendor's release notes.
+- [ ] Prefer the vendor's official install path when one exists.
+- [ ] Turn off auto-update for high-privilege extensions on machines with prod access.
+- [ ] Keep prod credentials off dev machines; use short-lived tokens.
+If you installed 2.1.312/2.1.313 from Cursor's marketplace in that window:
+- [ ] Follow Cursor's notice: run its check script, look for the "svc-telemetry"
+      key in ~/.ssh/authorized_keys, remove persistence, rotate credentials
+      from a trusted machine.
+
+## 7. If a key was exposed
+
+- [ ] Revoke/rotate it at the provider first. Deleting the commit is not enough.
+- [ ] Check the provider's logs for use since the exposure.
+- [ ] Then clean history if needed and add the pattern to the scan.
+
+## Sources
+- https://code.claude.com/docs/en/permissions
+- https://cursor.com/docs/context/ignore-files
+- https://developers.openai.com/codex/config-reference
+- https://developers.openai.com/codex/config-advanced
+- https://developers.openai.com/codex/permissions
+- https://github.com/gitleaks/gitleaks
+- https://cursor.com/blog/claude-code-extension-security-notice
+- https://www.microsoft.com/en-us/security/blog/2026/10/30/inside-malicious-claude-code-branded-cursor-extension-persistent-ssh-backdoor/
+
+```
+
+---
+
+## AGENTS.md for a TypeScript monorepo
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/agents-md-typescript-monorepo/
+Tool: Codex / any agent | Category: Monorepo | Access: free
+Install path: AGENTS.md
+How it was checked: pnpm + Turborepo commands checked against current docs; follows the agents.md open format.
+
+One file every coding agent reads: pnpm + Turborepo commands, boundaries, and a done-checklist.
+
+What's inside:
+- Workspace layout + dependency boundaries
+- Exact pnpm / turbo commands, incl. affected-only checks
+- Definition of done checklist
+- Safety rules for secrets, DB and deploys
+
+`AGENTS.md` is the open, tool-neutral format read by Codex, Cursor, Jules, Copilot and others. This one is tuned for the most common modern setup: pnpm workspaces + Turborepo with `apps/*` and `packages/*`.
+
+Put it at the repo root. Add nested `AGENTS.md` files inside packages for package-specific rules; the closest file wins.
+
+```markdown
+# AGENTS.md
+
+Instructions for AI coding agents (Codex, Cursor, Claude Code, Copilot, Jules…) working in this TypeScript monorepo.
+
+## Layout
+- `apps/*` — deployable apps (e.g. `apps/web`, `apps/api`).
+- `packages/*` — shared libraries (`packages/ui`, `packages/config`, `packages/db`). Apps may depend on packages; packages must never import from apps.
+- Package manager: **pnpm** workspaces, orchestrated by **Turborepo**.
+
+## Setup & commands
+- Install: `pnpm install` (never npm or yarn; never commit another lockfile)
+- Dev one app: `pnpm --filter web dev`
+- Build all: `pnpm turbo run build`
+- Test: `pnpm turbo run test` — single package: `pnpm --filter @repo/ui test`
+- Lint/types: `pnpm turbo run lint typecheck`
+- Add a dependency to one package: `pnpm --filter <pkg> add <dep>`; internal deps use `"workspace:*"`.
+
+## Before you finish
+1. `pnpm turbo run lint typecheck test --filter=...[origin/main]` passes (only affected packages).
+2. New behaviour has tests next to the code (`*.test.ts`).
+3. No `any` without a `// reason:` comment. No `@ts-ignore`; use `@ts-expect-error` with a reason.
+4. If you changed a package's public API, update its `README.md` and add a changeset (`pnpm changeset`).
+
+## Conventions
+- TypeScript `strict`, ESM only, `import type` for type-only imports.
+- Shared tsconfig/eslint come from `packages/config`; extend, don't copy.
+- Each package exposes its API through `package.json#exports`; don't deep-import `src/` of another package.
+- Env vars are validated at startup (zod) in each app; document new ones in `.env.example`.
+
+## Safety
+- Never commit secrets or `.env` files.
+- Don't run destructive DB commands or deploys; propose them instead.
+- Keep PRs focused: one concern per change, conventional commit messages (`feat(ui): ...`).
+
+```
+
+---
+
+## CLAUDE.md for Python data projects
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/claude-md-python-data/
+Tool: Claude Code | Category: Data | Access: free
+Install path: CLAUDE.md
+How it was checked: Commands verified with uv 0.x, ruff and pytest; rules follow scikit-learn's guidance on data leakage.
+
+Reproducible analysis by default: no leakage, no touching raw data, tests and ruff before "done".
+
+What's inside:
+- Project layout + uv / pytest / ruff / mypy commands
+- 10 hard rules (raw data read-only, seeds, no leakage)
+- How to explore a dataset before transforming it
+- Reporting rules: always a baseline
+
+Written by a data science manager for the mistakes agents actually make in analytics repos: fitting a scaler on the whole dataset, overwriting raw files, logic buried in notebooks, and metrics reported without a baseline.
+
+Save it as `CLAUDE.md` at the repo root. Claude Code loads it automatically; other agents can read it as `AGENTS.md`.
+
+```markdown
+# CLAUDE.md — Python data project
+
+## Project
+Analytics / ML project. Code in `src/<package>/`, notebooks in `notebooks/` (exploration only), tests in `tests/`, raw data in `data/raw/` (read-only), derived data in `data/processed/`.
+
+## Commands
+- Install: `uv sync` (or `pip install -e ".[dev]"` if uv is unavailable)
+- Tests: `uv run pytest -q`
+- Lint + format: `uv run ruff check . --fix && uv run ruff format .`
+- Types: `uv run mypy src`
+Run tests and ruff before saying a task is done.
+
+## Rules
+1. Never modify files in `data/raw/`. Write outputs to `data/processed/` or `reports/`.
+2. Reusable logic goes in `src/`, not notebooks. Notebooks import from the package.
+3. Prefer vectorized pandas/polars operations over row loops; never use `df.iterrows()` on large frames.
+4. Set random seeds explicitly (`numpy.random.default_rng(42)`, `random_state=42`) so results are reproducible.
+5. Split data BEFORE any fitting, scaling or imputation to avoid leakage; fit transformers on train only (use sklearn `Pipeline`).
+6. Type hints on all public functions; docstrings state input shape/columns and units.
+7. Read paths from config (`src/<package>/config.py` or env vars), never hard-code absolute paths.
+8. No secrets in code or notebooks. Credentials come from environment variables / `.env` (git-ignored).
+9. When reporting a metric, also report the baseline and the dataset split it was measured on.
+10. Large files (> 50 MB) never go into git.
+
+## When analysing data
+- First print `df.shape`, `df.dtypes`, null counts and a few rows before transforming.
+- State assumptions explicitly; flag suspicious values (negative ages, future dates, duplicated IDs) instead of silently dropping them.
+- Charts: label axes with units, title every chart, save to `reports/figures/`.
+
+## Don't
+- Don't install new dependencies without adding them to `pyproject.toml`.
+- Don't silence warnings globally.
+- Don't claim a model "works" without a held-out evaluation.
+
+```
+
+---
+
+## Code review agent skill (Agent Skills Pack)
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/code-review-agent-skill/
+Tool: Agent Skills | Category: Code review | Access: paid ($12)
+Install path: .claude/skills/code-review/SKILL.md
+How it was checked: Follows the Agent Skills SKILL.md format (name + description frontmatter).
+
+A reusable SKILL.md that makes any agent review diffs like a senior engineer: prioritized, cited, no rewrites.
+
+What's inside:
+- Review order: correctness → security → data → tests
+- "Verify before claiming" rule
+- Strict output format with file:line findings
+- Pack: test-writer, bug-triage, security-audit + more
+
+Agent Skills are folders with a `SKILL.md` that agents load on demand. This skill is the preview of the Agent Skills Pack, which adds test-writer, refactor-planner, bug-triage, release-notes and security-audit skills.
+
+```markdown
+---
+name: code-review
+description: Review a diff or pull request for correctness, security, and maintainability, and return prioritized, actionable findings. Use when asked to review code, a PR, a diff, or "check my changes".
+---
+
+# Code review skill
+
+## Inputs
+- The diff (`git diff origin/main...HEAD` if not provided) and, when needed, the surrounding files.
+
+## Process
+1. **Understand intent.** Summarize in one sentence what the change is trying to do. If you can't, ask.
+2. **Read the whole diff once** before commenting. Note files touched and public API changes.
+3. **Check, in this order:**
+   1. Correctness — logic errors, off-by-one, null/undefined, async races, unhandled errors, wrong edge cases.
+   2. Security — injection (SQL/shell/HTML), authz checks missing, secrets in code, unsafe deserialization, SSRF, overly broad CORS.
+   3. Data — migrations reversible? backwards compatible? N+1 queries? missing indexes?
+   4. Tests — does new behaviour have tests? do tests assert the right thing?
+   5. Maintainability — naming, duplication, dead code, function size, comments that lie.
+4. **Verify before claiming.** If you say something is a bug, cite the exact line and explain the failing input. If unsure, label it a question.
+
+## Output format
+```
+## Summary
+<1-2 sentences: what changed, overall risk: low | medium | high>
+
+## Must fix
+- `path/file.ts:42` — <problem>. <why it breaks>. Suggested fix: <code or approach>
+
+## Should fix
+- ...
+
+## Nits (optional)
+- ...
+
+## Questions
+- ...
+```
+- Max ~10 findings; merge duplicates. Empty sections are omitted.
+- Never rewrite the whole file. Suggest the smallest change.
+- Praise one thing that is genuinely good, briefly.
+
+<!-- Agent Skills Pack also includes: test-writer, refactor-planner, bug-triage, release-notes, and security-audit skills. -->
+
+```
+
+---
+
+## Godot 4 GDScript rules
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/godot-4-gdscript-rules/
+Tool: Cursor | Category: Game dev | Access: free
+Install path: .cursor/rules/godot.mdc
+How it was checked: Godot 3→4 API renames checked against the official Godot 4 upgrade guide and GDScript style guide.
+
+Kills the #1 AI gamedev bug: Godot 3 code in a Godot 4 project. Typed GDScript, signals up, calls down.
+
+What's inside:
+- Godot 3 → 4 API translation table
+- Official style guide + script ordering
+- Scene architecture: signals, autoloads, exports
+- Performance rules (caching, pooling, queue_free)
+
+LLMs were trained on years of Godot 3 tutorials, so they keep writing `KinematicBody2D`, `yield` and string-based `connect()`. This rules file forces Godot 4 APIs and a clean scene architecture, perfect for game jams.
+
+Works in Cursor as a project rule; paste it into `CLAUDE.md` or `AGENTS.md` for other agents.
+
+```markdown
+---
+description: Godot 4.x GDScript conventions for game projects
+globs: ["**/*.gd", "**/*.tscn", "project.godot"]
+alwaysApply: false
+---
+
+# Godot 4 + GDScript rules
+
+## Version
+Godot **4.x** only. Do NOT use Godot 3 APIs:
+- `KinematicBody2D` → `CharacterBody2D`; `move_and_slide()` takes no args and uses the built-in `velocity` property.
+- `onready var` → `@onready var`; `export var` → `@export var`; `tool` → `@tool`.
+- `yield(obj, "signal")` → `await obj.signal`.
+- `connect("pressed", self, "_on_pressed")` → `pressed.connect(_on_pressed)`.
+- `instance()` → `instantiate()`; `rand_range()` → `randf_range()`.
+
+## Style (official GDScript style guide)
+- `snake_case` for functions/variables/files, `PascalCase` for `class_name` and nodes, `CONSTANT_CASE` for constants.
+- Static typing everywhere: `var speed: float = 200.0`, `func take_damage(amount: int) -> void:`.
+- Order inside a script: `class_name`, `extends`, signals, enums, constants, `@export`, public vars, private vars (`_prefix`), `@onready`, built-in callbacks, public methods, private methods.
+
+## Architecture
+- One responsibility per scene; compose scenes instead of deep inheritance.
+- "Call down, signal up": parents call children's methods; children emit signals to parents.
+- Global state lives in Autoload singletons (e.g. `GameState`, `Events` signal bus) — keep them small.
+- Use `@export` for designer-tunable values instead of magic numbers.
+- Physics/movement in `_physics_process(delta)`; visuals/input polling in `_process(delta)`; one-shot input in `_unhandled_input(event)`.
+- Use the Input Map (`Input.is_action_pressed("move_left")`), never raw keycodes.
+
+## Performance
+- Cache node refs with `@onready var sprite: Sprite2D = $Sprite2D`; don't call `get_node()` every frame.
+- Pool frequently spawned objects (bullets, particles) instead of `instantiate()`/`queue_free()` every frame.
+- Free nodes with `queue_free()`, never `free()` during physics callbacks.
+
+## When generating code
+- Give the full script, including `extends`, and say which node type it attaches to and which child nodes it expects.
+- If a scene setup is needed, describe the node tree as an indented list.
+
+```
+
+---
+
+## Next.js 15 + Supabase Cursor rules
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/nextjs-supabase-cursor-rules/
+Tool: Cursor | Category: Web | Access: free
+Install path: .cursor/rules/nextjs-supabase.mdc
+How it was checked: Checked against the current @supabase/ssr and Next.js 15 docs (async cookies(), getUser on the server).
+
+Stop your agent from using deprecated auth helpers and leaking the service key. App Router, @supabase/ssr, RLS-first.
+
+What's inside:
+- Correct server/browser client setup with @supabase/ssr
+- Auth rules: getUser() on the server, never getSession()
+- RLS + migrations workflow
+- Server Actions + zod validation pattern
+
+Most AI agents still write Supabase code from 2023: `auth-helpers-nextjs`, `getSession()` on the server, and the service-role key one typo away from the browser. This rules file pins your agent to the current, documented patterns for Next.js 15 App Router and `@supabase/ssr`.
+
+Drop it in `.cursor/rules/` and it activates automatically for app, lib, middleware and SQL migration files.
+
+```markdown
+---
+description: Next.js 15 App Router + Supabase (SSR) conventions
+globs: ["app/**/*.{ts,tsx}", "lib/**/*.ts", "middleware.ts", "supabase/**/*.sql"]
+alwaysApply: false
+---
+
+# Next.js 15 + Supabase rules
+
+## Stack facts (do not contradict)
+- Next.js App Router. Server Components by default; add `"use client"` only for state, effects, or browser APIs.
+- Auth/data via `@supabase/ssr` (NOT the deprecated `@supabase/auth-helpers-nextjs`).
+- TypeScript strict. Generated DB types live in `lib/database.types.ts` (`supabase gen types typescript --linked > lib/database.types.ts`).
+
+## Supabase clients
+- Server (RSC, Route Handlers, Server Actions): `lib/supabase/server.ts` using `createServerClient` with `cookies()` from `next/headers`. In Next 15 `cookies()` is async: `const cookieStore = await cookies()`.
+- Browser: `lib/supabase/client.ts` using `createBrowserClient`. Create it once per component tree, never at module scope on the server.
+- `middleware.ts` refreshes the session on every request with `supabase.auth.getUser()`.
+- To check who the user is on the server, ALWAYS call `supabase.auth.getUser()` (validates the JWT). Never trust `getSession()` on the server.
+
+## Security
+- Every table has Row Level Security enabled. New table = migration with `alter table ... enable row level security;` plus explicit policies.
+- Policies use `(select auth.uid())` (wrapped in select for performance), e.g. `using ((select auth.uid()) = user_id)`.
+- The `service_role` key is server-only: read it from `process.env.SUPABASE_SERVICE_ROLE_KEY` in code that never ships to the client. Never prefix it with `NEXT_PUBLIC_`.
+- Validate all Server Action / Route Handler input with `zod` before touching the database.
+
+## Data fetching
+- Fetch in Server Components; pass plain serializable props to client components.
+- Mutations go through Server Actions; after a write call `revalidatePath()` or `revalidateTag()`.
+- Handle `{ data, error }` from every Supabase call. Throw or return a typed error; never ignore `error`.
+
+## Schema changes
+- Use `supabase migration new <name>`; never edit the remote DB by hand. Regenerate types after each migration.
+
+## Style
+- Named exports, small components, `async` Server Components.
+- Tailwind for styling; no inline style objects except for dynamic values.
+- When unsure about an API, say so and point to the official docs instead of guessing.
+
+```
+
+---
+
+## Supabase RLS & security rules (Full-stack Pro)
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/supabase-rls-security-rules/
+Tool: Cursor | Category: Security | Access: paid ($19)
+Install path: .cursor/rules/supabase-rls.mdc
+How it was checked: Policy patterns follow Supabase's RLS performance guide ((select auth.uid()), indexed policy columns).
+
+Production RLS patterns your agent applies to every migration. Part of the Full-stack Pro bundle.
+
+What's inside:
+- Table template with RLS + indexes
+- Per-operation policies done right
+- security definer + storage hardening
+- Bundle: multi-tenant roles, audit logs, pgTAP tests
+
+The free preview below is fully usable. The Full-stack Pro bundle adds multi-tenant organization policies, audit-log triggers, a rate-limit table, pgTAP tests for your policies and a Stripe webhook idempotency pattern.
+
+```markdown
+---
+description: Supabase Row Level Security & Postgres hardening (Pro bundle preview)
+globs: ["supabase/migrations/**/*.sql"]
+alwaysApply: false
+---
+
+# Supabase RLS & database security rules
+
+## Every new table
+```sql
+create table public.projects (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  name text not null check (char_length(name) between 1 and 120),
+  created_at timestamptz not null default now()
+);
+alter table public.projects enable row level security;
+create index on public.projects (owner_id);
+```
+
+## Policies — one per operation, explicit roles
+```sql
+create policy "owners read" on public.projects
+  for select to authenticated using ((select auth.uid()) = owner_id);
+create policy "owners insert" on public.projects
+  for insert to authenticated with check ((select auth.uid()) = owner_id);
+create policy "owners update" on public.projects
+  for update to authenticated using ((select auth.uid()) = owner_id)
+  with check ((select auth.uid()) = owner_id);
+create policy "owners delete" on public.projects
+  for delete to authenticated using ((select auth.uid()) = owner_id);
+```
+- Wrap `auth.uid()` in `(select ...)` so Postgres evaluates it once per query.
+- Index every column used in a policy.
+- `update` policies need BOTH `using` and `with check`.
+
+## Functions
+- `security definer` functions must `set search_path = ''` and fully qualify names (`public.table`).
+- Never expose a `security definer` function that bypasses RLS without checking `auth.uid()` inside.
+
+## Storage
+- Bucket policies on `storage.objects` scoped by `(storage.foldername(name))[1] = (select auth.uid())::text`.
+
+<!-- Full bundle adds: multi-tenant org/role policies, audit log triggers, rate-limit table, pgTAP policy tests, Stripe webhook idempotency table. -->
+
+```
+
+---
+
+## Agent handoff kit: HANDOFF.md + Claude Code Stop hook
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/agent-handoff-kit/
+Tool: Claude Code | Category: General | Access: paid ($19)
+Install path: HANDOFF.md
+How it was checked: Stop hook event, settings.json shape, stop_hook_active and the decision/reason output checked against the Claude Code hooks docs on 2026-10-31. Hook script run locally on a temp git repo: no block on a clean tree, block on changed files without a HANDOFF.md update, no block when stop_hook_active is true or HANDOFF.md changed; settings.json and the block output parse as JSON. Not tested inside a live Claude Code session; Cursor and Codex use the prompt, not a hook.
+
+Switch between Claude Code, Codex and Cursor mid-task without losing context. The handoff records its commit SHA so the next agent diffs and reviews first.
+
+What's inside:
+- HANDOFF.md template (free preview below): goal, commit SHA, done, half-done, failed attempts, decisions, unsure, verify commands, next step
+- Bundle: Claude Code Stop hook (.claude/settings.json + handoff-check.sh) that asks Claude to update HANDOFF.md before ending
+- Bundle: continue prompt for Codex / Cursor / Claude Code: diff from the SHA, review, verify, then continue
+- Bundle: two-line AGENTS.md snippet
+
+Switching agents mid-task usually means re-explaining everything, or pasting a HANDOFF.md that went stale two commits ago. This kit fixes the staleness: the outgoing agent records the **commit SHA** the handoff was written at, and the incoming agent runs `git diff <sha>..HEAD` and reviews before it continues.
+
+**Free preview:** the `HANDOFF.md` template below works on its own. Commit it at the repo root next to `AGENTS.md`. `AGENTS.md` holds durable rules, and `HANDOFF.md` holds task state.
+
+**Paid part (hook, prompt, snippet):**
+
+- A **Claude Code `Stop` hook**. When files changed but `HANDOFF.md` didn't, it blocks the end of the turn once and asks Claude to update it. It checks `stop_hook_active`, so it never loops.
+- A **continue prompt** for the incoming agent: read AGENTS.md and HANDOFF.md, diff from the SHA, list what looks wrong, run the verify commands, then continue.
+- A two-line **AGENTS.md snippet**: "Before you stop, update HANDOFF.md."
+
+It isn't sold separately. Its status (in Full-stack Pro and Kit Club, or coming soon) is shown at the top of this page.
+
+Keep shared rules in one place with the free [One source of truth kit](../one-source-of-truth/) and the guide [How to use one AGENTS.md for Claude Code, Cursor and Codex](../../guides/one-agents-md-for-claude-code-cursor-codex/).
+
+Source: [Claude Code hooks reference](https://code.claude.com/docs/en/hooks).
+
+```markdown
+# HANDOFF.md
+<!-- Written by the outgoing agent before it stops. Keep under 60 lines. -->
+<!-- Durable rules live in AGENTS.md. This file holds task state only. -->
+
+## Goal
+- What we are building (1-2 lines):
+- Done when (acceptance criteria):
+  - [ ]
+  - [ ]
+
+## Snapshot
+- Branch:
+- Written at commit: <!-- git rev-parse --short HEAD -->
+- Date / agent: <!-- e.g. 2026-10-31, Claude Code -->
+
+## Done (with file paths)
+-
+
+## Half-done
+- <!-- file:line, what is missing -->
+
+## Failed attempts / rejected approaches (and why)
+-
+
+## Decisions
+-
+
+## Unsure about
+- <!-- things the next agent should double-check -->
+
+## Commands to verify
+```sh
+# e.g. npm test, npm run lint
+```
+
+## Next smallest step
+-
+
+```
+
+---
+
+## CLAUDE.md for Spanish-speaking teams
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/claude-md-webapp-es/
+Tool: Claude Code | Category: General | Access: free
+Install path: CLAUDE.md
+How it was checked: Generic workflow rules; adjust the commands block to your stack.
+
+Agent explains in Spanish, writes code in English. Small diffs, tests before done, clear hand-off.
+
+What's inside:
+- Language split: Spanish explanations, English code
+- Plan-before-code workflow
+- Security + i18n + accessibility rules
+- Structured hand-off format
+
+A general-purpose `CLAUDE.md` for teams that think in Spanish but ship code in English. The file itself is written in Spanish.
+
+```markdown
+# CLAUDE.md — Proyecto web (equipo hispanohablante)
+
+## Idioma
+- Responde y explica en **español**. Código, nombres de variables, commits y comentarios en el código: en **inglés**.
+
+## Antes de escribir código
+1. Lee los archivos relacionados y resume en 2–3 líneas qué vas a cambiar.
+2. Si la tarea es ambigua, haz como máximo 2 preguntas concretas; si no, propone un supuesto y decláralo.
+
+## Comandos (ajusta a tu proyecto)
+- Instalar: `npm install`
+- Desarrollo: `npm run dev`
+- Tests: `npm test`
+- Lint: `npm run lint`
+Ejecuta tests y lint antes de decir que terminaste. Si algo falla, muéstralo; no lo ocultes.
+
+## Reglas
+- Cambios pequeños y enfocados; no reescribas archivos completos si basta con unas líneas.
+- No agregues dependencias nuevas sin explicar por qué y sin alternativa nativa.
+- Nunca pongas claves, tokens ni `.env` en el código o en commits.
+- Valida toda entrada del usuario en el servidor.
+- Textos visibles para el usuario: usa el sistema de i18n del proyecto, no los escribas "a mano" en los componentes.
+- Accesibilidad: cada `img` con `alt`, botones con texto o `aria-label`, contraste AA.
+
+## Al terminar
+Entrega: (1) qué cambiaste, (2) cómo probarlo, (3) riesgos o pendientes. Formato breve con viñetas.
+
+```
+
+---
+
+## n8n lead-capture flow (Automation Pack)
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/n8n-lead-capture-flow/
+Tool: n8n | Category: Automation | Access: paid ($15)
+Install path: n8n → Import from file
+How it was checked: JSON structure and Code-node normalization tested with synthetic inputs; not tested end-to-end in a live n8n instance or Google Sheet. Verify node compatibility and credentials before activation.
+
+Webhook → validation, honeypot and safer spreadsheet cells → Google Sheets. Review privacy and abuse controls before use.
+
+What's inside:
+- Importable workflow JSON
+- Typed email validation (max 254 characters), honeypot and formula-prefix handling
+- Correct 200/422 responses for your form
+- Pack: enrichment, Slack/Telegram alerts, follow-up emails
+
+POST `{ email, name, source }` to the webhook from a form. Emails must be strings, no longer than 254 characters, and pass basic syntax checks. Non-string emails, malformed emails, structured request bodies, and submissions with a populated `website` honeypot receive HTTP 422. Valid leads flow to the configured `Leads` sheet; non-string `name` and `source` values are not coerced into spreadsheet cells, and leading formula characters in supported text fields are prefixed with an apostrophe. Before handling real contacts, configure consent, rate limiting, access controls and retention; inspect the workflow and test the Google Sheets integration with synthetic submissions.
+
+```json
+{
+  "name": "Lead capture: webhook → validate → Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1f0c1e2-0001-4c1a-9a01-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "rodrix-lead-capture"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inputs can become spreadsheet cells; keep untrusted text as text.\nconst sheetText = (value, maxLength) => {\n  const text = String(value ?? '').replace(/[\\u0000-\\u001f\\u007f]/g, ' ').trim();\n  // Leading =, +, -, @ are spreadsheet formula triggers.\n  return /^[=+\\-@]/.test(text) ? \"'\" + text.slice(0, maxLength - 1) : text.slice(0, maxLength);\n};\nconst out = [];\nfor (const item of $input.all()) {\n  const candidate = item.json.body ?? item.json;\n  const b = candidate && typeof candidate === 'object' && !Array.isArray(candidate) ? candidate : {};\n  const email = typeof b.email === 'string' ? b.email.trim().toLowerCase() : '';\n  const name = sheetText(typeof b.name === 'string' ? b.name : '', 120);\n  const source = sheetText(typeof b.source === 'string' ? b.source : 'site', 60);\n  // A filled honeypot is rejected even if its value is false or 0.\n  const emptyHoneypot = b.website === undefined || b.website === null || b.website === '';\n  const valid = email.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email) && !/^[=+\\-@]/.test(email) && emptyHoneypot;\n  out.push({ json: { valid, email, name, source, created_at: new Date().toISOString() } });\n}\nreturn out;"
+      },
+      "id": "a1f0c1e2-0002-4c1a-9a01-000000000002",
+      "name": "Normalize & validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+```
+
+---
+
+## One source of truth: AGENTS.md for Claude Code, Cursor and Codex
+
+URL: https://rodrix91.github.io/rodrix-agent-kits/kits/one-source-of-truth/
+Tool: Codex / any agent | Category: General | Access: free
+Install path: AGENTS.md
+How it was checked: CLAUDE.md @-import syntax and Cursor .mdc frontmatter (description, globs, alwaysApply) checked against current Claude Code and Cursor docs; drift-check shell script run locally on pass and fail cases. Not tested inside a live GitHub Actions run.
+
+Write agent rules once in AGENTS.md; CLAUDE.md and a Cursor rule stub point to it, and a GitHub Action catches drift.
+
+What's inside:
+- Master AGENTS.md template (commands, conventions, boundaries, done-checklist)
+- CLAUDE.md that imports it with @AGENTS.md
+- Cursor rule stub (.cursor/rules/agents.mdc)
+- Drift-check GitHub Action that fails CI on duplicated rules
+
+Keep one rules file. `AGENTS.md` is the master; the tool-specific files only point to it, so rules never drift apart.
+
+**1. `AGENTS.md`** (repo root): download the file above and fill in the placeholders.
+
+**2. `CLAUDE.md`** (repo root): Claude Code expands `@path` imports. Recent Claude Code versions also read `AGENTS.md` directly when no `CLAUDE.md` exists; the import keeps it working when a `CLAUDE.md` is present.
+
+```markdown
+@AGENTS.md
+```
+
+**3. `.cursor/rules/agents.mdc`** (optional): Cursor already reads `AGENTS.md`, so this always-applied stub is only a reminder. Per Cursor's docs, an `@AGENTS.md` mention in a rule is not inlined; the agent reads the file when it needs it.
+
+```markdown
+---
+description: Project rules live in AGENTS.md
+globs:
+alwaysApply: true
+---
+Follow every rule in @AGENTS.md. Do not add rules here; edit AGENTS.md instead.
+```
+
+**4. `.github/workflows/agents-drift.yml`**: fails CI if CLAUDE.md or the Cursor stub stop pointing to AGENTS.md or grow their own rules.
+
+```yaml
+name: agents-drift
+on: [push, pull_request]
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tool files point to AGENTS.md
+        run: |
+          set -e
+          test -f AGENTS.md || { echo "AGENTS.md missing"; exit 1; }
+          grep -q '^@AGENTS.md' CLAUDE.md || { echo "CLAUDE.md must import @AGENTS.md"; exit 1; }
+          grep -q '@AGENTS.md' .cursor/rules/agents.mdc || { echo "agents.mdc must reference @AGENTS.md"; exit 1; }
+          max=15
+          for f in CLAUDE.md .cursor/rules/agents.mdc; do
+            n=$(grep -cv '^\s*$' "$f")
+            [ "$n" -le "$max" ] || { echo "$f has $n non-empty lines (> $max): move rules to AGENTS.md"; exit 1; }
+          done
+          echo "OK: single source of truth"
+```
+
+Raise `max` if you keep a few Claude-only notes in CLAUDE.md.
+
+```markdown
+# AGENTS.md — single source of truth for every coding agent
+
+<!--
+This file is the MASTER. Claude Code reads it through CLAUDE.md (`@AGENTS.md`),
+Cursor reads it natively and through .cursor/rules/agents.mdc, Codex and most
+other agents read AGENTS.md directly. Edit rules HERE only.
+The drift-check workflow (.github/workflows/agents-drift.yml) fails CI if a
+tool-specific file starts duplicating rules instead of pointing here.
+-->
+
+## Project
+- One-line description: <what this repo does>
+- Stack: <language / framework / package manager>
+
+## Commands (run these, do not guess)
+- Install: `<install command>`
+- Dev: `<dev command>`
+- Test: `<test command>`
+- Lint / format: `<lint command>`
+
+## Conventions
+- Follow existing patterns in the file you edit before introducing new ones.
+- Keep changes small and focused; one concern per commit/PR.
+- Add or update tests for every behavior change.
+
+## Boundaries
+- Never commit secrets, `.env*` files or credentials.
+- Never run destructive DB commands or deploys without explicit human approval.
+- Ask before adding a new dependency.
+
+## Definition of done
+- [ ] Tests pass locally with the test command above
+- [ ] Lint passes
+- [ ] No unrelated files changed
+- [ ] Docs/README updated if behavior changed
+
+## Tool-specific files (do not put rules there)
+- `CLAUDE.md` → contains only `@AGENTS.md` (+ optional Claude-only notes)
+- `.cursor/rules/agents.mdc` → stub with `alwaysApply: true` that references `@AGENTS.md`
+
+```

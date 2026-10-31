@@ -1,0 +1,40 @@
+# Rodrix Agent Kits
+
+> Free, bilingual (English/Spanish) library of tested configuration files for AI coding agents: Cursor rules (.mdc), CLAUDE.md, AGENTS.md, Agent Skills (SKILL.md) and n8n workflows. Free kits are MIT-licensed. Paid bundles cost $9-29; the Kit Club membership is $7/month via Gumroad.
+
+## Answers
+- Which file does each agent read? Cursor: .cursor/rules/*.mdc (YAML frontmatter: description, globs, alwaysApply). Claude Code: CLAUDE.md (can import AGENTS.md with a line `@AGENTS.md`; recent versions read AGENTS.md directly when no CLAUDE.md exists). Codex: AGENTS.md (also read by Cursor and many other agents).
+- All free kits are MIT-licensed and can be copied from the raw file links below without signup.
+
+## Guides
+- [All guides](https://rodrix91.github.io/rodrix-agent-kits/guides/): index of every guide.
+- [AGENTS.md vs CLAUDE.md vs Cursor rules: which file does each AI agent read?](https://rodrix91.github.io/rodrix-agent-kits/guides/agents-md-vs-claude-md-vs-cursor-rules/): Which instruction file Cursor, Claude Code and Codex read, where each one goes, and how to keep them from drifting apart.
+- [How to use one AGENTS.md for Claude Code, Cursor and Codex](https://rodrix91.github.io/rodrix-agent-kits/guides/one-agents-md-for-claude-code-cursor-codex/): Write your agent rules once in AGENTS.md, point CLAUDE.md at it, and add a CI check that catches drift between tool files.
+- [Where to put Cursor rules (.mdc files) and how to write them](https://rodrix91.github.io/rodrix-agent-kits/guides/where-to-put-cursor-rules-mdc/): Cursor project rules go in .cursor/rules/ as .mdc files with description, globs and alwaysApply frontmatter. Here is the layout and a working example.
+
+## Guías (español)
+- [Todas las guías](https://rodrix91.github.io/rodrix-agent-kits/es/guides/): índice de guías en español.
+- [AGENTS.md vs CLAUDE.md vs reglas de Cursor: ¿qué archivo lee cada agente de IA?](https://rodrix91.github.io/rodrix-agent-kits/es/guides/agents-md-vs-claude-md-vs-cursor-rules/): Qué archivo de instrucciones leen Cursor, Claude Code y Codex, dónde va cada uno y cómo evitar que se desincronicen.
+- [Cómo usar un solo AGENTS.md para Claude Code, Cursor y Codex](https://rodrix91.github.io/rodrix-agent-kits/es/guides/one-agents-md-for-claude-code-cursor-codex/): Escribe las reglas de tus agentes una sola vez en AGENTS.md, haz que CLAUDE.md apunte a él y agrega una verificación en CI que detecte desajustes.
+- [Dónde poner las reglas de Cursor (archivos .mdc) y cómo escribirlas](https://rodrix91.github.io/rodrix-agent-kits/es/guides/where-to-put-cursor-rules-mdc/): Las reglas de proyecto de Cursor van en .cursor/rules/ como archivos .mdc con frontmatter description, globs y alwaysApply. Aquí tienes la estructura y un ejemplo.
+
+## Key pages
+- [Kit library](https://rodrix91.github.io/rodrix-agent-kits/kits/): searchable list of all kits
+- [Pricing](https://rodrix91.github.io/rodrix-agent-kits/pricing/): Free, Bundles, Kit Club
+- [About](https://rodrix91.github.io/rodrix-agent-kits/about/)
+- [Spanish version](https://rodrix91.github.io/rodrix-agent-kits/es/)
+- [X @RODRX_NOVA](https://x.com/RODRX_NOVA): updates and feedback
+- [GitHub](https://github.com/rodrix91/rodrix-agent-kits): source
+
+## Kits
+- [Agent secrets & safety pack: keep .env away from Claude Code, Cursor and Codex](https://rodrix91.github.io/rodrix-agent-kits/kits/agent-secrets-safety-pack/): Enforced deny and ignore rules for Claude Code, Cursor and Codex, a gitleaks pre-commit scan, and a safe-extension checklist after the Oct 2026 fake extension. (Codex / any agent; free; install at `docs/agent-secrets-safety.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/agent-secrets-safety.md)
+- [AGENTS.md for a TypeScript monorepo](https://rodrix91.github.io/rodrix-agent-kits/kits/agents-md-typescript-monorepo/): One file every coding agent reads: pnpm + Turborepo commands, boundaries, and a done-checklist. (Codex / any agent; free; install at `AGENTS.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/AGENTS.ts-monorepo.md)
+- [CLAUDE.md for Python data projects](https://rodrix91.github.io/rodrix-agent-kits/kits/claude-md-python-data/): Reproducible analysis by default: no leakage, no touching raw data, tests and ruff before "done". (Claude Code; free; install at `CLAUDE.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/CLAUDE.python-data.md)
+- [Code review agent skill (Agent Skills Pack)](https://rodrix91.github.io/rodrix-agent-kits/kits/code-review-agent-skill/): A reusable SKILL.md that makes any agent review diffs like a senior engineer: prioritized, cited, no rewrites. (Agent Skills; paid $12, preview free; install at `.claude/skills/code-review/SKILL.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/code-review.SKILL.md)
+- [Godot 4 GDScript rules](https://rodrix91.github.io/rodrix-agent-kits/kits/godot-4-gdscript-rules/): Kills the #1 AI gamedev bug: Godot 3 code in a Godot 4 project. Typed GDScript, signals up, calls down. (Cursor; free; install at `.cursor/rules/godot.mdc`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/godot-gdscript.mdc)
+- [Next.js 15 + Supabase Cursor rules](https://rodrix91.github.io/rodrix-agent-kits/kits/nextjs-supabase-cursor-rules/): Stop your agent from using deprecated auth helpers and leaking the service key. App Router, @supabase/ssr, RLS-first. (Cursor; free; install at `.cursor/rules/nextjs-supabase.mdc`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/nextjs-supabase.mdc)
+- [Supabase RLS & security rules (Full-stack Pro)](https://rodrix91.github.io/rodrix-agent-kits/kits/supabase-rls-security-rules/): Production RLS patterns your agent applies to every migration. Part of the Full-stack Pro bundle. (Cursor; paid $19, preview free; install at `.cursor/rules/supabase-rls.mdc`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/supabase-rls.mdc)
+- [Agent handoff kit: HANDOFF.md + Claude Code Stop hook](https://rodrix91.github.io/rodrix-agent-kits/kits/agent-handoff-kit/): Switch between Claude Code, Codex and Cursor mid-task without losing context. The handoff records its commit SHA so the next agent diffs and reviews first. (Claude Code; paid $19, preview free; install at `HANDOFF.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/HANDOFF.template.md)
+- [CLAUDE.md for Spanish-speaking teams](https://rodrix91.github.io/rodrix-agent-kits/kits/claude-md-webapp-es/): Agent explains in Spanish, writes code in English. Small diffs, tests before done, clear hand-off. (Claude Code; free; install at `CLAUDE.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/CLAUDE.webapp-es.md)
+- [n8n lead-capture flow (Automation Pack)](https://rodrix91.github.io/rodrix-agent-kits/kits/n8n-lead-capture-flow/): Webhook → validation, honeypot and safer spreadsheet cells → Google Sheets. Review privacy and abuse controls before use. (n8n; paid $15, preview free; install at `n8n → Import from file`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/n8n-lead-capture.json)
+- [One source of truth: AGENTS.md for Claude Code, Cursor and Codex](https://rodrix91.github.io/rodrix-agent-kits/kits/one-source-of-truth/): Write agent rules once in AGENTS.md; CLAUDE.md and a Cursor rule stub point to it, and a GitHub Action catches drift. (Codex / any agent; free; install at `AGENTS.md`; raw file: https://rodrix91.github.io/rodrix-agent-kits/files/AGENTS.one-source-of-truth.md)
