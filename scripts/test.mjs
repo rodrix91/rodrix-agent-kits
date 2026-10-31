@@ -207,6 +207,38 @@ ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('
 await page.fill('#finder-q', 'quiero automatizar formularios de leads'); await page.click('#finder-form button');
 await page.waitForTimeout(200);
 ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('n8n'), 'kit finder (ES query) finds n8n flow');
+// Newsletter: synthetic transport outcomes only. Never send a real email or call a provider.
+for (const l of ['', 'es/']) {
+  await page.goto(`${ORIGIN}${B}/${l}`);
+  const email = 'synthetic@example.test';
+  await page.evaluate(() => {
+    const form = document.querySelector('.nl-form');
+    form.dataset.live = 'true'; // simulate a configured provider without changing config
+    form.action = location.origin + '/synthetic-newsletter-no-network';
+    window.fetch = async () => ({ type: 'opaque', ok: false });
+  });
+  await page.fill('.nl-form input[type=email]', email);
+  await page.locator('.nl-form button[type=submit]').click();
+  await page.waitForFunction(() => {
+    const f = document.querySelector('.nl-form');
+    return f.parentElement.querySelector('.status').textContent === f.dataset.pending;
+  });
+  ok((await page.locator('.nl-form input[type=email]').inputValue()) === email, `opaque newsletter response does not clear email: /${l}`);
+  await page.evaluate(() => { window.fetch = async () => ({ type: 'basic', ok: false }); });
+  await page.locator('.nl-form button[type=submit]').click();
+  await page.waitForFunction(() => {
+    const f = document.querySelector('.nl-form');
+    return f.parentElement.querySelector('.status').textContent === f.dataset.err;
+  });
+  ok((await page.locator('.nl-form input[type=email]').inputValue()) === email, `failed newsletter response preserves email: /${l}`);
+  await page.evaluate(() => { window.fetch = async () => ({ type: 'basic', ok: true }); });
+  await page.locator('.nl-form button[type=submit]').click();
+  await page.waitForFunction(() => {
+    const f = document.querySelector('.nl-form');
+    return f.parentElement.querySelector('.status').textContent === f.dataset.ok;
+  });
+  ok((await page.locator('.nl-form input[type=email]').inputValue()) === '', `confirmed newsletter response clears email: /${l}`);
+}
 // conversion: Gumroad CTA above the fold on mobile (390x844) for /pricing/ and every paid kit page (EN/ES)
 {
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });

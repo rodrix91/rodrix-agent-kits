@@ -14,7 +14,7 @@ const live = Boolean(NEWSLETTER.action);
         <p style="margin:0">{s.sub}</p>
       </div>
       <div>
-        <form class="nl-form" action={NEWSLETTER.action || '#'} method="post" data-live={String(live)} data-ok={s.ok} data-err={s.err} data-soon={s.soon} novalidate>
+        <form class="nl-form" action={NEWSLETTER.action || '#'} method="post" data-live={String(live)} data-ok={s.ok} data-pending={s.pending} data-err={s.err} data-soon={s.soon} novalidate>
           <label class="sr-only" for={`nl-${lang}`}>{s.email}</label>
           <input class="input" id={`nl-${lang}`} name={NEWSLETTER.emailField} type="email" autocomplete="email" required placeholder="you@domain.com" />
           <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
@@ -42,8 +42,19 @@ const live = Boolean(NEWSLETTER.action);
       if (f.dataset.live !== 'true') { st.textContent = f.dataset.soon!; return; }
       if ((f.querySelector('input[name=website]') as HTMLInputElement).value) return;
       try {
-        await fetch(f.action, { method: 'POST', body: new FormData(f), mode: 'no-cors' });
-        st.textContent = f.dataset.ok!; f.reset();
+        const response = await fetch(f.action, {
+          method: 'POST', body: new FormData(f), mode: 'no-cors',
+        });
+        // Cross-origin no-cors hides HTTP status. An opaque response may
+        // represent a provider error, so never claim signup was confirmed.
+        if (response.type === 'opaque' || response.type === 'opaqueredirect') {
+          st.textContent = f.dataset.pending!;
+        } else if (response.ok) {
+          st.textContent = f.dataset.ok!;
+          f.reset();
+        } else {
+          st.textContent = f.dataset.err!;
+        }
       } catch { st.textContent = f.dataset.err!; }
     });
   });
