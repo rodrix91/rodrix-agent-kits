@@ -22,6 +22,41 @@ test('normalizes decomposed accents and whitespace without losing original text'
   assert.equal(source, 'Programación: revisión de código');
 });
 
+test('natural punctuation separates bilingual searches without hiding valid kits', () => {
+  const card = 'n8n workflow para automatización de leads y revisión de código en español';
+  const canonical = searchTerms('n8n automatizacion');
+  assert.deepEqual(canonical, ['n8n', 'automatizacion']);
+  for (const query of [
+    'n8n, automatización', '¿n8n automatización?', 'n8n / AUTOMATIZACIÓN!',
+    '"n8n" (automatizacion)', 'n8n: automatización.', 'n8n + automatizacion',
+  ]) {
+    assert.deepEqual(searchTerms(query), canonical, query);
+    assert.equal(matchesSearch(card, searchTerms(query)), true, query);
+  }
+  assert.deepEqual(searchTerms('¿revisión, código?'), ['revision', 'codigo']);
+  assert.equal(matchesSearch(card, searchTerms('¿revisión, código?')), true);
+  assert.equal(matchesSearch(card, searchTerms('n8n, godot')), false);
+});
+
+test('technical punctuation stays in file names, product names and programming terms', () => {
+  const text = 'Use CLAUDE.md with Next.js, C++ and C#; rules also mention AGENTS.md';
+  assert.deepEqual(
+    searchTerms('CLAUDE.md / Next.js + C++ / C#'),
+    ['claude.md', 'next.js', 'c++', 'c#'],
+  );
+  assert.equal(matchesSearch(text, searchTerms('CLAUDE.md, Next.js!')), true);
+  assert.equal(matchesSearch(text, searchTerms('¿C++ y C#?')), true);
+  assert.deepEqual(searchTerms('AGENTS.md.'), ['agents.md']);
+  assert.deepEqual(searchTerms('¿!? / + # ...'), []);
+});
+
+test('punctuation-aware tokenization preserves non-Latin searches', () => {
+  assert.deepEqual(searchTerms('Русский, язык!'), ['русскии', 'язык']);
+  assert.equal(matchesSearch('Русский язык', searchTerms('Русский, язык!')), true);
+  assert.deepEqual(searchTerms('日本語、コード'), ['日本語', 'コード']);
+  assert.equal(matchesSearch('日本語 コード', searchTerms('日本語、コード')), true);
+});
+
 test('maintains AND matching, nonmatches, and empty-search behavior', () => {
   const card = 'n8n workflow para automatización de leads';
   assert.equal(matchesSearch(card, searchTerms('n8n automatizacion')), true);
