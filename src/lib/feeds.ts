@@ -1,5 +1,5 @@
 import { getCollection } from 'astro:content';
-import { getKits, kitFile } from './kits';
+import { getKits, kitFile, bundlePending, SOON } from './kits';
 import { url, asset, type Lang } from './i18n';
 import { BRAND, PRICES } from '../config';
 const esc = (s: string) => s.replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c]!);
@@ -21,13 +21,13 @@ export async function llms(full: boolean, site: URL) {
   s += `## Key pages\n- [Kit library](${o}${url('/kits/')}): searchable list of all kits\n- [Pricing](${o}${url('/pricing/')}): Free, Bundles, Kit Club\n- [About](${o}${url('/about/')})\n- [Spanish version](${o}${url('/', 'es')})\n- [X @RODRX_NOVA](${BRAND.x}): updates and feedback\n- [GitHub](${BRAND.github}): source\n\n## Kits\n`;
   for (const k of kits) {
     const d = k.data;
-    s += `- [${d.en.title}](${o}${url(`/kits/${k.id}/`)}): ${d.en.summary} (${d.tool}; ${d.tier === 'free' ? 'free' : `paid $${d.price}, preview free`}; install at \`${d.installPath}\`; raw file: ${o}${asset(`/files/${d.file}`)})\n`;
+    s += `- [${d.en.title}](${o}${url(`/kits/${k.id}/`)}): ${d.en.summary} (${d.tool}; ${d.tier === 'free' ? 'free' : bundlePending(k) ? `${SOON.en.toLowerCase()} (not included yet), template free` : `paid $${d.price}, preview free`}; install at \`${d.installPath}\`; raw file: ${o}${asset(`/files/${d.file}`)})\n`;
   }
   if (full) {
     s += `\n## Optional\n- [llms.txt](${o}${asset('/llms.txt')})\n\n# Full kit contents\n`;
     for (const k of kits) {
       const d = k.data;
-      s += `\n---\n\n## ${d.en.title}\n\nURL: ${o}${url(`/kits/${k.id}/`)}\nTool: ${d.tool} | Category: ${d.category} | Access: ${d.tier}${d.price ? ` ($${d.price})` : ''}\nInstall path: ${d.installPath}\nHow it was checked: ${d.tested}\n\n${d.en.summary}\n\nWhat's inside:\n${d.en.inside.map((i) => `- ${i}`).join('\n')}\n\n${k.body?.trim() ?? ''}\n\n\`\`\`${d.file.endsWith('.json') ? 'json' : 'markdown'}\n${d.tier === 'paid' ? kitFile(k).split('\n').slice(0, d.previewLines).join('\n') : kitFile(k)}\n\`\`\`\n`;
+      s += `\n---\n\n## ${d.en.title}\n\nURL: ${o}${url(`/kits/${k.id}/`)}\nTool: ${d.tool} | Category: ${d.category} | Access: ${bundlePending(k) ? SOON.en + ' (not included yet); template free' : d.tier + (d.price ? ` ($${d.price})` : '')}\nInstall path: ${d.installPath}\nHow it was checked: ${d.tested}\n\n${d.en.summary}\n\nWhat's inside:\n${d.en.inside.map((i) => `- ${i}`).join('\n')}\n\n${k.body?.trim() ?? ''}\n\n\`\`\`${d.file.endsWith('.json') ? 'json' : 'markdown'}\n${d.tier === 'paid' ? kitFile(k).split('\n').slice(0, d.previewLines).join('\n') : kitFile(k)}\n\`\`\`\n`;
     }
   }
   return new Response(s, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });

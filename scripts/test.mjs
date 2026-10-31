@@ -157,6 +157,31 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
 // F-SCO-7 agent handoff kit (paid, Full-stack Pro + Kit Club)
 { const h = readFileSync('dist/kits/agent-handoff-kit/index.html', 'utf8');
   ok(/data-testid="buy-top"/.test(h) && h.includes('https://rodrix91.gumroad.com/l/full-stack-pro') && h.includes('https://rodrix91.gumroad.com/l/kit-club') && /\$19/.test(h), 'handoff kit: paid, Full-stack Pro $19 + Kit Club buttons');
+  // Steve 10:41: while HANDOFF_IN_BUNDLE=false the site must not say buyers get it (both states tested)
+  const cfgFlag = /export const HANDOFF_IN_BUNDLE[^\n]*: false;/.test(readFileSync('src/config.ts', 'utf8'));
+  const he = readFileSync('dist/es/kits/agent-handoff-kit/index.html', 'utf8'), llmsT = readFileSync('dist/llms.txt', 'utf8'), llmsF = readFileSync('dist/llms-full.txt', 'utf8');
+  const cl = readFileSync('dist/changelog/index.html', 'utf8') + readFileSync('dist/es/changelog/index.html', 'utf8');
+  const lists = ['kits/index.html', 'es/kits/index.html', 'index.html', 'kits/one-source-of-truth/index.html'].map((f) => readFileSync('dist/' + f, 'utf8')).join('');
+  const checkState = (included, H, HE, LT, LF, CL, LS, tag) => {
+    if (included) {
+      ok(!/Coming to Full-stack Pro|Próximamente en Full-stack Pro/.test(H + HE + LT + LF + CL), `[${tag}] included: no "coming" labels`);
+      ok(/Buy bundle/.test(H) && /InStock/.test(H) && /New in Full-stack Pro: Agent handoff kit/.test(CL), `[${tag}] included: Buy bundle + InStock + changelog`);
+    } else {
+      ok(H.includes('Coming to Full-stack Pro &amp; Kit Club') && HE.includes('Próximamente en Full-stack Pro y Kit Club') && /data-soon-note/.test(H), `[${tag}] pending: label visible EN/ES`);
+      ok(H.includes('Get Full-stack Pro — handoff kit coming soon') && !/>\s*Buy bundle\s*</.test(H) && /PreOrder/.test(H) && !/InStock/.test(H.match(/"@type":"Product"[\s\S]*?\}\}/)?.[0] || ''), `[${tag}] pending: reworded buttons + PreOrder offer`);
+      ok(!/part of Fullstack Pro Bundle for|included in Full-stack Pro|Included in Full-stack Pro|New in Full-stack Pro/i.test(H + HE + LT + LF + CL), `[${tag}] pending: no "included" claims (page, llms, changelog)`);
+      ok(/agent-handoff-kit\/\): [^\n]*coming to full-stack pro &amp; kit club \(not included yet\)|agent-handoff-kit\/\): [^\n]*coming to full-stack pro & kit club \(not included yet\)/.test(LT) && /Access: Coming to Full-stack Pro & Kit Club \(not included yet\)/.test(LF), `[${tag}] pending: llms.txt + llms-full say coming`);
+      ok(/data-soon>Coming to Full-stack Pro &amp; Kit Club/.test(LS) || /data-soon[^>]*>Coming/.test(LS), `[${tag}] pending: kit cards show coming label`);
+      ok(existsSync('dist/files/HANDOFF.template.md') && /Not tested inside a live Claude Code session/.test(H), `[${tag}] pending: free template + untested note kept`);
+    }
+  };
+  checkState(!cfgFlag, h, he, llmsT, llmsF, cl, lists, 'current flag');
+  // other state: rebuild into dist-included with the flag flipped via the test-only env var
+  try {
+    execSync('npx astro build --outDir dist-included', { env: { ...process.env, HANDOFF_IN_BUNDLE_TEST: cfgFlag ? 'true' : 'false' }, stdio: 'ignore' });
+    const r = (f) => readFileSync('dist-included/' + f, 'utf8');
+    checkState(cfgFlag, r('kits/agent-handoff-kit/index.html'), r('es/kits/agent-handoff-kit/index.html'), r('llms.txt'), r('llms-full.txt'), r('changelog/index.html') + r('es/changelog/index.html'), ['kits/index.html', 'es/kits/index.html', 'index.html', 'kits/one-source-of-truth/index.html'].map(r).join(''), 'flipped flag');
+  } finally { execSync('rm -rf dist-included'); }
   ok(/one-source-of-truth\//.test(h) && h.includes('/guides/one-agents-md-for-claude-code-cursor-codex/'), 'handoff kit links one-source-of-truth + guide #2');
   const t = readFileSync('dist/files/HANDOFF.template.md', 'utf8'); ok(t.split('\n').length <= 60 && /Written at commit/.test(t), 'handoff template < 60 lines with commit SHA field');
   ok(!/handoff-check\.sh\n|stop_hook_active/.test(t), 'handoff preview file does not include paid bundle files');

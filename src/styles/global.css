@@ -151,6 +151,7 @@ fieldset.chips{border:0;margin:0;padding:0}
 @media (max-width:960px){.kit-layout{grid-template-columns:minmax(0,1fr)}}
 .buy-top{display:none;align-items:center;gap:1rem;flex-wrap:wrap;margin:0 0 1.5rem}
 @media (max-width:960px){.buy-top{display:flex}}
+.buy-top .btn,.aside .btn{white-space:normal;height:auto;min-height:var(--h);line-height:1.25;padding-top:.55rem;padding-bottom:.55rem;text-align:center;max-width:100%}
 .head-cta{margin-top:1.25rem;display:flex;justify-content:center}
 .aside{position:sticky;top:84px;display:grid;gap:1rem}
 .check{list-style:none;padding:0;margin:0;display:grid;gap:.6rem}

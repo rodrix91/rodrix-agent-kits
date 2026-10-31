@@ -11,6 +11,15 @@ export const BRAND = {
   email: 'rodrixlabs@mail.grokbot.com', // public support/contact email (Rodrix Labs)
 };
 
+/**
+ * Agent handoff kit (F-SCO-7): true once its files are uploaded to the Gumroad Full-stack Pro
+ * and Kit Club products. While false the site says "Coming to Full-stack Pro & Kit Club" and
+ * never claims buyers get it today. Flip to true (one change) after the upload.
+ */
+export const HANDOFF_IN_BUNDLE: boolean = typeof process !== 'undefined' && process.env?.HANDOFF_IN_BUNDLE_TEST ? process.env.HANDOFF_IN_BUNDLE_TEST === 'true' : false; // the flag; env var is only for the both-states test
+/** Paid kits whose bundle files are not on Gumroad yet (derived from the flags above). */
+export const BUNDLE_PENDING_KITS: string[] = HANDOFF_IN_BUNDLE ? [] : ['agent-handoff-kit'];
+
 export const GUMROAD = {
   /** Kit Club membership, $7/month recurring. TODO: e.g. 'https://rodrix.gumroad.com/l/kit-club' */
   kitClub: 'https://rodrix91.gumroad.com/l/kit-club',

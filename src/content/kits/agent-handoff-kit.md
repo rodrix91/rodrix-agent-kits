@@ -1,15 +1,15 @@
 ---
 en:
-  title: "Agent handoff kit: HANDOFF.md + Claude Code Stop hook (Full-stack Pro)"
-  summary: "Switch between Claude Code, Codex and Cursor mid-task without losing context. The handoff records its commit SHA so the next agent diffs and reviews first. In Full-stack Pro and Kit Club."
+  title: "Agent handoff kit: HANDOFF.md + Claude Code Stop hook"
+  summary: "Switch between Claude Code, Codex and Cursor mid-task without losing context. The handoff records its commit SHA so the next agent diffs and reviews first."
   inside:
     - "HANDOFF.md template (free preview below): goal, commit SHA, done, half-done, failed attempts, decisions, unsure, verify commands, next step"
     - "Bundle: Claude Code Stop hook (.claude/settings.json + handoff-check.sh) that asks Claude to update HANDOFF.md before ending"
     - "Bundle: continue prompt for Codex / Cursor / Claude Code: diff from the SHA, review, verify, then continue"
     - "Bundle: two-line AGENTS.md snippet"
 es:
-  title: "Kit de handoff entre agentes: HANDOFF.md + hook Stop de Claude Code (Full-stack Pro)"
-  summary: "Cambia entre Claude Code, Codex y Cursor a mitad de tarea sin perder contexto. El handoff guarda su commit SHA para que el siguiente agente revise el diff primero. En Full-stack Pro y Kit Club."
+  title: "Kit de handoff entre agentes: HANDOFF.md + hook Stop de Claude Code"
+  summary: "Cambia entre Claude Code, Codex y Cursor a mitad de tarea sin perder contexto. El handoff guarda su commit SHA para que el siguiente agente revise el diff primero."
   inside:
     - "Plantilla HANDOFF.md (vista previa gratis abajo): objetivo, commit SHA, hecho, a medias, intentos fallidos, decisiones, dudas, comandos de verificación, siguiente paso"
     - "Bundle: hook Stop de Claude Code (.claude/settings.json + handoff-check.sh) que pide actualizar HANDOFF.md antes de terminar"
@@ -33,13 +33,13 @@ Switching agents mid-task usually means re-explaining everything, or pasting a H
 
 **Free preview:** the `HANDOFF.md` template below works on its own. Commit it at the repo root next to `AGENTS.md`. `AGENTS.md` holds durable rules, and `HANDOFF.md` holds task state.
 
-**The bundle adds:**
+**Paid part (hook, prompt, snippet):**
 
 - A **Claude Code `Stop` hook**. When files changed but `HANDOFF.md` didn't, it blocks the end of the turn once and asks Claude to update it. It checks `stop_hook_active`, so it never loops.
 - A **continue prompt** for the incoming agent: read AGENTS.md and HANDOFF.md, diff from the SHA, list what looks wrong, run the verify commands, then continue.
 - A two-line **AGENTS.md snippet**: "Before you stop, update HANDOFF.md."
 
-It's included in **Full-stack Pro** ($19 one-time) and **Kit Club** ($7/mo). It isn't sold separately.
+It isn't sold separately. Its status (in Full-stack Pro and Kit Club, or coming soon) is shown at the top of this page.
 
 Keep shared rules in one place with the free [One source of truth kit](../one-source-of-truth/) and the guide [How to use one AGENTS.md for Claude Code, Cursor and Codex](../../guides/one-agents-md-for-claude-code-cursor-codex/).
 

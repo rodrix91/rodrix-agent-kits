@@ -4,12 +4,17 @@ import KitCard from '../components/KitCard.astro';
 import BuyButton from '../components/BuyButton.astro';
 import Newsletter from '../components/Newsletter.astro';
 import { t, url, asset, type Lang } from '../lib/i18n';
-import { getKits, kitFile, buyUrl, type Kit } from '../lib/kits';
+import { getKits, kitFile, buyUrl, bundlePending, SOON, type Kit } from '../lib/kits';
 import { GUMROAD } from '../config';
 import { render, getCollection } from 'astro:content';
 const { lang, kit } = Astro.props as { lang: Lang; kit: Kit };
 const s = t[lang], K = s.kit, d = kit.data, L = d[lang];
 const { Content } = await render(kit);
+const soon = bundlePending(kit);
+const es = lang === 'es';
+const inside = soon ? L.inside.map((i) => i.replace(/^Bundle: /, es ? 'Próximamente: ' : 'Coming soon: ')) : L.inside;
+const buyLabel = soon ? (es ? 'Ver Full-stack Pro (kit de handoff próximamente)' : 'Get Full-stack Pro — handoff kit coming soon') : s.cta.buy;
+const clubLabel = soon ? (es ? 'Kit Club (kit de handoff próximamente)' : 'Kit Club — handoff kit coming soon') : s.cta.club;
 const src = kitFile(kit);
 const lines = src.split('\n');
 const preview = d.tier === 'paid' ? lines.slice(0, d.previewLines).join('\n') : src;
@@ -21,7 +26,7 @@ const pageUrl = origin + url(`/kits/${kit.id}/`, lang);
 const product = {
   '@context': 'https://schema.org', '@type': 'Product', name: L.title, description: L.summary, url: pageUrl, image: origin + asset(`/og/${kit.id}.png`),
   brand: { '@type': 'Brand', name: 'Rodrix Agent Kits' }, category: `${d.tool} / ${d.category}`,
-  offers: { '@type': 'Offer', price: d.tier === 'free' ? '0' : String(d.price), priceCurrency: 'USD', availability: d.tier === 'free' || href ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder', url: d.tier === 'free' ? pageUrl : href || pageUrl },
+  offers: { '@type': 'Offer', price: d.tier === 'free' ? '0' : String(d.price), priceCurrency: 'USD', availability: soon ? 'https://schema.org/PreOrder' : d.tier === 'free' || href ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder', url: d.tier === 'free' ? pageUrl : href || pageUrl },
 };
 const crumbs = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
   { '@type': 'ListItem', position: 1, name: 'Home', item: origin + url('/', lang) },
@@ -37,7 +42,7 @@ const compatDefault: Record<string, string> = {
 const bundleName = d.product ? d.product.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ') : '';
 const faq = [
   [`Where do I put this ${d.tool} file?`, `Save it as ${d.installPath} in your project root and restart/reload ${d.tool}.`],
-  ['Is this kit free?', d.tier === 'free' ? 'Yes, MIT-licensed.' : `The preview is free; the full kit is part of ${bundleName} for $${d.price}.`],
+  ['Is this kit free?', d.tier === 'free' ? 'Yes, MIT-licensed.' : soon ? `The ${fname} template is free. The full kit is coming to ${bundleName} ($${d.price}) and Kit Club; it is not included in them yet.` : `The preview is free; the full kit is part of ${bundleName} for $${d.price}.`],
   ['Does it work with other agents?', d.compat ?? compatDefault[d.tool]],
 ];
 const graph = { '@context': 'https://schema.org', '@graph': [
@@ -57,14 +62,15 @@ const date = d.added.toISOString().slice(0, 10);
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem">
           <span class="tag">{d.tool}</span><span class="tag">{d.category}</span>
           {d.languages.map((l) => <span class="tag">{l.toUpperCase()}</span>)}
-          <span class={d.tier === 'free' ? 'tag tag-accent' : 'tag'}>{d.tier === 'free' ? K.freeLabel : K.paidLabel}</span>
+          <span class={d.tier === 'free' ? 'tag tag-accent' : 'tag'}>{d.tier === 'free' ? K.freeLabel : soon ? SOON[lang] : K.paidLabel}</span>
         </div>
         <h1>{L.title}</h1>
         <p style="font-size:var(--t-md)">{L.summary}</p>
-        {d.tier === 'paid' && <div class="buy-top" data-testid="buy-top"><span class="price" style="font-size:var(--t-lg)">${d.price} <small>{lang === 'es' ? 'pago único' : 'one-time'}</small></span><BuyButton href={href} label={s.cta.buy} lang={lang} /></div>}
+        {soon && <p class="answer" data-soon-note><strong>{SOON[lang]}.</strong> {es ? 'Hoy no está incluido en ningún bundle. La plantilla HANDOFF.md de abajo es gratis.' : 'It is not inside any bundle today. The HANDOFF.md template below is free.'}</p>}
+        {d.tier === 'paid' && <div class="buy-top" data-testid="buy-top"><span class="price" style="font-size:var(--t-lg)">{soon ? 'Full-stack Pro ' : ''}${d.price} <small>{lang === 'es' ? 'pago único' : 'one-time'}</small></span><BuyButton href={href} label={buyLabel} lang={lang} /></div>}
         <div class="prose" lang="en"><Content /></div>
         <h2 style="font-size:var(--t-lg);margin-top:2.5rem">{K.inside}</h2>
-        <ul class="check">{L.inside.map((i) => <li>{i}</li>)}</ul>
+        <ul class="check">{inside.map((i) => <li>{i}</li>)}</ul>
         <h2 style="font-size:var(--t-lg);margin-top:2.5rem">{K.file}</h2>
         <div class="code">
           <div class="code-head"><span>{fname}</span>
@@ -79,15 +85,15 @@ const date = d.added.toISOString().slice(0, 10);
         <section aria-labelledby="faq-h" lang="en"><h2 id="faq-h" style="font-size:var(--t-lg);margin-top:2.5rem">FAQ</h2>
           <dl class="faq">{faq.map(([q, a]) => <><dt style="font-weight:600;margin-top:1rem">{q}</dt><dd style="margin:.25rem 0 0">{a}</dd></>)}</dl>
         </section>
-        {d.tier === 'paid' && <p class="muted" style="margin-top:1rem;font-size:var(--t-sm)">{K.paidNote}</p>}
+        {d.tier === 'paid' && <p class="muted" style="margin-top:1rem;font-size:var(--t-sm)">{soon ? (es ? 'La plantilla HANDOFF.md se puede usar sola. El hook, el prompt y el snippet llegarán a Full-stack Pro y Kit Club; aún no están incluidos.' : 'The HANDOFF.md template is usable on its own. The hook, prompt and snippet are coming to Full-stack Pro and Kit Club; they are not included yet.') : K.paidNote}</p>}
       </article>
       <aside class="aside">
         <div class="card">
           {d.tier === 'free'
             ? <><div class="price">$0 <small>MIT</small></div><p style="font-size:var(--t-sm)">{lang === 'es' ? 'Gratis para siempre. Copia el archivo y listo.' : 'Free forever. Copy the file and go.'}</p>
                 <button class="btn btn-primary copy" type="button" data-target="kit-src" data-done={s.cta.copied} style="width:100%">{s.cta.copy}</button></>
-            : <><div class="price">${d.price} <small>{lang === 'es' ? 'pago único' : 'one-time'}</small></div><p style="font-size:var(--t-sm)">{lang === 'es' ? 'O inclúyelo en Kit Club por $7/mes.' : 'Or get it in Kit Club for $7/mo.'}</p>
-                <div style="display:grid;gap:.5rem"><BuyButton href={href} label={s.cta.buy} lang={lang} /><BuyButton href={GUMROAD.kitClub} label={s.cta.club} lang={lang} primary={false} /></div></>}
+            : <><div class="price">{soon ? 'Full-stack Pro ' : ''}${d.price} <small>{lang === 'es' ? 'pago único' : 'one-time'}</small></div><p style="font-size:var(--t-sm)">{soon ? SOON[lang] + (es ? '. Aún no incluido.' : '. Not included yet.') : lang === 'es' ? 'O inclúyelo en Kit Club por $7/mes.' : 'Or get it in Kit Club for $7/mo.'}</p>
+                <div style="display:grid;gap:.5rem"><BuyButton href={href} label={buyLabel} lang={lang} /><BuyButton href={GUMROAD.kitClub} label={clubLabel} lang={lang} primary={false} /></div></>}
         </div>
         <div class="card">
           <dl class="dl">

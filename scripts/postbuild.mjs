@@ -29,7 +29,7 @@ function og(title, sub, tag) {
 const kits = validatedOgKits(JSON.parse(readFileSync(join(DIST, 'search-en.json'), 'utf8')));
 mkdirSync(join(DIST, 'og'), { recursive: true });
 writeFileSync(join(DIST, 'og/default.png'), og('Agent kits that actually ship.', 'Tested Cursor rules, CLAUDE.md, AGENTS.md, agent skills and n8n flows. EN / ES.', 'Free library · Kit Club $7/mo'));
-for (const k of kits) writeFileSync(join(DIST, `og/${k.slug}.png`), og(k.title, k.summary, `${k.tool} · ${k.tier === 'free' ? 'Free' : '$' + k.price}`));
+for (const k of kits) writeFileSync(join(DIST, `og/${k.slug}.png`), og(k.title, k.summary, `${k.tool} · ${k.tier === 'free' ? 'Free' : k.soon ? 'Coming to Full-stack Pro' : '$' + k.price}`));
 
 // CSP: hash every inline <script> (non-JSON) per page.
 const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });

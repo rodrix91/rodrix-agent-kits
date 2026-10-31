@@ -1,5 +1,8 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { GUMROAD } from '../config';
+import { GUMROAD, BUNDLE_PENDING_KITS } from '../config';
+/** True when a paid kit is announced but not yet inside its Gumroad bundle. */
+export const bundlePending = (k: { id: string }) => BUNDLE_PENDING_KITS.includes(k.id);
+export const SOON = { en: 'Coming to Full-stack Pro & Kit Club', es: 'Próximamente en Full-stack Pro y Kit Club' } as const;
 import type { Lang } from './i18n';
 
 const files = import.meta.glob('/src/kitfiles/*', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
@@ -24,7 +27,7 @@ export function fileLang(file: string) {
 export function searchDoc(k: Kit, lang: Lang) {
   const d = k.data, L = d[lang];
   return {
-    slug: k.id, title: L.title, summary: L.summary, tool: d.tool, category: d.category, languages: d.languages, tier: d.tier, price: d.price ?? 0,
+    slug: k.id, title: L.title, summary: L.summary, tool: d.tool, category: d.category, languages: d.languages, tier: d.tier, price: d.price ?? 0, soon: bundlePending(k),
     text: [L.title, L.summary, ...L.inside, d.tool, d.category, ...d.keywords, d.en.title, d.en.summary].join(' ').toLowerCase(),
   };
 }
