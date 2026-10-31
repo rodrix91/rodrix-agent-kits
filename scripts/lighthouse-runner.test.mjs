@@ -111,3 +111,76 @@ test('a synchronous Chrome cleanup error does not prevent server shutdown', asyn
   );
   assert.ok(h.events.includes('close-server'));
 });
+
+test('invalid or missing Lighthouse category scores fail without saving partial reports', async () => {
+  const valid = () => Object.fromEntries(
+    ['performance', 'accessibility', 'best-practices', 'seo']
+      .map((key) => [key, { score: 0.9 }]),
+  );
+  const badResults = [
+    ['missing response', undefined],
+    ['missing LHR', {}],
+    ['missing categories', { lhr: {} }],
+    ['missing one category', { lhr: { categories: { performance: { score: 0.9 } } } }],
+    ['missing category score', { lhr: { categories: { ...valid(), seo: {} } } }],
+    ['null category score', { lhr: { categories: { ...valid(), seo: { score: null } } } }],
+    ['string category score', { lhr: { categories: { ...valid(), seo: { score: '0.9' } } } }],
+    ['boolean category score', { lhr: { categories: { ...valid(), seo: { score: true } } } }],
+    ['not a number', { lhr: { categories: { ...valid(), seo: { score: NaN } } } }],
+    ['positive infinity', { lhr: { categories: { ...valid(), seo: { score: Infinity } } } }],
+    ['negative infinity', { lhr: { categories: { ...valid(), seo: { score: -Infinity } } } }],
+    ['negative score', { lhr: { categories: { ...valid(), seo: { score: -0.01 } } } }],
+    ['score over one', { lhr: { categories: { ...valid(), seo: { score: 1.01 } } } }],
+  ];
+  for (const [name, result] of badResults) {
+    const h = harness();
+    h.deps.audit = async () => { h.events.push('audit'); return result; };
+    await assert.rejects(
+      runLighthouse(h.deps),
+      /Invalid Lighthouse (?:performance|accessibility|best-practices|seo) score for mobile \/$/,
+      name,
+    );
+    assert.deepEqual(h.saved, [], name);
+    assert.deepEqual(h.events, ['serve', 'launch-chrome', 'audit', 'kill-chrome', 'close-server'], name);
+  }
+});
+
+test('valid zero and perfect Lighthouse scores are preserved', async () => {
+  const h = harness();
+  h.deps.audit = async () => ({
+    lhr: {
+      categories: {
+        performance: { score: 0 },
+        accessibility: { score: 1 },
+        'best-practices': { score: 0.999 },
+        seo: { score: 0.005 },
+      },
+    },
+  });
+  const rows = await runLighthouse(h.deps);
+  assert.deepEqual(rows, [{
+    formFactor: 'mobile', page: '/',
+    performance: 0, accessibility: 100, bestPractices: 100, seo: 1,
+  }]);
+  assert.deepEqual(h.saved[0].rows, rows);
+  assert.deepEqual(h.events.slice(-3), ['save', 'kill-chrome', 'close-server']);
+});
+
+test('a late invalid score discards otherwise valid earlier audit rows', async () => {
+  const h = harness();
+  h.deps.env.LH_PAGES = '/,/pricing/';
+  let count = 0;
+  h.deps.audit = async () => {
+    h.events.push('audit');
+    count++;
+    const categories = Object.fromEntries(
+      ['performance', 'accessibility', 'best-practices', 'seo']
+        .map((key) => [key, { score: count === 1 ? 0.9 : NaN }]),
+    );
+    return { lhr: { categories } };
+  };
+  await assert.rejects(runLighthouse(h.deps), /Invalid Lighthouse performance score for mobile \/pricing\//);
+  assert.equal(count, 2);
+  assert.equal(h.saved.length, 0);
+  assert.deepEqual(h.events.slice(-2), ['kill-chrome', 'close-server']);
+});
