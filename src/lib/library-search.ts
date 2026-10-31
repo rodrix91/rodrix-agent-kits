@@ -5,7 +5,14 @@ export function foldSearchText(value: string): string {
 }
 
 export function searchTerms(query: string): string[] {
-  return foldSearchText(query).trim().split(/\s+/u).filter(Boolean);
+  // Visitors write "n8n, workflow" and "¿código, español?" as naturally
+  // as space-separated queries. Split punctuation at word boundaries, but
+  // retain the significant symbols inside CLAUDE.md, C++, C# and Next.js.
+  return foldSearchText(query)
+    .trim()
+    .split(/[^\p{L}\p{N}.+#_-]+/u)
+    .map((term) => term.replace(/^\.+|\.+$/gu, ''))
+    .filter((term) => /[\p{L}\p{N}]/u.test(term));
 }
 
 export function matchesSearch(text: string, terms: readonly string[]): boolean {
