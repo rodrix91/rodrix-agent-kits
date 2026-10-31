@@ -10,6 +10,7 @@ Live: https://rodrix91.github.io/rodrix-agent-kits/
 - Client JS only for: theme toggle, mobile menu, library filters, copy-to-clipboard, newsletter form, local kit finder (`src/lib/match.ts`, BM25 + synonyms, no network). The finder accepts Spanish queries with or without accent marks, precomputes document frequencies once for growing catalogs, and has offline relevance regressions in `scripts/finder.test.mjs` (`npm test`).
 - Post-build (`scripts/postbuild.mjs`): OG images (resvg), per-page CSP with script hashes, `_headers`, `.nojekyll`. OG image filenames are validated against safe lowercase slugs, duplicate IDs and the reserved `default.png` name *before* writing images; `scripts/og-slugs.test.mjs` covers malformed catalog values, path traversal and collisions.
 - SEO/AEO: canonical + hreflang, OG/Twitter, JSON-LD (Organization, WebSite, Product, BreadcrumbList, ItemList, FAQPage), sitemap, robots.txt, `llms.txt`, `llms-full.txt`, RSS (EN + ES), raw kit files at `/files/*`.
+- Sitemap `lastmod` values are derived from each kit's validated `added` / `updated` frontmatter, including both language routes. Pages without a documented source update date omit `lastmod` rather than claiming that every rebuild changed the content. Missing, contradictory or invalid kit dates fail the build. Run `node --test scripts/sitemap-dates.test.mjs` for offline regressions; `npm test` also checks the generated XML against real kit metadata.
 
 ## Commands
 | | |
