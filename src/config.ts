@@ -39,7 +39,7 @@ export const PAYHIP = {
 };
 
 /** Search engine verification tokens (HTML-tag method). Empty = no tag emitted. */
-export const GOOGLE_SITE_VERIFICATION = '';
+export const GOOGLE_SITE_VERIFICATION = 'ZtPoEPg8NinMyCsJ78acEyxd46AO3bJxT2z6dfDGVHA';
 export const BING_SITE_VERIFICATION = '';
 
 export const NEWSLETTER = {

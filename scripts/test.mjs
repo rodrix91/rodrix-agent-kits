@@ -203,6 +203,15 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
   ok(readFileSync('dist/llms.txt', 'utf8').includes('/kits/agent-secrets-safety-pack/') && readFileSync('dist/sitemap-0.xml', 'utf8').includes('/kits/agent-secrets-safety-pack/'), 'secrets pack in llms.txt + sitemap');
 }
 
+// F-SEO-1 Google Search Console verification tag (Steve 2026-10-31 11:38)
+{ const GSV = 'ZtPoEPg8NinMyCsJ78acEyxd46AO3bJxT2z6dfDGVHA';
+  for (const f of ['index.html', 'es/index.html', 'kits/index.html']) {
+    const m = readFileSync('dist/' + f, 'utf8').match(/<meta name="google-site-verification" content="([^"]*)"\s*\/?>/g) || [];
+    ok(m.length === 1 && m[0].includes(`content="${GSV}"`), `google-site-verification exact token once: /${f}`);
+  }
+  ok(!/msvalidate\.01/.test(readFileSync('dist/index.html', 'utf8')), 'Bing verification still empty (no msvalidate tag)');
+}
+
 // support email (F-STV-3)
 { const EMAIL = 'rodrixlabs@mail.grokbot.com'; const re = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
   ok(re.test(EMAIL), 'support email format valid');
