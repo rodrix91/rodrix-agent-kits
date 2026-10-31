@@ -31,9 +31,17 @@ export function summarizeAuditReport(report) {
   }
 
   const advisories = Object.entries(vulnerabilities).sort(([a], [b]) => a.localeCompare(b));
+  // An audit containing advisories cannot be "clean", and a positive
+  // vulnerability total without affected-package details is incomplete.
+  if ((totals.total === 0) !== (advisories.length === 0)) {
+    throw new Error('npm audit advisory details contradict the reported vulnerability total');
+  }
   for (const [name, advisory] of advisories) {
     if (!advisory || typeof advisory !== 'object' || Array.isArray(advisory)) {
       throw new Error('npm audit returned malformed advisory details for ' + name);
+    }
+    if (!SEVERITIES.includes(advisory.severity) || normalized[advisory.severity] === 0) {
+      throw new Error('npm audit advisory severity contradicts metadata for ' + name);
     }
   }
   return { totals: { ...normalized, total: totals.total }, advisories };
