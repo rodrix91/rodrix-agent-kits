@@ -60,8 +60,16 @@ export async function runLighthouse({
           { port: chrome.port, output: 'json', logLevel: 'error' },
           desktopConfig(formFactor),
         );
-        const categories = result.lhr.categories;
-        const score = (key) => Math.round(categories[key].score * 100);
+        const categories = result?.lhr?.categories;
+        // Missing or malformed Lighthouse results must never be published as
+        // scores: JSON.stringify would silently convert NaN/Infinity to null.
+        const score = (key) => {
+          const value = categories?.[key]?.score;
+          if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 1) {
+            throw new Error(`Invalid Lighthouse ${key} score for ${formFactor} ${page}`);
+          }
+          return Math.round(value * 100);
+        };
         const row = {
           formFactor, page,
           performance: score('performance'),
