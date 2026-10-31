@@ -59,6 +59,7 @@ const date = d.added.toISOString().slice(0, 10);
         </div>
         <h1>{L.title}</h1>
         <p style="font-size:var(--t-md)">{L.summary}</p>
+        {d.tier === 'paid' && <div class="buy-top" data-testid="buy-top"><span class="price" style="font-size:var(--t-lg)">${d.price} <small>{lang === 'es' ? 'pago único' : 'one-time'}</small></span><BuyButton href={href} label={s.cta.buy} lang={lang} /></div>}
         <div class="prose" lang="en"><Content /></div>
         <h2 style="font-size:var(--t-lg);margin-top:2.5rem">{K.inside}</h2>
         <ul class="check">{L.inside.map((i) => <li>{i}</li>)}</ul>

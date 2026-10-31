@@ -197,6 +197,25 @@ ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('
 await page.fill('#finder-q', 'quiero automatizar formularios de leads'); await page.click('#finder-form button');
 await page.waitForTimeout(200);
 ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('n8n'), 'kit finder (ES query) finds n8n flow');
+// conversion: Gumroad CTA above the fold on mobile (390x844) for /pricing/ and every paid kit page (EN/ES)
+{
+  const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+  const mp = await mctx.newPage();
+  const paid = readdirSync('src/content/kits').filter((f) => /^tier:\s*"?paid/m.test(readFileSync(`src/content/kits/${f}`, 'utf8'))).map((f) => `/kits/${f.replace(/\.md$/, '')}/`);
+  for (const p of ['/pricing/', ...paid].flatMap((x) => [x, '/es' + x])) {
+    await mp.goto(ORIGIN + B + p, { waitUntil: 'load' });
+    const above = await mp.$$eval('a[href*="gumroad.com"]', (as) => as.some((a) => { const b = a.getBoundingClientRect(); return b.height > 0 && b.bottom + scrollY <= innerHeight && getComputedStyle(a).visibility !== 'hidden'; }));
+    ok(above, `mobile Gumroad CTA above the fold ${p}`);
+  }
+  // no horizontal page overflow on mobile (wide code blocks must scroll inside <pre>)
+  const kitPages = readdirSync('src/content/kits').map((f) => `/kits/${f.replace(/\.md$/, '')}/`);
+  for (const p of [...new Set([...pages, ...kitPages, ...kitPages.map((x) => '/es' + x)])]) {
+    await mp.goto(ORIGIN + B + p, { waitUntil: 'load' });
+    const w = await mp.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+    ok(w[0] <= w[1], `mobile no horizontal overflow ${p} (${w[0]}/${w[1]}px)`);
+  }
+  await mctx.close();
+}
 await browser.close(); srv.close();
 console.log(fail ? `\n${fail} check(s) FAILED` : '\nAll checks passed');
 process.exit(fail ? 1 : 0);

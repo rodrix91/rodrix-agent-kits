@@ -13,7 +13,7 @@ const meta = {
   privacy: [es ? 'Privacidad' : 'Privacy', es ? 'Qué datos recogemos (casi ninguno).' : 'What data we collect (almost none).'],
   terms: [es ? 'Términos' : 'Terms', es ? 'Términos de uso y licencias.' : 'Terms of use and licensing.'],
 }[page];
-const updated = '2026-10-30';
+const updated = '2026-10-31';
 ---
 <Base title={meta[0]} description={meta[1]} lang={lang} path={`/${page}/`}>
   <div class="wrap">
@@ -38,6 +38,7 @@ const updated = '2026-10-30';
       <h2>{es ? 'Reglas' : 'Rules'}</h2><ul><li>{es ? 'Todo contenido patrocinado se etiqueta.' : 'All sponsored content is labeled.'}</li><li>{es ? 'Sin píxeles de rastreo ni cookies de terceros.' : 'No tracking pixels or third-party cookies.'}</li><li>{es ? 'Solo herramientas que probaríamos nosotros.' : 'Only tools we would use ourselves.'}</li></ul>
       <p>{es ? '¿Interesado? Escríbenos a ' : 'Interested? Email '}<a href={`mailto:${BRAND.email}`}>{BRAND.email}</a>{es ? ' o por ' : ' or reach out on '}<a href={BRAND.x}>X</a>.</p></>}
     {page === 'changelog' && <div class="timeline">
+      <div><time datetime="2026-10-31">2026-10-31</time><h2 style="margin-top:.5rem">{es ? 'Mejor en el móvil' : 'Better on mobile'}</h2><ul><li>{es ? 'Las páginas de kits y guías ya no se desbordan a lo ancho en pantallas pequeñas; los bloques de código y tablas se desplazan dentro de su caja.' : 'Kit and guide pages no longer overflow sideways on small screens; code blocks and tables scroll inside their box.'}</li><li>{es ? 'Botón de compra visible arriba en Precios y en cada kit de pago.' : 'Buy button visible at the top of Pricing and every paid kit.'}</li></ul></div>
       <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? '3 guías nuevas (en inglés)' : '3 new guides'}</h2><ul><li>{es ? 'AGENTS.md vs CLAUDE.md vs reglas de Cursor, un solo AGENTS.md para Claude Code/Cursor/Codex y dónde poner reglas .mdc, verificadas contra la documentación oficial.' : 'AGENTS.md vs CLAUDE.md vs Cursor rules, one AGENTS.md for Claude Code/Cursor/Codex, and where to put .mdc rules, checked against the official docs.'}</li></ul></div>
       <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? 'Nuevo kit gratis: una sola fuente de verdad' : 'New free kit: One source of truth'}</h2><ul><li>{es ? 'AGENTS.md maestro + import en CLAUDE.md + stub de regla de Cursor + GitHub Action de drift-check.' : 'Master AGENTS.md + CLAUDE.md import + Cursor rule stub + drift-check GitHub Action.'}</li><li>{es ? 'Respaldo del newsletter: RSS y X mientras abre la suscripción.' : 'Newsletter fallback: RSS and X until signup opens.'}</li></ul></div>
       <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? 'Checkout en vivo' : 'Checkout is live'}</h2><ul><li>{es ? 'Full-stack Pro ($19), Agent Skills Pack ($12), n8n Automation Pack ($15) y Kit Club ($7/mes) ya se pueden comprar vía Gumroad.' : 'Full-stack Pro ($19), Agent Skills Pack ($12), n8n Automation Pack ($15) and Kit Club ($7/mo) are now available via Gumroad.'}</li></ul></div>

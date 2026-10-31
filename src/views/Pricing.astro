@@ -39,6 +39,7 @@ const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity
       <span class="kicker">{s.nav.pricing}</span>
       <h1>{es ? 'Gratis para empezar. Barato para escalar.' : 'Free to start. Cheap to scale.'}</h1>
       <p style="margin:0 auto">{es ? 'Sin planes confusos. Usa la biblioteca gratis; paga solo si quieres los bundles profundos.' : 'No confusing tiers. Use the library free; pay only for the deep bundles.'}</p>
+      {GUMROAD.kitClub && <div class="head-cta" data-testid="pricing-top-cta"><BuyButton href={GUMROAD.kitClub} label={`${s.cta.club} · $${PRICES.kitClubMonthly}${es ? '/mes' : '/mo'}`} lang={lang} /></div>}
     </header>
     <div class="plans">
       {plans.map((p) => (

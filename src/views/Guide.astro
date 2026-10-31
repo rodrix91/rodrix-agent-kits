@@ -41,3 +41,7 @@ const ld = [
   </div>
   <Newsletter lang="en" />
 </Base>
+<script>
+  // Wide tables scroll horizontally on small screens; make them keyboard-scrollable.
+  document.querySelectorAll<HTMLTableElement>('.prose table').forEach((t) => { if (t.scrollWidth > t.clientWidth) { t.tabIndex = 0; t.setAttribute('aria-label', t.closest('section')?.querySelector('h2')?.textContent || 'Table'); } });
+</script>
