@@ -89,8 +89,8 @@ export async function runLighthouse({
   } finally {
     // Both resources must be cleaned up even if an audit or cleanup fails.
     const cleanup = await Promise.allSettled([
-      chrome ? chrome.kill() : Promise.resolve(),
-      server ? closeServer(server) : Promise.resolve(),
+      Promise.resolve().then(() => chrome?.kill()),
+      Promise.resolve().then(() => server && closeServer(server)),
     ]);
     const errors = cleanup
       .filter((result) => result.status === 'rejected')
