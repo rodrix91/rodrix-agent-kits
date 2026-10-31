@@ -112,6 +112,21 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
   ok(/\/guides\/one-agents-md-for-claude-code-cursor-codex\//.test(readFileSync('dist/kits/one-source-of-truth/index.html', 'utf8')), 'kit page links to its guides');
 }
 
+// support email (F-STV-3)
+{ const EMAIL = 'rodrixlabs@mail.grokbot.com'; const re = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+  ok(re.test(EMAIL), 'support email format valid');
+  for (const f of ['index.html', 'es/index.html', 'pricing/index.html', 'es/pricing/index.html', 'kits/index.html', 'about/index.html', 'privacy/index.html', 'es/privacy/index.html', 'guides/one-agents-md-for-claude-code-cursor-codex/index.html']) {
+    const h = readFileSync('dist/' + f, 'utf8');
+    ok(h.includes(`href="mailto:${EMAIL}"`), `support mailto present: /${f}`);
+    const org = [...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])).find((x) => x['@type'] === 'Organization');
+    ok(org?.contactPoint?.contactType === 'customer support' && org.contactPoint.email === EMAIL, `Organization ContactPoint: /${f}`);
+  }
+  for (const f of ['pricing/index.html', 'es/pricing/index.html']) ok(/"FAQPage"[\s\S]*rodrixlabs@mail\.grokbot\.com/.test(readFileSync('dist/' + f, 'utf8')), `Gumroad FAQ has support email: /${f}`);
+  const all = execSync('grep -rhoE "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[a-z]{2,}" dist src || true').toString().split('\n').filter(Boolean);
+  const bad = [...new Set(all)].filter((e) => ![EMAIL, 'you@domain.com'].includes(e) && !/\.(png|svg|js|css)$/.test(e) && !/^[a-z0-9.-]+@\d/.test(e));
+  ok(bad.length === 0, `no other email addresses in src/dist (${bad.join(', ') || 'none'})`);
+}
+
 // newsletter: live action or a working fallback (RSS + X links) on EN/ES home
 for (const l of ['', 'es/']) {
   const h = readFileSync(`dist/${l}index.html`, 'utf8');

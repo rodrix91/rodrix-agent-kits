@@ -18,6 +18,7 @@ const s = t[lang];
       <div><h2>{s.footer.company}</h2><ul>
         <li><a href={url('/about/', lang)}>{s.nav.about}</a></li>
         <li><a href={url('/sponsors/', lang)}>{s.nav.sponsors}</a></li>
+        <li><a href={`mailto:${BRAND.email}`} data-support-email>{BRAND.email}</a></li>
         <li><a href={BRAND.x} rel="me noopener">X</a></li>
         <li><a href={BRAND.github} rel="noopener">GitHub</a></li>
       </ul></div>

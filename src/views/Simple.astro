@@ -36,7 +36,7 @@ const updated = '2026-10-30';
         <tr><td>{es ? 'Biblioteca' : 'Library banner'}</td><td>{es ? 'Tarjeta en la biblioteca durante 30 días' : 'Card in the library for 30 days'}</td><td>{es ? 'Texto, sin rastreadores' : 'Text, no trackers'}</td></tr>
       </tbody></table>
       <h2>{es ? 'Reglas' : 'Rules'}</h2><ul><li>{es ? 'Todo contenido patrocinado se etiqueta.' : 'All sponsored content is labeled.'}</li><li>{es ? 'Sin píxeles de rastreo ni cookies de terceros.' : 'No tracking pixels or third-party cookies.'}</li><li>{es ? 'Solo herramientas que probaríamos nosotros.' : 'Only tools we would use ourselves.'}</li></ul>
-      <p>{es ? 'Interesado? Escríbenos por ' : 'Interested? Reach out on '}<a href={BRAND.x}>X</a>.</p></>}
+      <p>{es ? '¿Interesado? Escríbenos a ' : 'Interested? Email '}<a href={`mailto:${BRAND.email}`}>{BRAND.email}</a>{es ? ' o por ' : ' or reach out on '}<a href={BRAND.x}>X</a>.</p></>}
     {page === 'changelog' && <div class="timeline">
       <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? '3 guías nuevas (en inglés)' : '3 new guides'}</h2><ul><li>{es ? 'AGENTS.md vs CLAUDE.md vs reglas de Cursor, un solo AGENTS.md para Claude Code/Cursor/Codex y dónde poner reglas .mdc, verificadas contra la documentación oficial.' : 'AGENTS.md vs CLAUDE.md vs Cursor rules, one AGENTS.md for Claude Code/Cursor/Codex, and where to put .mdc rules, checked against the official docs.'}</li></ul></div>
       <div><time datetime="2026-10-30">2026-10-30</time><h2 style="margin-top:.5rem">{es ? 'Nuevo kit gratis: una sola fuente de verdad' : 'New free kit: One source of truth'}</h2><ul><li>{es ? 'AGENTS.md maestro + import en CLAUDE.md + stub de regla de Cursor + GitHub Action de drift-check.' : 'Master AGENTS.md + CLAUDE.md import + Cursor rule stub + drift-check GitHub Action.'}</li><li>{es ? 'Respaldo del newsletter: RSS y X mientras abre la suscripción.' : 'Newsletter fallback: RSS and X until signup opens.'}</li></ul></div>
@@ -49,13 +49,13 @@ const updated = '2026-10-30';
       <h2>Qué guardamos</h2><ul><li><strong>Preferencia de tema</strong> en el almacenamiento local de tu navegador. Nunca sale de tu dispositivo.</li><li><strong>Email del newsletter</strong>, solo si te suscribes, guardado por nuestro proveedor de newsletter. Puedes darte de baja en cada envío.</li><li><strong>Compras</strong>: las procesa Gumroad, que actúa como vendedor responsable; aplica su política de privacidad.</li></ul>
       <h2>Buscador de kits</h2><p>Funciona totalmente en tu navegador. Lo que escribes no se envía a ningún servidor.</p>
       <h2>Hosting</h2><p>GitHub Pages puede registrar direcciones IP en logs técnicos según su propia política.</p>
-      <h2>Contacto</h2><p>Para pedir acceso o borrado de tus datos, contáctanos por <a href={BRAND.x}>X</a>.</p></> : <>
+      <h2>Contacto</h2><p>Para pedir acceso o borrado de tus datos, escríbenos a <a href={`mailto:${BRAND.email}`}>{BRAND.email}</a> o por <a href={BRAND.x}>X</a>.</p></> : <>
       <p class="muted">Updated: {updated}</p>
       <h2>Summary</h2><p>This is a static site. It uses no tracking cookies and no third-party analytics.</p>
       <h2>What we store</h2><ul><li><strong>Theme preference</strong> in your browser's local storage. It never leaves your device.</li><li><strong>Newsletter email</strong>, only if you subscribe, stored by our newsletter provider. Every issue has an unsubscribe link.</li><li><strong>Purchases</strong> are processed by Gumroad as merchant of record; their privacy policy applies.</li></ul>
       <h2>Kit finder</h2><p>Runs entirely in your browser. What you type is never sent to a server.</p>
       <h2>Hosting</h2><p>GitHub Pages may log IP addresses in technical logs under its own policy.</p>
-      <h2>Contact</h2><p>To request access to or deletion of your data, contact us on <a href={BRAND.x}>X</a>.</p></>)}
+      <h2>Contact</h2><p>To request access to or deletion of your data, email <a href={`mailto:${BRAND.email}`}>{BRAND.email}</a> or contact us on <a href={BRAND.x}>X</a>.</p></>)}
     {page === 'terms' && (es ? <>
       <p class="muted">Actualizado: {updated}</p>
       <h2>Kits gratis</h2><p>Se publican bajo licencia MIT: úsalos, modifícalos y compártelos, también en proyectos comerciales.</p>

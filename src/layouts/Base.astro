@@ -11,7 +11,7 @@ const canonical = site + url(path, lang);
 const alt = (l: Lang) => site + url(path, l);
 const ogUrl = site + asset(og);
 const fullTitle = path === '/' ? title : `${title} — ${BRAND.name}`;
-const org = { '@context': 'https://schema.org', '@type': 'Organization', name: BRAND.name, url: site + url('/', 'en'), logo: site + asset('/favicon.svg'), sameAs: [BRAND.x, BRAND.github] };
+const org = { '@context': 'https://schema.org', '@type': 'Organization', name: BRAND.name, url: site + url('/', 'en'), logo: site + asset('/favicon.svg'), sameAs: [BRAND.x, BRAND.github], email: BRAND.email, contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: BRAND.email, availableLanguage: ['English', 'Spanish'] } };
 const ld = [org, ...jsonLd];
 ---
 <!doctype html>

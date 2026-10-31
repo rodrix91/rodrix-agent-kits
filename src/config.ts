@@ -8,7 +8,7 @@ export const BRAND = {
   short: 'Rodrix',
   x: 'https://x.com/RODRX_NOVA',
   github: 'https://github.com/rodrix91/rodrix-agent-kits',
-  email: '', // TODO(Rodrigo): public contact email (optional)
+  email: 'rodrixlabs@mail.grokbot.com', // public support/contact email (Rodrix Labs)
 };
 
 export const GUMROAD = {

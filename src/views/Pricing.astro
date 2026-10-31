@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import BuyButton from '../components/BuyButton.astro';
 import Newsletter from '../components/Newsletter.astro';
 import { t, url, type Lang } from '../lib/i18n';
-import { GUMROAD, PRICES } from '../config';
+import { GUMROAD, PRICES , BRAND } from '../config';
 const { lang } = Astro.props as { lang: Lang };
 const s = t[lang]; const es = lang === 'es';
 const plans = [
@@ -16,14 +16,16 @@ const faq = es ? [
   ['¿Qué es Kit Club?', 'Una membresía de $7/mes con acceso a todos los bundles de pago y sus actualizaciones. Se cobra a través de Gumroad.'],
   ['¿Puedo cancelar?', 'Sí, en cualquier momento desde tu cuenta de Gumroad. Mantienes acceso hasta el final del periodo pagado.'],
   ['¿Con qué herramientas funcionan?', 'Cursor, Claude Code, Codex y cualquier agente que lea AGENTS.md, además de n8n. Cada kit indica la ruta de instalación exacta.'],
-  ['¿Reembolsos?', 'Si un kit de pago no te sirve, escríbenos dentro de 14 días y te devolvemos el dinero.'],
+  ['¿Reembolsos?', `Si un kit de pago no te sirve, escríbenos a ${BRAND.email} dentro de 14 días y te devolvemos el dinero.`],
+  ['¿Problemas con una compra en Gumroad?', `Escríbenos a ${BRAND.email} con el correo que usaste en Gumroad y te ayudamos.`],
   ['¿Cómo pago?', 'Con tarjeta o PayPal en el checkout seguro de Gumroad. Nunca vemos los datos de tu tarjeta.'],
 ] : [
   ['Are the free kits really free?', 'Yes. MIT-licensed, complete, no signup. Revenue comes from bundles and Kit Club, not from hiding the basics.'],
   ['What is Kit Club?', 'A $7/month membership that unlocks every paid bundle and its updates. Billed through Gumroad.'],
   ['Can I cancel?', 'Anytime, from your Gumroad account. You keep access until the end of the paid period.'],
   ['Which tools do kits work with?', 'Cursor, Claude Code, Codex and any agent that reads AGENTS.md, plus n8n. Every kit lists its exact install path.'],
-  ['Refunds?', 'If a paid kit does not help you, email us within 14 days for a full refund.'],
+  ['Refunds?', `If a paid kit does not help you, email ${BRAND.email} within 14 days for a full refund.`],
+  ['Problem with a Gumroad purchase?', `Email ${BRAND.email} with the address you used on Gumroad and we will help.`],
   ['How do I pay?', 'Card or PayPal through Gumroad\'s secure checkout. We never see your card details.'],
 ];
 const club = { '@context': 'https://schema.org', '@type': 'Product', name: 'Kit Club', description: es ? 'Membresía: todos los bundles y kits gratis, con kits nuevos.' : 'Membership: every bundle and free kit, plus new kits as they ship.', brand: { '@type': 'Brand', name: 'Rodrix Agent Kits' },
@@ -51,7 +53,7 @@ const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity
     </div>
     <section class="section" aria-labelledby="faq-h">
       <h2 id="faq-h">FAQ</h2>
-      <div class="faq">{faq.map(([q, a]) => <details><summary>{q}</summary><p>{a}</p></details>)}</div>
+      <div class="faq">{faq.map(([q, a]) => <details><summary>{q}</summary><p>{a.includes(BRAND.email) ? <>{a.split(BRAND.email)[0]}<a href={`mailto:${BRAND.email}`}>{BRAND.email}</a>{a.split(BRAND.email)[1]}</> : a}</p></details>)}</div>
     </section>
   </div>
   <Newsletter lang={lang} />
