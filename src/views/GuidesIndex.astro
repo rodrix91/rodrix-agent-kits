@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { url } from '../lib/i18n';
+import type { Lang } from '../lib/i18n';
+import { getCollection } from 'astro:content';
+const { lang = 'en' } = Astro.props as { lang?: Lang };
+const es = lang === 'es';
+const guides = (await getCollection(es ? 'guidesEs' : 'guides')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const origin = Astro.site!.origin;
+const pageUrl = origin + url('/guides/', lang);
+const title = es ? 'Guías: reglas para agentes de IA' : 'Guides: AI coding agent rules';
+const description = es
+  ? 'Guías verificadas sobre AGENTS.md, CLAUDE.md y reglas de Cursor: qué archivo lee cada agente, dónde va y cómo evitar que se desincronicen.'
+  : 'Verified guides on AGENTS.md, CLAUDE.md and Cursor rules: which file each coding agent reads, where it goes, and how to keep them in sync.';
+const ld = [
+  { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, description, url: pageUrl, inLanguage: lang,
+    mainEntity: { '@type': 'ItemList', itemListElement: guides.map((g, i) => ({ '@type': 'ListItem', position: i + 1, name: g.data.title, url: origin + url(`/guides/${g.id}/`, lang) })) } },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: es ? 'Inicio' : 'Home', item: origin + url('/', lang) },
+    { '@type': 'ListItem', position: 2, name: es ? 'Guías' : 'Guides', item: pageUrl }] },
+];
+---
+<Base title={title} description={description} lang={lang} path="/guides/" jsonLd={ld}>
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href={url('/', lang)}>{es ? 'Inicio' : 'Home'}</a><span aria-hidden="true">/</span><span aria-current="page">{es ? 'Guías' : 'Guides'}</span></nav>
+    <article style="max-width:46rem">
+      <h1>{es ? 'Guías' : 'Guides'}</h1>
+      <p class="muted">{description}</p>
+      <ul class="guide-list" style="list-style:none;padding:0">
+        {guides.map((g) => <li style="margin-top:1.5rem"><h2 style="font-size:var(--t-lg);margin:0"><a href={url(`/guides/${g.id}/`, lang)}>{g.data.title}</a></h2><p style="margin:.25rem 0 0">{g.data.description}</p></li>)}
+      </ul>
+    </article>
+  </div>
+  <Newsletter lang={lang} />
+</Base>

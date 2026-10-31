@@ -92,7 +92,8 @@ ok(!tracked.some((f) => secretRe.test(readFileSync(f, 'utf8'))), 'no secrets in 
     filename, content: readFileSync('src/content/kits/' + filename, 'utf8'),
   })));
   const kitPages = urls.filter((item) => /\/(?:es\/)?kits\/[a-z0-9-]+\/$/.test(item.loc));
-  const generalPages = urls.filter((item) => !kitPages.includes(item));
+  // Guide detail pages carry their verified `updated` date (checked in the F-SCO-9 block).
+  const generalPages = urls.filter((item) => !kitPages.includes(item) && !/\/(?:es\/)?guides\/[a-z0-9-]+\/$/.test(item.loc));
   ok(urls.length > 0 && urls.every((item) => item.loc), 'sitemap includes valid location entries');
   ok(kitPages.length === dated.size * 2, 'both language variants of each kit occur in sitemap');
   ok(kitPages.every(({ loc, lastmod }) => {
@@ -152,6 +153,23 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
   }
   ok(/\/guides\/one-agents-md-for-claude-code-cursor-codex\//.test(readFileSync('dist/kits/one-source-of-truth/index.html', 'utf8')), 'kit page links to its guides');
   ok(/\/es\/guides\/one-agents-md-for-claude-code-cursor-codex\//.test(readFileSync('dist/es/kits/one-source-of-truth/index.html', 'utf8')), 'ES kit page links to ES guides');
+  // F-SCO-9: /guides/ index (EN+ES), breadcrumb item 2 = index, guide lastmod
+  const site = 'https://rodrix91.github.io' + B;
+  for (const [lang, pre] of [['en', ''], ['es', '/es']]) {
+    const f = `dist${pre}/guides/index.html`; ok(existsSync(f), `guides index exists: ${pre}/guides/`); if (!existsSync(f)) continue;
+    const h = readFileSync(f, 'utf8');
+    ok(guides.every((g) => h.includes(`${B}${pre}/guides/${g}/`)), `guides index links all guides: ${pre}/guides/`);
+    ok(sm.includes(`${site}${pre}/guides/</loc>`) && llmsTxt.includes(`${site}${pre}/guides/)`), `guides index in sitemap + llms.txt: ${pre}/guides/`);
+    for (const g of guides) {
+      const gh = readFileSync(`dist${pre}/guides/${g}/index.html`, 'utf8');
+      const bc = [...gh.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])).find((x) => x['@type'] === 'BreadcrumbList');
+      ok(bc?.itemListElement?.[1]?.item === `${site}${pre}/guides/` && bc.itemListElement[2].item.endsWith(`/guides/${g}/`), `guide breadcrumb item 2 = ${pre}/guides/: ${g}`);
+      ok(new RegExp(`class="crumbs"[^]*?href="${B}${pre}/guides/"`).test(gh), `visible breadcrumb links ${pre}/guides/: ${g}`);
+      const m = sm.match(new RegExp(`<loc>${site}${pre}/guides/${g}/</loc>(?:(?!</url>)[^])*?<lastmod>([^<]+)</lastmod>`));
+      ok(!!m && /^\d{4}-\d{2}-\d{2}/.test(m[1]), `guide has sitemap lastmod (${m?.[1]}): ${pre}/guides/${g}/`);
+    }
+  }
+  ok((sm.match(/<lastmod>/g) || []).length >= 21, `sitemap lastmod count >= 21 (${(sm.match(/<lastmod>/g) || []).length})`);
 }
 
 // F-SCO-7 agent handoff kit (paid, Full-stack Pro + Kit Club)
@@ -245,7 +263,7 @@ await checker.check({ path: `${ORIGIN}${B}/es/`, recurse: true, linksToSkip: [`^
 ok(broken.length === 0, `internal links: ${broken.length} broken`); broken.forEach((b) => console.log('   ', b));
 
 const browser = await launch();
-const pages = ['/', '/es/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/', '/kits/agent-secrets-safety-pack/', '/kits/agent-handoff-kit/', '/es/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/es/guides/one-agents-md-for-claude-code-cursor-codex/', '/es/guides/where-to-put-cursor-rules-mdc/'];
+const pages = ['/', '/es/', '/guides/', '/es/guides/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/', '/kits/agent-secrets-safety-pack/', '/kits/agent-handoff-kit/', '/es/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/es/guides/one-agents-md-for-claude-code-cursor-codex/', '/es/guides/where-to-put-cursor-rules-mdc/'];
 for (const theme of ['dark', 'light']) {
   const ctx = await browser.newContext({ colorScheme: theme, reducedMotion: 'reduce' });
   for (const p of pages) {

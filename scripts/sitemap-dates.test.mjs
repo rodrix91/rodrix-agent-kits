@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { kitModificationDates, sitemapLastmod, validUtcDate } from './sitemap-dates.mjs';
+import { kitModificationDates, guideModificationDates, sitemapLastmod, validUtcDate } from './sitemap-dates.mjs';
 
 const kit = (filename, extra = '', added = '2026-10-30') => ({
   filename,
@@ -97,5 +97,22 @@ test('all real kit sources have explicit parseable sitemap dates', () => {
   for (const [slug, date] of dates) {
     assert.equal(validUtcDate(date), true, slug);
     assert.equal(sitemapLastmod('https://example.test/site/es/kits/' + slug + '/', dates), date);
+  }
+});
+
+test('guide sitemap dates use the verified updated date per language; index pages get none', () => {
+  const g = (filename, updated) => ({ filename, content: '---\ntitle: "x"\nupdated: "' + updated + '"\n---\nbody\n' });
+  const guides = { en: guideModificationDates([g('a-guide.md', '2026-10-30')]), es: guideModificationDates([g('a-guide.md', '2026-10-31')]) };
+  const kits = new Map();
+  assert.equal(sitemapLastmod('https://example.test/p/guides/a-guide/', kits, guides), '2026-10-30');
+  assert.equal(sitemapLastmod('https://example.test/p/es/guides/a-guide/', kits, guides), '2026-10-31');
+  assert.equal(sitemapLastmod('https://example.test/p/guides/', kits, guides), undefined);
+  assert.equal(sitemapLastmod('https://example.test/p/es/guides/', kits, guides), undefined);
+  assert.throws(() => sitemapLastmod('https://example.test/p/guides/missing/', kits, guides), /no verified source date/);
+  assert.throws(() => guideModificationDates([{ filename: 'b.md', content: '---\ntitle: "x"\n---\n' }]), /exactly one updated/);
+  assert.throws(() => guideModificationDates([g('c.md', '2026-02-30')]), /Invalid guide UTC date/);
+  for (const dir of ['src/content/guides', 'src/content/guides-es']) {
+    const files = readdirSync(dir).filter((f) => f.endsWith('.md')).map((filename) => ({ filename, content: readFileSync(dir + '/' + filename, 'utf8') }));
+    assert.equal(guideModificationDates(files).size, files.length, dir);
   }
 });

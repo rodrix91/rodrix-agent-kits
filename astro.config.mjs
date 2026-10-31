@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import { SITE, BASE } from './src/site.mjs';
 import { readdirSync, readFileSync } from 'node:fs';
-import { kitModificationDates, sitemapLastmod } from './scripts/sitemap-dates.mjs';
+import { kitModificationDates, guideModificationDates, sitemapLastmod } from './scripts/sitemap-dates.mjs';
 
 const kitDates = kitModificationDates(
   readdirSync('src/content/kits')
@@ -12,6 +12,14 @@ const kitDates = kitModificationDates(
       content: readFileSync(`src/content/kits/${filename}`, 'utf8'),
     })),
 );
+
+const readDir = (dir) => readdirSync(dir)
+  .filter((filename) => filename.endsWith('.md'))
+  .map((filename) => ({ filename, content: readFileSync(`${dir}/${filename}`, 'utf8') }));
+const guideDates = {
+  en: guideModificationDates(readDir('src/content/guides')),
+  es: guideModificationDates(readDir('src/content/guides-es')),
+};
 
 export default defineConfig({
   site: SITE,
@@ -23,7 +31,7 @@ export default defineConfig({
       i18n: { defaultLocale: 'en', locales: { en: 'en', es: 'es' } },
       filter: (p) => !p.includes('/404'),
       serialize: (item) => {
-        const date = sitemapLastmod(item.url, kitDates);
+        const date = sitemapLastmod(item.url, kitDates, guideDates);
         if (date) item.lastmod = date;
         else delete item.lastmod;
         return item;
