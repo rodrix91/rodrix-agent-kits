@@ -24,6 +24,7 @@ Quality bar: verify every API/command against official docs; never invent featur
 
 ## Newsletter
 - `NEWSLETTER.action` = provider form POST URL (Buttondown recommended: free ≤100 subscribers, embed-subscribe endpoint, field `email`). Until set, the form shows "opens soon".
+- A cross-origin `no-cors` form POST cannot reveal the provider's HTTP success/failure. The form therefore shows a neutral **unverified submission** notice for opaque responses, never an unproven signup confirmation; it preserves the address. Only a readable successful response can show confirmation and reset the form. Browser regression tests use mocked network responses and never send real subscriptions.
 
 ## Tests & quality
 - `npm test` — run locally and require a passing result before each manual deploy. `.github/workflows/site-quality.yml` runs the build and browser quality checks on pull requests and `main`; require successful checks on the exact proposed commit before merging. `ci/github-actions-ci.yml` is a separate **inactive deployment template**. The site does not automatically deploy from this workflow.
