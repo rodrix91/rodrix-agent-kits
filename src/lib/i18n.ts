@@ -20,7 +20,7 @@ export const t = {
       title: ['Agent kits that', 'actually ship.'],
       sub: 'Tested rules, CLAUDE.md / AGENTS.md files, agent skills and n8n flows. Copy one in 10 seconds and stop re-explaining your stack to your AI.',
     },
-    finder: { title: 'Kit finder', label: 'Describe what you are building', placeholder: 'e.g. a SaaS with Next.js and Supabase auth', go: 'Find kits', note: 'Runs in your browser with local keyword + synonym matching. No AI API, nothing is sent anywhere.', none: 'No close match yet. Try naming your tools (Next.js, Python, Godot, n8n…).', results: 'Best matches' },
+    finder: { title: 'Kit finder', label: 'Describe what you are building', placeholder: 'e.g. a SaaS with Next.js and Supabase auth', go: 'Find kits', note: 'Runs in your browser with local keyword + synonym matching. No AI API, nothing is sent anywhere.', none: 'No close match yet. Try naming your tools (Next.js, Python, Godot, n8n…).', results: 'Best matches', error: 'Kit catalog unavailable. Please try again.' },
     how: { title: 'How it works', steps: [
       ['Pick a kit', 'Search by tool, stack or language. Every kit says exactly what it covers and how it was checked.'],
       ['Drop it in your repo', 'Copy the file to the path shown (e.g. .cursor/rules/ or AGENTS.md). No installs, no lock-in.'],
@@ -46,7 +46,7 @@ export const t = {
       title: ['Kits para agentes', 'que sí funcionan.'],
       sub: 'Reglas probadas, archivos CLAUDE.md / AGENTS.md, skills para agentes y flujos n8n. Cópialos en 10 segundos y deja de explicarle tu stack a tu IA.',
     },
-    finder: { title: 'Buscador de kits', label: 'Describe lo que estás construyendo', placeholder: 'ej. un SaaS con Next.js y auth de Supabase', go: 'Buscar kits', note: 'Funciona en tu navegador con coincidencia local de palabras y sinónimos. Sin API de IA, no se envía nada.', none: 'Aún no hay coincidencias. Prueba nombrando tus herramientas (Next.js, Python, Godot, n8n…).', results: 'Mejores coincidencias' },
+    finder: { title: 'Buscador de kits', label: 'Describe lo que estás construyendo', placeholder: 'ej. un SaaS con Next.js y auth de Supabase', go: 'Buscar kits', note: 'Funciona en tu navegador con coincidencia local de palabras y sinónimos. Sin API de IA, no se envía nada.', none: 'Aún no hay coincidencias. Prueba nombrando tus herramientas (Next.js, Python, Godot, n8n…).', results: 'Mejores coincidencias', error: 'No se pudo cargar el catálogo de kits. Inténtalo de nuevo.' },
     how: { title: 'Cómo funciona', steps: [
       ['Elige un kit', 'Busca por herramienta, stack o idioma. Cada kit dice qué cubre y cómo se verificó.'],
       ['Ponlo en tu repo', 'Copia el archivo a la ruta indicada (ej. .cursor/rules/ o AGENTS.md). Sin instalar nada.'],
