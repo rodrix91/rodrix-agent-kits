@@ -2,13 +2,16 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import { SITE, BASE } from './src/site.mjs';
 import { readdirSync, readFileSync } from 'node:fs';
+import { kitModificationDates, sitemapLastmod } from './scripts/sitemap-dates.mjs';
 
-const BUILD_DATE = new Date().toISOString().slice(0, 10);
-const kitDates = Object.fromEntries(readdirSync('src/content/kits').map((f) => {
-  const fm = readFileSync(`src/content/kits/${f}`, 'utf8');
-  const d = (fm.match(/^updated:\s*"?([\d-]+)/m) || fm.match(/^added:\s*"?([\d-]+)/m) || [])[1];
-  return [f.replace(/\.md$/, ''), d || BUILD_DATE];
-}));
+const kitDates = kitModificationDates(
+  readdirSync('src/content/kits')
+    .filter((filename) => filename.endsWith('.md'))
+    .map((filename) => ({
+      filename,
+      content: readFileSync(`src/content/kits/${filename}`, 'utf8'),
+    })),
+);
 
 export default defineConfig({
   site: SITE,
@@ -19,7 +22,12 @@ export default defineConfig({
     sitemap({
       i18n: { defaultLocale: 'en', locales: { en: 'en', es: 'es' } },
       filter: (p) => !p.includes('/404'),
-      serialize: (item) => { const m = item.url.match(/\/kits\/([^/]+)\/$/); item.lastmod = m && kitDates[m[1]] ? kitDates[m[1]] : BUILD_DATE; return item; },
+      serialize: (item) => {
+        const date = sitemapLastmod(item.url, kitDates);
+        if (date) item.lastmod = date;
+        else delete item.lastmod;
+        return item;
+      },
     }),
   ],
 });
