@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { symlink, unlink } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { serve } from './serve.mjs';
 
 test('static preview serves only valid paths inside the configured base', async () => {
@@ -40,6 +42,30 @@ test('static preview serves only valid paths inside the configured base', async 
 
     const invalidEncoding = await fetch(origin + base + '/%ZZ');
     assert.equal(invalidEncoding.status, 400);
+
+    // Lexical path checks are insufficient: readFile follows file and
+    // directory symlinks, potentially exposing private source files.
+    const escapedFile = `.preview-escaped-file-${process.pid}.txt`;
+    const escapedDir = `.preview-escaped-dir-${process.pid}`;
+    const createdLinks = [];
+    try {
+      const fileLink = resolve('dist', escapedFile);
+      await symlink(resolve('package.json'), fileLink, 'file');
+      createdLinks.push(fileLink);
+
+      const dirLink = resolve('dist', escapedDir);
+      await symlink(resolve('src'), dirLink, 'dir');
+      createdLinks.push(dirLink);
+
+      const fileAttempt = await fetch(origin + base + '/' + escapedFile);
+      assert.equal(fileAttempt.status, 403, 'symlinked file outside dist must be denied');
+      assert.ok(!(await fileAttempt.text()).includes('"name": "rodrix-agent-kits"'));
+
+      const dirAttempt = await fetch(origin + base + '/' + escapedDir + '/config.ts');
+      assert.equal(dirAttempt.status, 403, 'symlinked parent directory must be denied');
+    } finally {
+      for (const path of createdLinks) await unlink(path);
+    }
 
     // A rejected path must not crash the server or block a later good request.
     assert.equal((await fetch(origin + base + '/')).status, 200);
