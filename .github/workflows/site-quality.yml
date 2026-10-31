@@ -35,6 +35,9 @@ jobs:
       - name: Validate audit reporter syntax
         run: node --check scripts/audit-summary.mjs
 
+      - name: Verify audit report integrity without network
+        run: node --test scripts/audit-report-core.test.mjs
+
       - name: Summarize dependency audit findings (diagnostic only)
         continue-on-error: true
         run: node scripts/audit-summary.mjs
