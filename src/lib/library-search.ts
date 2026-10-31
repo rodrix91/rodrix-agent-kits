@@ -6,11 +6,11 @@ export function foldSearchText(value: string): string {
 
 export function searchTerms(query: string): string[] {
   // Visitors write "n8n, workflow" and "¿código, español?" as naturally
-  // as space-separated queries. Split punctuation at word boundaries, but
-  // retain the significant symbols inside CLAUDE.md, C++, C# and Next.js.
+  // as space-separated queries. Treat hyphens and underscores as word
+  // separators while retaining meaningful symbols in CLAUDE.md, C++, C# and Next.js.
   return foldSearchText(query)
     .trim()
-    .split(/[^\p{L}\p{N}.+#_-]+/u)
+    .split(/[^\p{L}\p{N}.+#]+/u)
     .map((term) => term.replace(/^\.+|\.+$/gu, ''))
     .filter((term) => /[\p{L}\p{N}]/u.test(term));
 }
