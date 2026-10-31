@@ -45,7 +45,7 @@ test('technical punctuation stays in file names, product names and programming t
     ['claude.md', 'next.js', 'c++', 'c#'],
   );
   assert.equal(matchesSearch(text, searchTerms('CLAUDE.md, Next.js!')), true);
-  assert.equal(matchesSearch(text, searchTerms('¿C++ y C#?')), true);
+  assert.equal(matchesSearch(text, searchTerms('¿C++ / C#?')), true);
   assert.deepEqual(searchTerms('AGENTS.md.'), ['agents.md']);
   assert.deepEqual(searchTerms('¿!? / + # ...'), []);
 });
