@@ -22,7 +22,7 @@ Live: https://rodrix91.github.io/rodrix-agent-kits/
 | `node scripts/lighthouse.mjs` | Lighthouse (mobile + desktop) → `lighthouse/scores.json`; set `LH_PAGES=/` and `LH_FORM_FACTORS=mobile` for a single-page mobile smoke test |
 | `node scripts/screenshots.mjs` | screenshots at 390/768/1440 → `screenshots/` |
 
-Headless checks use Playwright with system Chrome (`CHROME_PATH` to override). `npm test` also runs local static-server regression tests after the build and before the browser suite. These tests reject paths outside the exact `/rodrix-agent-kits/` base, encoded traversal, NUL/backslash paths, and malformed URL encodings. `scripts/serve.mjs` is a local preview/test server, **not** a public production server.
+Headless checks use Playwright with system Chrome (`CHROME_PATH` to override). `npm test` also runs local static-server regression tests after the build and before the browser suite. These tests reject paths outside the exact `/rodrix-agent-kits/` base, encoded traversal, NUL/backslash paths, malformed URL encodings, and file/directory symlinks that resolve outside `dist/`. `scripts/serve.mjs` is a local preview/test server, **not** a public production server.
 
 ## Dependency security and maintenance
 
