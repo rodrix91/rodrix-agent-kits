@@ -24,7 +24,7 @@ Live: https://rodrix91.github.io/rodrix-agent-kits/
 
 Headless checks use Playwright with system Chrome (`CHROME_PATH` to override). `npm test` also runs local static-server regression tests after the build and before the browser suite. These tests reject paths outside the exact `/rodrix-agent-kits/` base, encoded traversal, NUL/backslash paths, malformed URL encodings, and file/directory symlinks that resolve outside `dist/`. `scripts/serve.mjs` is a local preview/test server, **not** a public production server.
 
-Lighthouse execution validates `LH_PAGES` (comma-separated site-relative paths beginning with `/`) and `LH_FORM_FACTORS` (`mobile`, `desktop`) **before** starting Chrome or a preview server. The runner closes both resources after success, browser startup failure, audit failure or failed score output. Its offline lifecycle regression tests are included in `npm test`; the actual browser smoke test remains in GitHub Actions.
+Lighthouse execution validates `LH_PAGES` (comma-separated site-relative paths beginning with `/`) and `LH_FORM_FACTORS` (`mobile`, `desktop`) **before** starting Chrome or a preview server. The runner rejects missing, nonnumeric, nonfinite or out-of-range category scores before writing results, preventing corrupt `null` scores and partially saved audit reports. It closes both resources after success, browser startup failure, audit failure or failed score output. Its offline lifecycle and score-validation regression tests are included in `npm test`; the actual browser smoke test remains in GitHub Actions.
 
 ## Dependency security and maintenance
 
