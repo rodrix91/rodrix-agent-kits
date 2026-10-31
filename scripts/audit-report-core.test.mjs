@@ -52,6 +52,42 @@ test('rejects invalid advisory records instead of printing unverified details', 
   }
 });
 
+test('rejects false-clean audit totals with actual advisory entries', () => {
+  const input = report();
+  input.metadata.vulnerabilities = {
+    info: 0, low: 0, moderate: 0, high: 0, critical: 0, total: 0,
+  };
+  assert.throws(() => summarizeAuditReport(input), /advisory details contradict.*total/);
+});
+
+test('rejects positive totals when the audit contains no affected package details', () => {
+  const input = report();
+  input.vulnerabilities = {};
+  assert.throws(() => summarizeAuditReport(input), /advisory details contradict.*total/);
+});
+
+test('rejects listed severities that contradict npm audit totals', () => {
+  for (const severity of ['high', 'critical', 'info', 'unknown', undefined, null, 3]) {
+    const input = report();
+    input.vulnerabilities.alpha.severity = severity;
+    assert.throws(
+      () => summarizeAuditReport(input),
+      /advisory severity contradicts metadata/,
+      String(severity),
+    );
+  }
+});
+
+test('keeps valid same-severity findings and optional info category supported', () => {
+  const input = report();
+  delete input.metadata.vulnerabilities.info;
+  input.vulnerabilities.zeta.severity = 'moderate';
+  input.metadata.vulnerabilities = {
+    ...input.metadata.vulnerabilities, low: 0, moderate: 2,
+  };
+  assert.equal(summarizeAuditReport(input).advisories.length, 2);
+});
+
 test('accepts a genuine report with zero findings', () => {
   const result = summarizeAuditReport({
     metadata: { vulnerabilities: { info: 0, low: 0, moderate: 0, high: 0, critical: 0, total: 0 } },
