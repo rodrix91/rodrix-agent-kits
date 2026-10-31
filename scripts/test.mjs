@@ -302,6 +302,23 @@ ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('
 await page.fill('#finder-q', 'quiero automatizar formularios de leads'); await page.click('#finder-form button');
 await page.waitForTimeout(200);
 ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('n8n'), 'kit finder (ES query) finds n8n flow');
+// A failed or malformed catalog request must be visible and retryable in both locales.
+for (const [locale, suffix, response, expected] of [
+  ['', 'en', { status: 503, body: 'temporarily unavailable' }, 'Kit catalog unavailable. Please try again.'],
+  ['es/', 'es', { status: 200, contentType: 'application/json', body: '{}' }, 'No se pudo cargar el catálogo de kits. Inténtalo de nuevo.'],
+]) {
+  const pattern = '**/search-' + suffix + '.json';
+  await page.route(pattern, (route) => route.fulfill(response));
+  await page.goto(`${ORIGIN}${B}/${locale}`);
+  await page.fill('#finder-q', 'Python data');
+  await page.click('#finder-form button');
+  await page.waitForFunction((message) => document.querySelector('#finder-out')?.textContent?.includes(message), expected);
+  ok((await page.locator('#finder-out').textContent())?.includes(expected), 'finder shows localized catalog error: ' + suffix);
+  await page.unroute(pattern);
+  await page.click('#finder-form button');
+  await page.waitForSelector('#finder-out a');
+  ok((await page.locator('#finder-out a').count()) > 0, 'finder retries successfully after catalog failure: ' + suffix);
+}
 // Newsletter: synthetic transport outcomes only. Never send a real email or call a provider.
 for (const l of ['', 'es/']) {
   await page.goto(`${ORIGIN}${B}/${l}`);
