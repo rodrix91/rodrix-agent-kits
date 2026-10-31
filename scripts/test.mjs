@@ -154,6 +154,15 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
   ok(/\/es\/guides\/one-agents-md-for-claude-code-cursor-codex\//.test(readFileSync('dist/es/kits/one-source-of-truth/index.html', 'utf8')), 'ES kit page links to ES guides');
 }
 
+// F-SCO-7 agent handoff kit (paid, Full-stack Pro + Kit Club)
+{ const h = readFileSync('dist/kits/agent-handoff-kit/index.html', 'utf8');
+  ok(/data-testid="buy-top"/.test(h) && h.includes('https://rodrix91.gumroad.com/l/full-stack-pro') && h.includes('https://rodrix91.gumroad.com/l/kit-club') && /\$19/.test(h), 'handoff kit: paid, Full-stack Pro $19 + Kit Club buttons');
+  ok(/one-source-of-truth\//.test(h) && h.includes('/guides/one-agents-md-for-claude-code-cursor-codex/'), 'handoff kit links one-source-of-truth + guide #2');
+  const t = readFileSync('dist/files/HANDOFF.template.md', 'utf8'); ok(t.split('\n').length <= 60 && /Written at commit/.test(t), 'handoff template < 60 lines with commit SHA field');
+  ok(!/handoff-check\.sh\n|stop_hook_active/.test(t), 'handoff preview file does not include paid bundle files');
+  ok(readFileSync('dist/llms.txt', 'utf8').includes('/kits/agent-handoff-kit/') && readFileSync('dist/sitemap-0.xml', 'utf8').includes('/kits/agent-handoff-kit/'), 'handoff kit in llms.txt + sitemap');
+}
+
 // F-SCO-8 secrets & safety pack
 { const f = 'dist/files/agent-secrets-safety.md'; ok(existsSync(f), 'secrets pack raw file'); const t = readFileSync(f, 'utf8');
   const j = t.slice(t.indexOf('{\n  "permissions"'), t.indexOf('Notes:'));
@@ -202,7 +211,7 @@ await checker.check({ path: `${ORIGIN}${B}/es/`, recurse: true, linksToSkip: [`^
 ok(broken.length === 0, `internal links: ${broken.length} broken`); broken.forEach((b) => console.log('   ', b));
 
 const browser = await launch();
-const pages = ['/', '/es/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/', '/kits/agent-secrets-safety-pack/', '/es/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/es/guides/one-agents-md-for-claude-code-cursor-codex/', '/es/guides/where-to-put-cursor-rules-mdc/'];
+const pages = ['/', '/es/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/', '/kits/agent-secrets-safety-pack/', '/kits/agent-handoff-kit/', '/es/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/es/guides/one-agents-md-for-claude-code-cursor-codex/', '/es/guides/where-to-put-cursor-rules-mdc/'];
 for (const theme of ['dark', 'light']) {
   const ctx = await browser.newContext({ colorScheme: theme, reducedMotion: 'reduce' });
   for (const p of pages) {
