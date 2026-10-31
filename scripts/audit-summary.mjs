@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Diagnostic only: summarize npm's advisory JSON without modifying dependencies.
-// Vulnerabilities do not block site quality CI; audit transport/parser failures are shown.
+// Production advisories are blocked separately in CI; these diagnostics must be honest.
 import { spawnSync } from 'node:child_process';
+import { summarizeAuditReport } from './audit-report-core.mjs';
 
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const checks = [
@@ -28,14 +29,16 @@ for (const check of checks) {
     console.error(`Audit returned non-JSON output (exit ${run.status}).`);
     continue;
   }
-  if (!report || typeof report !== 'object' || !report.vulnerabilities || !report.metadata?.vulnerabilities) {
+  let summary;
+  try {
+    summary = summarizeAuditReport(report);
+  } catch (error) {
     hadAuditFailure = true;
-    console.error(`Audit returned an incomplete result (exit ${run.status}): ${JSON.stringify(report.error ?? 'missing vulnerability metadata')}`);
+    console.error(`Audit returned incomplete or inconsistent data (exit ${run.status}): ${error.message}`);
     continue;
   }
-  const totals = report.metadata.vulnerabilities;
+  const { totals, advisories } = summary;
   console.log(`Counts: critical=${totals.critical ?? 0}, high=${totals.high ?? 0}, moderate=${totals.moderate ?? 0}, low=${totals.low ?? 0}, total=${totals.total ?? '?'}`);
-  const advisories = Object.entries(report.vulnerabilities).sort(([a], [b]) => a.localeCompare(b));
   for (const [name, advisory] of advisories) {
     const fix = advisory.fixAvailable === false ? 'no suggested fix' : advisory.fixAvailable === true ? 'fix suggested' :
       advisory.fixAvailable && typeof advisory.fixAvailable === 'object' ? `fix: ${advisory.fixAvailable.name}@${advisory.fixAvailable.version}${advisory.fixAvailable.isSemVerMajor ? ' (major)' : ''}` : 'fix status unknown';
