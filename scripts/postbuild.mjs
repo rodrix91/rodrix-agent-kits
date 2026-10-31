@@ -3,6 +3,7 @@ import { Resvg } from '@resvg/resvg-js';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { validatedOgKits } from './og-slugs.mjs';
 
 const DIST = 'dist';
 const fonts = ['scripts/fonts/geist.ttf', 'scripts/fonts/geist-mono.ttf'];
@@ -24,9 +25,10 @@ function og(title, sub, tag) {
   return new Resvg(svg, { font: { fontFiles: fonts, loadSystemFonts: false, defaultFontFamily: 'Geist' } }).render().asPng();
 }
 
+// Validate the complete output filename set before any OG image is written.
+const kits = validatedOgKits(JSON.parse(readFileSync(join(DIST, 'search-en.json'), 'utf8')));
 mkdirSync(join(DIST, 'og'), { recursive: true });
 writeFileSync(join(DIST, 'og/default.png'), og('Agent kits that actually ship.', 'Tested Cursor rules, CLAUDE.md, AGENTS.md, agent skills and n8n flows. EN / ES.', 'Free library · Kit Club $7/mo'));
-const kits = JSON.parse(readFileSync(join(DIST, 'search-en.json'), 'utf8'));
 for (const k of kits) writeFileSync(join(DIST, `og/${k.slug}.png`), og(k.title, k.summary, `${k.tool} · ${k.tier === 'free' ? 'Free' : '$' + k.price}`));
 
 // CSP: hash every inline <script> (non-JSON) per page.
