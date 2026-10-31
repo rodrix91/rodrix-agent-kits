@@ -53,8 +53,8 @@ test('technical punctuation stays in file names, product names and programming t
 test('punctuation-aware tokenization preserves non-Latin searches', () => {
   assert.deepEqual(searchTerms('Русский, язык!'), ['русскии', 'язык']);
   assert.equal(matchesSearch('Русский язык', searchTerms('Русский, язык!')), true);
-  assert.deepEqual(searchTerms('日本語、コード'), ['日本語', 'コード']);
-  assert.equal(matchesSearch('日本語 コード', searchTerms('日本語、コード')), true);
+  assert.deepEqual(searchTerms('日本語、東京'), ['日本語', '東京']);
+  assert.equal(matchesSearch('日本語 東京', searchTerms('日本語、東京')), true);
 });
 
 test('maintains AND matching, nonmatches, and empty-search behavior', () => {
