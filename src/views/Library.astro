@@ -48,6 +48,7 @@ const list = { '@context': 'https://schema.org', '@type': 'ItemList', itemListEl
   <Newsletter lang={lang} />
 </Base>
 <script>
+  import { matchesSearch, searchTerms } from '../lib/library-search';
   const cards = [...document.querySelectorAll<HTMLElement>('#kits > article')];
   const q = document.getElementById('q') as HTMLInputElement;
   const count = document.getElementById('count')!;
@@ -55,12 +56,11 @@ const list = { '@context': 'https://schema.org', '@type': 'ItemList', itemListEl
   const params = new URLSearchParams(location.search);
   q.value = params.get('q') ?? '';
   for (const g of Object.keys(state)) state[g] = params.get(g) ?? '';
-  const text = (c: HTMLElement) => c.textContent!.toLowerCase();
   function apply() {
-    const terms = q.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const terms = searchTerms(q.value);
     let n = 0;
     for (const c of cards) {
-      const ok = terms.every((t) => text(c).includes(t))
+      const ok = matchesSearch(c.textContent ?? '', terms)
         && (!state.tool || c.dataset.tool === state.tool)
         && (!state.category || c.dataset.category === state.category)
         && (!state.langs || c.dataset.langs!.split(',').includes(state.langs))
@@ -79,6 +79,12 @@ const list = { '@context': 'https://schema.org', '@type': 'ItemList', itemListEl
   document.querySelectorAll<HTMLFieldSetElement>('fieldset[data-group]').forEach((fs) =>
     fs.addEventListener('click', (e) => { const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip'); if (!b) return; state[fs.dataset.group!] = b.dataset.v!; apply(); }));
   q.addEventListener('input', apply);
-  addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); } });
+  addEventListener('keydown', (e) => {
+    if (e.key !== '/' || e.defaultPrevented || e.ctrlKey || e.altKey || e.metaKey) return;
+    // Never steal a slash from other fields and editable content.
+    if (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable]')) return;
+    e.preventDefault();
+    q.focus();
+  });
   apply();
 </script>
