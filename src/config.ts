@@ -16,7 +16,7 @@ export const BRAND = {
  * and Kit Club products. While false the site says "Coming to Full-stack Pro & Kit Club" and
  * never claims buyers get it today. Flip to true (one change) after the upload.
  */
-export const HANDOFF_IN_BUNDLE: boolean = typeof process !== 'undefined' && process.env?.HANDOFF_IN_BUNDLE_TEST ? process.env.HANDOFF_IN_BUNDLE_TEST === 'true' : false; // the flag; env var is only for the both-states test
+export const HANDOFF_IN_BUNDLE: boolean = typeof process !== 'undefined' && process.env?.HANDOFF_IN_BUNDLE_TEST ? process.env.HANDOFF_IN_BUNDLE_TEST === 'true' : true; // the flag; env var is only for the both-states test
 /** Paid kits whose bundle files are not on Gumroad yet (derived from the flags above). */
 export const BUNDLE_PENDING_KITS: string[] = HANDOFF_IN_BUNDLE ? [] : ['agent-handoff-kit'];
 
