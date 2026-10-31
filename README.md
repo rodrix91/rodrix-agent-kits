@@ -8,7 +8,7 @@ Live: https://rodrix91.github.io/rodrix-agent-kits/
 - **Astro 7.4.4** static output, content collections (`src/content/kits/*.md`), zero client framework.
 - Hand-written CSS design system (`src/styles/global.css`), self-hosted **Geist / Geist Mono** variable fonts, dark + light themes, `prefers-reduced-motion` respected.
 - Client JS only for: theme toggle, mobile menu, library filters, copy-to-clipboard, newsletter form, local kit finder (`src/lib/match.ts`, BM25 + synonyms, no network).
-- Post-build (`scripts/postbuild.mjs`): OG images (resvg), per-page CSP with script hashes, `_headers`, `.nojekyll`.
+- Post-build (`scripts/postbuild.mjs`): OG images (resvg), per-page CSP with script hashes, `_headers`, `.nojekyll`. OG image filenames are validated against safe lowercase slugs, duplicate IDs and the reserved `default.png` name *before* writing images; `scripts/og-slugs.test.mjs` covers malformed catalog values, path traversal and collisions.
 - SEO/AEO: canonical + hreflang, OG/Twitter, JSON-LD (Organization, WebSite, Product, BreadcrumbList, ItemList, FAQPage), sitemap, robots.txt, `llms.txt`, `llms-full.txt`, RSS (EN + ES), raw kit files at `/files/*`.
 
 ## Commands
