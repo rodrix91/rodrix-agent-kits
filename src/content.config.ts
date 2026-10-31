@@ -26,6 +26,13 @@ const kits = defineCollection({
   }),
 });
 
+const guideSchema = z.object({
+    title: z.string(), description: z.string(), answer: z.string(),
+    kits: z.array(z.string()).min(2), updated: z.coerce.date(), sources: z.array(z.string().url()).min(1),
+    faq: z.array(z.object({ q: z.string(), a: z.string() })).min(1),
+  });
+// Spanish mirrors of /guides/: same slug, served at /es/guides/<slug>/ (hreflang pairs).
+const guidesEs = defineCollection({ loader: glob({ pattern: '*.md', base: './src/content/guides-es' }), schema: guideSchema });
 const guides = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/guides' }),
   schema: z.object({
@@ -35,4 +42,4 @@ const guides = defineCollection({
   }),
 });
 
-export const collections = { kits, guides };
+export const collections = { kits, guides, guidesEs };

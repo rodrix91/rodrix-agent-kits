@@ -44,7 +44,9 @@ const graph = { '@context': 'https://schema.org', '@graph': [
   { '@type': 'SoftwareSourceCode', name: L.title, description: L.summary, programmingLanguage: d.file.endsWith('.json') ? 'JSON' : 'Markdown', codeRepository: 'https://github.com/rodrix91/rodrix-agent-kits', license: 'https://opensource.org/licenses/MIT', url: pageUrl,
     targetProduct: { '@type': 'SoftwareApplication', name: d.tool, applicationCategory: 'DeveloperApplication', operatingSystem: 'Windows, macOS, Linux' } },
   { '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }] };
-const guides = (await getCollection('guides')).filter((g) => g.data.kits.includes(kit.id));
+const guidesAll = (await getCollection(lang === 'es' ? 'guidesEs' : 'guides')).filter((g) => g.data.kits.includes(kit.id));
+const guides = guidesAll.length ? guidesAll : (await getCollection('guides')).filter((g) => g.data.kits.includes(kit.id));
+const guidesLang: Lang = guidesAll.length ? lang : 'en';
 const date = d.added.toISOString().slice(0, 10);
 ---
 <Base title={L.title} description={L.summary} lang={lang} path={`/kits/${kit.id}/`} og={`/og/${kit.id}.png`} jsonLd={[product, crumbs, graph]} type="article" gumroad={d.tier === 'paid'}>
@@ -73,7 +75,7 @@ const date = d.added.toISOString().slice(0, 10);
           </div>
           <pre tabindex="0" aria-label={K.file}><code id="kit-src">{preview}</code></pre>
         </div>
-        {guides.length > 0 && <section aria-labelledby="guides-h" lang="en"><h2 id="guides-h" style="font-size:var(--t-lg);margin-top:2.5rem">{lang === 'es' ? 'Guías (en inglés)' : 'Guides'}</h2><ul>{guides.map((g) => <li><a href={url(`/guides/${g.id}/`)}>{g.data.title}</a></li>)}</ul></section>}
+        {guides.length > 0 && <section aria-labelledby="guides-h" lang={guidesLang}><h2 id="guides-h" style="font-size:var(--t-lg);margin-top:2.5rem">{lang === 'es' ? (guidesLang === 'es' ? 'Guías' : 'Guías (en inglés)') : 'Guides'}</h2><ul>{guides.map((g) => <li><a href={url(`/guides/${g.id}/`, guidesLang)}>{g.data.title}</a></li>)}</ul></section>}
         <section aria-labelledby="faq-h" lang="en"><h2 id="faq-h" style="font-size:var(--t-lg);margin-top:2.5rem">FAQ</h2>
           <dl class="faq">{faq.map(([q, a]) => <><dt style="font-weight:600;margin-top:1rem">{q}</dt><dd style="margin:.25rem 0 0">{a}</dd></>)}</dl>
         </section>

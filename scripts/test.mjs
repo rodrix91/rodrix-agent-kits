@@ -129,10 +129,44 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
     ok(/<h1>/.test(h) && /data-answer/.test(h) && /id="faq-h"/.test(h), `guide H1 + answer + visible FAQ: ${g}`);
     const ans = h.match(/data-answer[^>]*>([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '').replace('Short answer:', '').trim().split(/\s+/).length;
     ok(ans >= 40 && ans <= 60, `guide answer 40-60 words (${ans}): ${g}`);
-    ok(!/rel="alternate" hreflang="es"/.test(h), `guide EN-only, no ES hreflang: ${g}`);
+    // ES mirror (F-STV-5): reciprocal hreflang en/es/x-default on both pages
+    const fe = `dist/es/guides/${g}/index.html`; ok(existsSync(fe), `ES guide exists: /es/guides/${g}/`);
+    if (existsSync(fe)) {
+      const he = readFileSync(fe, 'utf8');
+      const hl = (x, l) => (x.match(new RegExp(`<link rel="alternate" hreflang="${l}" href="([^"]+)"`)) || [])[1];
+      const enU = `https://rodrix91.github.io${B}/guides/${g}/`, esU = `https://rodrix91.github.io${B}/es/guides/${g}/`;
+      ok(hl(h, 'en') === enU && hl(h, 'es') === esU && hl(h, 'x-default') === enU, `EN guide hreflang en/es/x-default: ${g}`);
+      ok(hl(he, 'en') === enU && hl(he, 'es') === esU && hl(he, 'x-default') === enU, `ES guide hreflang reciprocal: ${g}`);
+      ok(/<html lang="es"/.test(he) && he.includes(`rel="canonical" href="${esU}"`), `ES guide lang + canonical: ${g}`);
+      const le = [...he.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+      const art = le.find((x) => x['@type'] === 'Article'), fq = le.find((x) => x['@type'] === 'FAQPage');
+      ok(art?.inLanguage === 'es' && art.url === esU && fq?.mainEntity?.length >= 1 && /[¿áéíóúñ]/.test(JSON.stringify(fq)), `ES guide Article(es)+FAQPage in Spanish: ${g}`);
+      const lds2 = lds.find((x) => x['@type'] === 'Article'); ok(JSON.stringify(art.citation) === JSON.stringify(lds2.citation), `ES guide cites same sources as EN: ${g}`);
+      const ae = he.match(/data-answer[^>]*>([\s\S]*?)<\/p>/)[1].replace(/<[^>]+>/g, '').replace('Respuesta corta:', '').trim().split(/\s+/).length;
+      ok(ae >= 40 && ae <= 70, `ES guide answer 40-70 words (${ae}): ${g}`);
+      ok(sm.includes(`/es/guides/${g}/`) && llmsTxt.includes(`/es/guides/${g}/`), `ES guide in sitemap + llms.txt: ${g}`);
+      const kitsEs = new Set([...he.matchAll(/href="[^"]*\/es\/kits\/([a-z0-9-]+)\/"/g)].map((m) => m[1]));
+      ok(kitsEs.size >= 2, `ES guide links >=2 ES kits (${kitsEs.size}): ${g}`);
+    }
     ok(sm.includes(`/guides/${g}/`) && llmsTxt.includes(`/guides/${g}/`), `guide in sitemap + llms.txt: ${g}`);
   }
   ok(/\/guides\/one-agents-md-for-claude-code-cursor-codex\//.test(readFileSync('dist/kits/one-source-of-truth/index.html', 'utf8')), 'kit page links to its guides');
+  ok(/\/es\/guides\/one-agents-md-for-claude-code-cursor-codex\//.test(readFileSync('dist/es/kits/one-source-of-truth/index.html', 'utf8')), 'ES kit page links to ES guides');
+}
+
+// F-SCO-8 secrets & safety pack
+{ const f = 'dist/files/agent-secrets-safety.md'; ok(existsSync(f), 'secrets pack raw file'); const t = readFileSync(f, 'utf8');
+  const j = t.slice(t.indexOf('{\n  "permissions"'), t.indexOf('Notes:'));
+  let js; try { js = JSON.parse(j); } catch {} ok(js?.permissions?.deny?.includes('Read(**/.env)') && js.permissions.deny.includes('Read(**/.env.*)'), 'secrets pack: Claude settings.json parses with .env deny rules');
+  ok(/^\.env$/m.test(t) && /^\.env\.\*$/m.test(t), 'secrets pack: .cursorignore entries');
+  ok(/ignore_default_excludes = false/.test(t) && /inherit = "core"/.test(t) && /"\*\*\/\*\.env" = "deny"/.test(t), 'secrets pack: Codex shell_environment_policy + deny profile');
+  ok(/gitleaks git --pre-commit --redact --staged --verbose/.test(t) && /useDefault = true/.test(t), 'secrets pack: gitleaks hook + config');
+  ok(/does NOT stop/.test(t) && /terminal and MCP/.test(t), 'secrets pack: states enforcement limits');
+  ok(!secretRe.test(t), 'secrets pack: no real-looking secrets');
+  const h = readFileSync('dist/kits/agent-secrets-safety-pack/index.html', 'utf8');
+  ok(h.includes('https://code.claude.com/docs/en/permissions') && h.includes('https://cursor.com/docs/context/ignore-files') && h.includes('https://developers.openai.com/codex/config-reference') && h.includes('https://cursor.com/blog/claude-code-extension-security-notice'), 'secrets pack page lists sources');
+  ok(h.includes('https://rodrix91.gumroad.com/l/full-stack-pro') && h.includes('https://rodrix91.gumroad.com/l/kit-club') && /\$0 <small>MIT/.test(h), 'secrets pack: free + links paid packs');
+  ok(readFileSync('dist/llms.txt', 'utf8').includes('/kits/agent-secrets-safety-pack/') && readFileSync('dist/sitemap-0.xml', 'utf8').includes('/kits/agent-secrets-safety-pack/'), 'secrets pack in llms.txt + sitemap');
 }
 
 // support email (F-STV-3)
@@ -168,7 +202,7 @@ await checker.check({ path: `${ORIGIN}${B}/es/`, recurse: true, linksToSkip: [`^
 ok(broken.length === 0, `internal links: ${broken.length} broken`); broken.forEach((b) => console.log('   ', b));
 
 const browser = await launch();
-const pages = ['/', '/es/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/'];
+const pages = ['/', '/es/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/', '/kits/agent-secrets-safety-pack/', '/es/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/es/guides/one-agents-md-for-claude-code-cursor-codex/', '/es/guides/where-to-put-cursor-rules-mdc/'];
 for (const theme of ['dark', 'light']) {
   const ctx = await browser.newContext({ colorScheme: theme, reducedMotion: 'reduce' });
   for (const p of pages) {
