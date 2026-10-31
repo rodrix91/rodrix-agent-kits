@@ -3,7 +3,7 @@ import { t, url, asset, type Lang } from '../lib/i18n';
 const { lang } = Astro.props as { lang: Lang };
 const s = t[lang].finder;
 ---
-<div class="finder" id="finder" data-index={asset(`/search-${lang}.json`)} data-base={url('/kits/', lang)} data-none={s.none} data-results={s.results}>
+<div class="finder" id="finder" data-index={asset(`/search-${lang}.json`)} data-base={url('/kits/', lang)} data-none={s.none} data-results={s.results} data-error={s.error}>
   <span class="kicker">{s.title}</span>
   <form id="finder-form" role="search">
     <label class="label" for="finder-q" style="flex-basis:100%">{s.label}</label>
@@ -18,12 +18,40 @@ const s = t[lang].finder;
   const root = document.getElementById('finder')!;
   const out = document.getElementById('finder-out')!;
   let idx: any[] | null = null;
-  const load = async () => (idx ??= await (await fetch(root.dataset.index!)).json());
-  document.getElementById('finder-q')!.addEventListener('focus', load, { once: true });
+  let inFlight: Promise<any[]> | null = null;
+  const load = (): Promise<any[]> => {
+    if (idx) return Promise.resolve(idx);
+    if (!inFlight) {
+      inFlight = (async () => {
+        const response = await fetch(root.dataset.index!);
+        if (!response.ok) throw new Error('Kit index unavailable');
+        const result: unknown = await response.json();
+        if (!Array.isArray(result)) throw new Error('Invalid kit index');
+        idx = result;
+        return result;
+      })().finally(() => { inFlight = null; });
+    }
+    return inFlight;
+  };
+  document.getElementById('finder-q')!.addEventListener('focus', () => {
+    // Prefetch errors are handled on submit; failed requests remain retryable.
+    void load().catch(() => {});
+  }, { once: true });
   document.getElementById('finder-form')!.addEventListener('submit', async (e) => {
     e.preventDefault();
     const q = (document.getElementById('finder-q') as HTMLInputElement).value;
-    const res = rank(q, await load()).slice(0, 3);
+    let catalog: any[];
+    try {
+      catalog = await load();
+    } catch {
+      out.replaceChildren();
+      const p = document.createElement('p');
+      p.textContent = root.dataset.error!;
+      p.style.margin = '0';
+      out.append(p);
+      return;
+    }
+    const res = rank(q, catalog).slice(0, 3);
     out.replaceChildren();
     if (!res.length) { const p = document.createElement('p'); p.textContent = root.dataset.none!; p.style.margin = '0'; out.append(p); return; }
     const h = document.createElement('p'); h.className = 'muted'; h.style.margin = '0'; h.textContent = root.dataset.results!; out.append(h);
