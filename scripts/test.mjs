@@ -302,6 +302,48 @@ ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('
 await page.fill('#finder-q', 'quiero automatizar formularios de leads'); await page.click('#finder-form button');
 await page.waitForTimeout(200);
 ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('n8n'), 'kit finder (ES query) finds n8n flow');
+
+// Simulate a slow catalog load while two queries are submitted. Even a
+// transient insertion of a stale link is a regression for the user-visible UI.
+await page.goto(ORIGIN + B + '/');
+let releaseFinderCatalog;
+await page.route('**/search-en.json', async (route) => {
+  await new Promise((resolve) => { releaseFinderCatalog = resolve; });
+  await route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify(kits),
+  });
+});
+await page.evaluate(() => {
+  window.__finderInsertedLinks = [];
+  const output = document.querySelector('#finder-out');
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE && node.matches('a')) {
+          window.__finderInsertedLinks.push(node.getAttribute('href'));
+        }
+      }
+    }
+  });
+  observer.observe(output, { childList: true });
+});
+await page.fill('#finder-q', 'Godot game');
+await page.click('#finder-form button');
+await page.fill('#finder-q', 'n8n automation lead');
+await page.click('#finder-form button');
+for (let attempt = 0; attempt < 20 && !releaseFinderCatalog; attempt++) {
+  await page.waitForTimeout(25);
+}
+if (!releaseFinderCatalog) throw new Error('Synthetic finder catalog request was never made');
+releaseFinderCatalog();
+await page.waitForFunction(() => document.querySelector('#finder-out a')?.getAttribute('href')?.includes('n8n'));
+const insertedFinderLinks = await page.evaluate(() => window.__finderInsertedLinks);
+ok(
+  insertedFinderLinks.length > 0 && insertedFinderLinks.every((href) => !href.includes('godot')),
+  'finder never inserts outdated Godot results after a newer n8n submission',
+);
+await page.unroute('**/search-en.json');
+
 // Failed, empty, malformed, or semantically invalid catalogs must be visible and retryable.
 for (const [locale, suffix, response, expected] of [
   ['', 'en', { status: 503, body: 'temporarily unavailable' }, 'Kit catalog unavailable. Please try again.'],
