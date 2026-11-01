@@ -78,6 +78,28 @@ test('rejects listed severities that contradict npm audit totals', () => {
   }
 });
 
+test('rejects truncated and inflated advisory lists even with positive totals', () => {
+  const missing = report();
+  delete missing.vulnerabilities.alpha;
+  assert.throws(() => summarizeAuditReport(missing), /advisory count does not match/);
+
+  const extra = report();
+  extra.vulnerabilities.beta = { severity: 'low', fixAvailable: false };
+  assert.throws(() => summarizeAuditReport(extra), /advisory count does not match/);
+});
+
+test('rejects shifted advisory severities with an otherwise matching total', () => {
+  const input = report();
+  // Both package details now claim low severity, while npm's metadata
+  // claims one low and one moderate affected package.
+  input.vulnerabilities.alpha.severity = 'low';
+  assert.equal(Object.keys(input.vulnerabilities).length, input.metadata.vulnerabilities.total);
+  assert.throws(
+    () => summarizeAuditReport(input),
+    /advisory severity counts do not match metadata/,
+  );
+});
+
 test('keeps valid same-severity findings and optional info category supported', () => {
   const input = report();
   delete input.metadata.vulnerabilities.info;
