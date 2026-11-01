@@ -60,7 +60,7 @@ const list = { '@context': 'https://schema.org', '@type': 'ItemList', itemListEl
     const terms = searchTerms(q.value);
     let n = 0;
     for (const c of cards) {
-      const ok = matchesSearch(c.textContent ?? '', terms)
+      const ok = matchesSearch((c.textContent ?? '') + ' ' + (c.dataset.search ?? ''), terms)
         && (!state.tool || c.dataset.tool === state.tool)
         && (!state.category || c.dataset.category === state.category)
         && (!state.langs || c.dataset.langs!.split(',').includes(state.langs))
