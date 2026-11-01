@@ -45,10 +45,8 @@ const s = t[lang].finder;
     }
     return inFlight;
   };
-  document.getElementById('finder-q')!.addEventListener('focus', () => {
-    // Prefetch errors are handled on submit; failed requests remain retryable.
-    void load().catch(() => {});
-  }, { once: true });
+  // Fetch only after a meaningful search submission. Focusing the field
+  // should not request a potentially large index when the query is blank.
   const showNoResults = () => {
     out.replaceChildren();
     const p = document.createElement('p');
