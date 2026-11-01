@@ -5,12 +5,11 @@ export function foldSearchText(value: string): string {
 }
 
 export function searchTerms(query: string): string[] {
-  // Visitors write "n8n, workflow" and "¿código, español?" as naturally
-  // as space-separated queries. Treat hyphens and underscores as word
-  // separators while retaining meaningful symbols in CLAUDE.md, C++, C# and Next.js.
-  return foldSearchText(query)
-    .trim()
-    .split(/[^\p{L}\p{N}.+#]+/u)
+  // Visitors also omit spaces around "+" in queries like
+  // "n8n+workflow" and "Next.js+C#". Match terms instead of splitting so
+  // single plus signs separate words while C++, C# and dotted filenames
+  // retain their meaningful punctuation. Hyphens/underscores still split.
+  return (foldSearchText(query).match(/[\p{L}\p{N}.]+(?:\+\+|#)?/gu) ?? [])
     .map((term) => term.replace(/^\.+|\.+$/gu, ''))
     .filter((term) => /[\p{L}\p{N}]/u.test(term));
 }
