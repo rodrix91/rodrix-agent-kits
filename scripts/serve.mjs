@@ -24,6 +24,15 @@ async function readContained(file) {
 
 export function serve(port = Number(process.env.PORT) || 4321) {
   const srv = createServer(async (req, res) => {
+    // This is a static preview only. Reject mutating HTTP methods even if
+    // the requested path resolves to a readable HTML or asset file.
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      res.writeHead(405, {
+        Allow: 'GET, HEAD',
+        'Content-Type': 'text/plain; charset=utf-8',
+      });
+      return res.end('Method not allowed');
+    }
     let pathname;
     try {
       pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
