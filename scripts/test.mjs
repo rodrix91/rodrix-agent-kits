@@ -284,10 +284,16 @@ await page.goto(`${ORIGIN}${B}/kits/?tool=n8n`);
 ok((await page.locator('#kits > article:not([hidden])').count()) === 1, 'library filter by tool=n8n shows 1 kit');
 await page.fill('#q', 'godot'); await page.goto(`${ORIGIN}${B}/kits/?q=godot`);
 ok((await page.locator('#kits > article:not([hidden])').count()) === 1, 'library search "godot" shows 1 kit');
+await page.goto(`${ORIGIN}${B}/kits/?q=n8n%2Bworkflow`);
+ok((await page.locator('#kits > article:not([hidden])').count()) === 1,
+  'library joined-plus URL query matches n8n workflow');
 await page.goto(`${ORIGIN}${B}/es/kits/?q=espanol`);
 ok((await page.locator('#kits > article[data-slug="claude-md-webapp-es"]:not([hidden])').count()) === 1, 'library ES URL search ignores missing accent in español');
 await page.fill('#q', 'código inglés');
 ok((await page.locator('#kits > article[data-slug="claude-md-webapp-es"]:not([hidden])').count()) === 1, 'library ES input matches accented phrase');
+await page.fill('#q', 'código+inglés');
+ok((await page.locator('#kits > article[data-slug="claude-md-webapp-es"]:not([hidden])').count()) === 1,
+  'library ES input matches adjacent plus-separated accented words');
 await page.locator('#newsletter input[type=email]').focus();
 await page.keyboard.press('/');
 ok(await page.locator('#newsletter input[type=email]').evaluate((el) => document.activeElement === el), 'library slash shortcut does not steal focus from newsletter email');
