@@ -36,12 +36,25 @@ export function summarizeAuditReport(report) {
   if ((totals.total === 0) !== (advisories.length === 0)) {
     throw new Error('npm audit advisory details contradict the reported vulnerability total');
   }
+  const detailCounts = Object.fromEntries(SEVERITIES.map((severity) => [severity, 0]));
   for (const [name, advisory] of advisories) {
     if (!advisory || typeof advisory !== 'object' || Array.isArray(advisory)) {
       throw new Error('npm audit returned malformed advisory details for ' + name);
     }
     if (!SEVERITIES.includes(advisory.severity) || normalized[advisory.severity] === 0) {
       throw new Error('npm audit advisory severity contradicts metadata for ' + name);
+    }
+    detailCounts[advisory.severity] += 1;
+  }
+  // npm audit reports affected-package counts per severity. A truncated or
+  // severity-shifted list can have plausible totals while hiding the actual
+  // affected packages; never print such an inconsistent diagnostic.
+  if (advisories.length !== totals.total) {
+    throw new Error('npm audit advisory count does not match the reported total');
+  }
+  for (const severity of SEVERITIES) {
+    if (detailCounts[severity] !== normalized[severity]) {
+      throw new Error('npm audit advisory severity counts do not match metadata for ' + severity);
     }
   }
   return { totals: { ...normalized, total: totals.total }, advisories };
