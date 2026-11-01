@@ -19,6 +19,11 @@ const s = t[lang].finder;
   const out = document.getElementById('finder-out')!;
   let idx: any[] | null = null;
   let inFlight: Promise<any[]> | null = null;
+  const isKitRecord = (entry: unknown): boolean => {
+    if (entry === null || typeof entry !== 'object') return false;
+    const record = entry as Record<string, unknown>;
+    return ['slug', 'title', 'tool', 'text'].every((field) => typeof record[field] === 'string');
+  };
   const load = (): Promise<any[]> => {
     if (idx) return Promise.resolve(idx);
     if (!inFlight) {
@@ -26,7 +31,7 @@ const s = t[lang].finder;
         const response = await fetch(root.dataset.index!);
         if (!response.ok) throw new Error('Kit index unavailable');
         const result: unknown = await response.json();
-        if (!Array.isArray(result)) throw new Error('Invalid kit index');
+        if (!Array.isArray(result) || !result.every(isKitRecord)) throw new Error('Invalid kit index');
         idx = result;
         return result;
       })().finally(() => { inFlight = null; });
