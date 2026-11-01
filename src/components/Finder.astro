@@ -14,7 +14,7 @@ const s = t[lang].finder;
   <p class="muted" style="font-size:var(--t-xs);margin:1rem 0 0">{s.note}</p>
 </div>
 <script>
-  import { rank } from '../lib/match';
+  import { rank, tokenize } from '../lib/match';
   const root = document.getElementById('finder')!;
   const out = document.getElementById('finder-out')!;
   let idx: any[] | null = null;
@@ -49,10 +49,23 @@ const s = t[lang].finder;
     // Prefetch errors are handled on submit; failed requests remain retryable.
     void load().catch(() => {});
   }, { once: true });
+  const showNoResults = () => {
+    out.replaceChildren();
+    const p = document.createElement('p');
+    p.textContent = root.dataset.none!;
+    p.style.margin = '0';
+    out.append(p);
+  };
   document.getElementById('finder-form')!.addEventListener('submit', async (e) => {
     e.preventDefault();
     const searchId = ++newestSearch;
     const q = (document.getElementById('finder-q') as HTMLInputElement).value;
+    // A blank/stop-word query has no useful matches. Do not fetch the catalog
+    // or surface a network error, and invalidate any earlier pending search.
+    if (!tokenize(q).length) {
+      showNoResults();
+      return;
+    }
     let catalog: any[];
     try {
       catalog = await load();
@@ -68,7 +81,7 @@ const s = t[lang].finder;
     if (searchId !== newestSearch) return;
     const res = rank(q, catalog).slice(0, 3);
     out.replaceChildren();
-    if (!res.length) { const p = document.createElement('p'); p.textContent = root.dataset.none!; p.style.margin = '0'; out.append(p); return; }
+    if (!res.length) { showNoResults(); return; }
     const h = document.createElement('p'); h.className = 'muted'; h.style.margin = '0'; h.textContent = root.dataset.results!; out.append(h);
     for (const r of res) {
       const a = document.createElement('a'); a.href = root.dataset.base + r.doc.slug + '/';
