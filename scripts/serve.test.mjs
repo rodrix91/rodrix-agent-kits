@@ -16,6 +16,25 @@ test('static preview serves only valid paths inside the configured base', async 
     const directFile = await fetch(origin + base + '/index.html');
     assert.equal(directFile.status, 200);
 
+    // A static preview must serve reads without accepting data-changing
+    // requests to either a page or a generated asset.
+    const head = await fetch(origin + base + '/index.html', { method: 'HEAD' });
+    assert.equal(head.status, 200);
+    assert.equal(head.headers.get('content-type'), directFile.headers.get('content-type'));
+    assert.equal(await head.text(), '', 'HEAD must never return a response body');
+
+    for (const [method, pathname] of [
+      ['POST', '/index.html'],
+      ['PUT', '/search-en.json'],
+      ['PATCH', '/index.html'],
+      ['DELETE', '/index.html'],
+    ]) {
+      const denied = await fetch(origin + base + pathname, { method });
+      assert.equal(denied.status, 405, method);
+      assert.equal(denied.headers.get('allow'), 'GET, HEAD', method);
+      assert.match(await denied.text(), /Method not allowed/, method);
+    }
+
     const redirect = await fetch(origin + '/', { redirect: 'manual' });
     assert.equal(redirect.status, 302);
     assert.equal(redirect.headers.get('location'), base + '/');
