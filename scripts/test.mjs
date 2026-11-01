@@ -294,6 +294,32 @@ ok(await page.locator('#newsletter input[type=email]').evaluate((el) => document
 await page.locator('#q').focus();
 await page.keyboard.press('/');
 ok((await page.locator('#q').inputValue()).endsWith('/'), 'slash typed in kit search is kept');
+// Empty and stop-word-only queries must not request a catalog: an offline
+// visitor should see "no results" instead of a misleading network error.
+// Submit programmatically to avoid the input-focus prefetch.
+for (const [locale, suffix] of [['', 'en'], ['es/', 'es']]) {
+  await page.goto(`${ORIGIN}${B}/${locale}`);
+  const pattern = '**/search-' + suffix + '.json';
+  let catalogRequests = 0;
+  await page.route(pattern, (route) => {
+    catalogRequests++;
+    return route.fulfill({ status: 503, body: 'offline' });
+  });
+  const none = await page.locator('#finder').getAttribute('data-none');
+  for (const query of ['', ' \t ', '...?!', 'the and in de con']) {
+    await page.evaluate((value) => {
+      document.querySelector('#finder-q').value = value;
+      document.querySelector('#finder-form').requestSubmit();
+    }, query);
+    ok(
+      (await page.locator('#finder-out').textContent()) === none,
+      'finder handles non-searchable query locally: ' + suffix + ' ' + JSON.stringify(query),
+    );
+  }
+  ok(catalogRequests === 0, 'blank queries do not fetch the catalog: ' + suffix);
+  await page.unroute(pattern);
+}
+
 await page.goto(`${ORIGIN}${B}/`);
 await page.fill('#finder-q', 'I am building a SaaS with Next.js and Supabase login');
 await page.click('#finder-form button');
@@ -341,6 +367,38 @@ const insertedFinderLinks = await page.evaluate(() => window.__finderInsertedLin
 ok(
   insertedFinderLinks.length > 0 && insertedFinderLinks.every((href) => !href.includes('godot')),
   'finder never inserts outdated Godot results after a newer n8n submission',
+);
+await page.unroute('**/search-en.json');
+
+// A newly submitted blank query also supersedes an older request still
+// waiting for the catalog. Late results must not replace the no-results state.
+await page.goto(ORIGIN + B + '/');
+let releasePendingFinder;
+await page.route('**/search-en.json', async (route) => {
+  await new Promise((resolve) => { releasePendingFinder = resolve; });
+  await route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify(kits),
+  });
+});
+await page.fill('#finder-q', 'Godot game');
+await page.click('#finder-form button');
+for (let attempt = 0; attempt < 20 && !releasePendingFinder; attempt++) {
+  await page.waitForTimeout(25);
+}
+if (!releasePendingFinder) throw new Error('Pending finder catalog fetch never started');
+await page.evaluate(() => {
+  document.querySelector('#finder-q').value = ' ';
+  document.querySelector('#finder-form').requestSubmit();
+});
+const blankResult = await page.locator('#finder').getAttribute('data-none');
+ok((await page.locator('#finder-out').textContent()) === blankResult,
+  'blank submission shows no results while an earlier search is pending');
+releasePendingFinder();
+await page.waitForTimeout(100);
+ok(
+  (await page.locator('#finder-out').textContent()) === blankResult
+    && (await page.locator('#finder-out a').count()) === 0,
+  'late network results cannot overwrite the newer blank search',
 );
 await page.unroute('**/search-en.json');
 
