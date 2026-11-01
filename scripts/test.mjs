@@ -296,7 +296,7 @@ await page.keyboard.press('/');
 ok((await page.locator('#q').inputValue()).endsWith('/'), 'slash typed in kit search is kept');
 // Empty and stop-word-only queries must not request a catalog: an offline
 // visitor should see "no results" instead of a misleading network error.
-// Submit programmatically to avoid the input-focus prefetch.
+// Interact with the actual search field and submit button, including focus.
 for (const [locale, suffix] of [['', 'en'], ['es/', 'es']]) {
   await page.goto(`${ORIGIN}${B}/${locale}`);
   const pattern = '**/search-' + suffix + '.json';
@@ -307,10 +307,8 @@ for (const [locale, suffix] of [['', 'en'], ['es/', 'es']]) {
   });
   const none = await page.locator('#finder').getAttribute('data-none');
   for (const query of ['', ' \t ', '...?!', 'the and in de con']) {
-    await page.evaluate((value) => {
-      document.querySelector('#finder-q').value = value;
-      document.querySelector('#finder-form').requestSubmit();
-    }, query);
+    await page.fill('#finder-q', query);
+    await page.click('#finder-form button');
     ok(
       (await page.locator('#finder-out').textContent()) === none,
       'finder handles non-searchable query locally: ' + suffix + ' ' + JSON.stringify(query),
