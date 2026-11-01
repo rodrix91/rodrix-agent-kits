@@ -38,6 +38,19 @@ test('natural punctuation separates bilingual searches without hiding valid kits
   assert.equal(matchesSearch(card, searchTerms('n8n, godot')), false);
 });
 
+test('adjacent plus signs separate terms without breaking C++ and C# names', () => {
+  const card = 'n8n workflow for Next.js C# integration and automation';
+  assert.deepEqual(searchTerms('n8n+workflow'), ['n8n', 'workflow']);
+  assert.deepEqual(searchTerms('Next.js+C#'), ['next.js', 'c#']);
+  assert.deepEqual(searchTerms('C+++Next.js'), ['c++', 'next.js']);
+  assert.deepEqual(searchTerms('n8n+workflow'), searchTerms('n8n + workflow'));
+  assert.equal(matchesSearch(card, searchTerms('n8n+workflow')), true);
+  assert.equal(matchesSearch(card, searchTerms('Next.js+C#')), true);
+  assert.equal(matchesSearch(card, searchTerms('n8n+godot')), false);
+  assert.deepEqual(searchTerms('a+b'), ['a', 'b']);
+  assert.deepEqual(searchTerms('+++###'), []);
+});
+
 test('technical punctuation stays in file names, product names and programming terms', () => {
   const text = 'Use CLAUDE.md with Next.js, C++ and C#; rules also mention AGENTS.md';
   assert.deepEqual(
