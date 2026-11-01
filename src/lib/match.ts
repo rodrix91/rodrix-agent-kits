@@ -14,7 +14,11 @@ const SYN: Record<string, string[]> = {
   espanol: ['spanish', 'es'], spanish: ['espanol'], claude: ['claude.md'], cursor: ['rules'], codex: ['agents.md'], web: ['nextjs'], app: ['web'],
 };
 const STOP = new Set('a an and the for with of to in on my i is it un una el la los las de del con para mi y que en por with using build building want quiero hacer'.split(' '));
-export const tokenize = (s: string) => s.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '').split(/[^\p{L}\p{N}.]+/u).map((w) => w.replace(/^\.+|\.+$/g, '')).filter((w) => w.length > 1 && !STOP.has(w));
+// Keep C++ and C# as distinct searchable terms. Other plus signs remain
+// separators, so "Python+data" is still two words, not a single query.
+export const tokenize = (s: string) => (s.toLowerCase().normalize('NFKD').replace(/\p{M}/gu, '').match(/[\p{L}\p{N}.]+(?:\+\+|#)?/gu) ?? [])
+  .map((w) => w.replace(/^\.+|\.+$/g, ''))
+  .filter((w) => w.length > 1 && !STOP.has(w));
 
 export interface Doc { slug: string; title: string; tool: string; text: string; [k: string]: unknown }
 export function rank(query: string, docs: Doc[]) {
