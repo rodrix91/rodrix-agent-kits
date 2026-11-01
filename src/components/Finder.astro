@@ -22,7 +22,12 @@ const s = t[lang].finder;
   const isKitRecord = (entry: unknown): boolean => {
     if (entry === null || typeof entry !== 'object') return false;
     const record = entry as Record<string, unknown>;
-    return ['slug', 'title', 'tool', 'text'].every((field) => typeof record[field] === 'string');
+    // Kit URLs are built from slug values, while title, tool and text are
+    // required for readable results and meaningful search ranking.
+    if (typeof record.slug !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(record.slug)) return false;
+    return ['title', 'tool', 'text'].every(
+      (field) => typeof record[field] === 'string' && (record[field] as string).trim().length > 0,
+    );
   };
   const load = (): Promise<any[]> => {
     if (idx) return Promise.resolve(idx);
