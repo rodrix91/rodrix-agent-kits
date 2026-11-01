@@ -302,7 +302,7 @@ ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('
 await page.fill('#finder-q', 'quiero automatizar formularios de leads'); await page.click('#finder-form button');
 await page.waitForTimeout(200);
 ok((await page.locator('#finder-out a').first().getAttribute('href')).includes('n8n'), 'kit finder (ES query) finds n8n flow');
-// Failed, empty, malformed, or structurally invalid catalogs must be visible and retryable.
+// Failed, empty, malformed, or semantically invalid catalogs must be visible and retryable.
 for (const [locale, suffix, response, expected] of [
   ['', 'en', { status: 503, body: 'temporarily unavailable' }, 'Kit catalog unavailable. Please try again.'],
   ['es/', 'es', { status: 200, contentType: 'application/json', body: '{}' }, 'No se pudo cargar el catálogo de kits. Inténtalo de nuevo.'],
@@ -310,6 +310,9 @@ for (const [locale, suffix, response, expected] of [
   ['es/', 'es', { status: 200, contentType: 'application/json', body: '[null]' }, 'No se pudo cargar el catálogo de kits. Inténtalo de nuevo.'],
   ['', 'en', { status: 200, contentType: 'application/json', body: '[]' }, 'Kit catalog unavailable. Please try again.'],
   ['es/', 'es', { status: 200, contentType: 'application/json', body: '[]' }, 'No se pudo cargar el catálogo de kits. Inténtalo de nuevo.'],
+  ["", "en", { status: 200, contentType: 'application/json', body: "[{\"slug\":\"../../pricing\",\"title\":\"Wrong route\",\"tool\":\"Codex\",\"text\":\"Python data\"}]" }, "Kit catalog unavailable. Please try again."],
+  ["es/", "es", { status: 200, contentType: 'application/json', body: "[{\"slug\":\"valid-kit\",\"title\":\"   \",\"tool\":\"Codex\",\"text\":\"Python data\"}]" }, "No se pudo cargar el catálogo de kits. Inténtalo de nuevo."],
+  ["", "en", { status: 200, contentType: 'application/json', body: "[{\"slug\":\"valid-kit\",\"title\":\"Valid title\",\"tool\":\"Codex\",\"text\":\"  \"}]" }, "Kit catalog unavailable. Please try again."],
 ]) {
   const pattern = '**/search-' + suffix + '.json';
   await page.route(pattern, (route) => route.fulfill(response));
