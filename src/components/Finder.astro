@@ -19,6 +19,8 @@ const s = t[lang].finder;
   const out = document.getElementById('finder-out')!;
   let idx: any[] | null = null;
   let inFlight: Promise<any[]> | null = null;
+  // Each submission supersedes earlier pending results and errors.
+  let newestSearch = 0;
   const isKitRecord = (entry: unknown): boolean => {
     if (entry === null || typeof entry !== 'object') return false;
     const record = entry as Record<string, unknown>;
@@ -49,11 +51,13 @@ const s = t[lang].finder;
   }, { once: true });
   document.getElementById('finder-form')!.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const searchId = ++newestSearch;
     const q = (document.getElementById('finder-q') as HTMLInputElement).value;
     let catalog: any[];
     try {
       catalog = await load();
     } catch {
+      if (searchId !== newestSearch) return;
       out.replaceChildren();
       const p = document.createElement('p');
       p.textContent = root.dataset.error!;
@@ -61,6 +65,7 @@ const s = t[lang].finder;
       out.append(p);
       return;
     }
+    if (searchId !== newestSearch) return;
     const res = rank(q, catalog).slice(0, 3);
     out.replaceChildren();
     if (!res.length) { const p = document.createElement('p'); p.textContent = root.dataset.none!; p.style.margin = '0'; out.append(p); return; }
