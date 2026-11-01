@@ -31,7 +31,7 @@ const s = t[lang].finder;
         const response = await fetch(root.dataset.index!);
         if (!response.ok) throw new Error('Kit index unavailable');
         const result: unknown = await response.json();
-        if (!Array.isArray(result) || !result.every(isKitRecord)) throw new Error('Invalid kit index');
+        if (!Array.isArray(result) || result.length === 0 || !result.every(isKitRecord)) throw new Error('Invalid kit index');
         idx = result;
         return result;
       })().finally(() => { inFlight = null; });
