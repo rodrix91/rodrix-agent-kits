@@ -21,6 +21,22 @@ test('tokenization handles accented and unaccented Spanish consistently', () => 
   assert.deepEqual(tokenize('a de and 123'), ['123']);
 });
 
+test('C++ and C# are distinct searchable technical terms', () => {
+  assert.deepEqual(tokenize('C++ / C#; Next.js + Python'), ['c++', 'c#', 'next.js', 'python']);
+  assert.deepEqual(tokenize('Python+data'), ['python', 'data']);
+  assert.deepEqual(tokenize('AGENTS.md / CLAUDE.md'), ['agents.md', 'claude.md']);
+  const languageDocs = [
+    { slug: 'cpp', title: 'C++', tool: 'Codex', text: 'C++ game engine build rules' },
+    { slug: 'csharp', title: 'C#', tool: 'Cursor', text: 'C# dotnet application rules' },
+    { slug: 'python', title: 'Python', tool: 'Codex', text: 'Python data automation rules' },
+  ];
+  assert.equal(rank('C++', languageDocs)[0]?.doc.slug, 'cpp');
+  assert.equal(rank('C#', languageDocs)[0]?.doc.slug, 'csharp');
+  assert.equal(rank('Python + data', languageDocs)[0]?.doc.slug, 'python');
+  assert.deepEqual(rank('C', languageDocs), []);
+  assert.deepEqual(rank('# + ...', languageDocs), []);
+});
+
 test('Spanish queries rank identically with and without accent marks', () => {
   for (const [accented, plain] of [
     ['revisión de código', 'revision de codigo'],
