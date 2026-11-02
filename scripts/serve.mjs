@@ -74,6 +74,21 @@ export function serve(port = Number(process.env.PORT) || 4321) {
   });
   // A local preview must never listen on public/LAN interfaces by default.
   // Bind explicitly to IPv4 loopback instead of Node's wildcard address.
-  return new Promise((done) => srv.listen(port, '127.0.0.1', () => done(srv)));
+  return new Promise((resolve, reject) => {
+    // listen() reports an occupied port asynchronously through 'error'.
+    // Reject the caller's promise rather than crashing on an unhandled event.
+    srv.once('error', reject);
+    srv.listen(port, '127.0.0.1', () => {
+      srv.off('error', reject);
+      resolve(srv);
+    });
+  });
 }
-if (import.meta.url === `file://${process.argv[1]}`) serve().then(() => console.log(`Serving dist at http://localhost:${process.env.PORT || 4321}${BASE}/`));
+if (import.meta.url === `file://${process.argv[1]}`) {
+  serve().then((server) => {
+    console.log(`Serving dist at http://127.0.0.1:${server.address().port}${BASE}/`);
+  }).catch((error) => {
+    console.error(`Could not start local preview: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
