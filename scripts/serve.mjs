@@ -72,6 +72,8 @@ export function serve(port = Number(process.env.PORT) || 4321) {
       catch { return res.end('Not found'); }
     }
   });
-  return new Promise((done) => srv.listen(port, () => done(srv)));
+  // A local preview must never listen on public/LAN interfaces by default.
+  // Bind explicitly to IPv4 loopback instead of Node's wildcard address.
+  return new Promise((done) => srv.listen(port, '127.0.0.1', () => done(srv)));
 }
 if (import.meta.url === `file://${process.argv[1]}`) serve().then(() => console.log(`Serving dist at http://localhost:${process.env.PORT || 4321}${BASE}/`));
