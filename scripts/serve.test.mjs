@@ -94,3 +94,20 @@ test('static preview serves only valid paths inside the configured base', async 
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
 });
+
+test('an occupied preview port rejects cleanly without disrupting the existing server', async () => {
+  const first = await serve(0);
+  const port = first.address().port;
+  try {
+    await assert.rejects(
+      serve(port),
+      { code: 'EADDRINUSE' },
+      'a second preview must reject rather than cause an unhandled server error',
+    );
+    const stillServing = await fetch(`http://127.0.0.1:${port}/rodrix-agent-kits/`);
+    assert.equal(stillServing.status, 200);
+  } finally {
+    await new Promise((resolve, reject) =>
+      first.close((error) => error ? reject(error) : resolve()));
+  }
+});
