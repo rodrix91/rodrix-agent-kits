@@ -22,5 +22,13 @@ export function hasUnsearchableQuery(query: string, terms: readonly string[]): b
 
 export function matchesSearch(text: string, terms: readonly string[]): boolean {
   const normalized = foldSearchText(text);
-  return terms.every((term) => normalized.includes(term));
+  // Short queries such as "PR", "AI", "Go" or "C" should match complete
+  // technical tokens, not fragments of "productivity", "paid" or "Google".
+  // Longer terms retain the existing forgiving substring search.
+  const shortTokens = terms.some((term) => term.length <= 2)
+    ? new Set(searchTerms(text))
+    : null;
+  return terms.every((term) => term.length <= 2
+    ? shortTokens!.has(term)
+    : normalized.includes(term));
 }

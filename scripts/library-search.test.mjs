@@ -3,6 +3,31 @@ import assert from 'node:assert/strict';
 import { foldSearchText, hasUnsearchableQuery, matchesSearch, searchTerms } from '../src/lib/library-search.ts';
 
 
+
+test('short technical queries match whole tokens rather than unrelated fragments', () => {
+  const productivity = 'Productivity and Google collaboration kit, paid plans';
+  const review = 'PR review and AI-assisted code checks, written in Go';
+  for (const query of ['PR', 'AI', 'Go', 'C']) {
+    assert.equal(matchesSearch(productivity, searchTerms(query)), false, query);
+  }
+  for (const query of ['pr', 'AI', 'go', 'PR AI']) {
+    assert.equal(matchesSearch(review, searchTerms(query)), true, query);
+  }
+  assert.equal(matchesSearch('C++ and C# integration', searchTerms('C')), false);
+  assert.equal(matchesSearch('C++ and C# integration', searchTerms('C#')), true);
+  assert.equal(matchesSearch('C++ and C# integration', searchTerms('C++')), true);
+  assert.equal(matchesSearch('A PR review for React', searchTerms('PR react')), true);
+  assert.equal(matchesSearch('Improved productivity for React', searchTerms('PR react')), false);
+});
+
+test('longer library queries retain useful partial and bilingual matches', () => {
+  assert.equal(matchesSearch('Automatización de leads', searchTerms('automatiz')), true);
+  assert.equal(matchesSearch('Productivity toolkit', searchTerms('product')), true);
+  assert.equal(matchesSearch('A Go project on GitHub', searchTerms('go git')), true);
+  assert.equal(matchesSearch('Googled productivity tools', searchTerms('go git')), false);
+  assert.equal(matchesSearch('Revisión de código', searchTerms('revisión código')), true);
+});
+
 test('punctuation-only library queries do not display every kit', () => {
   const card = 'C++ and C# coding kits, CLAUDE.md, n8n workflow';
   for (const query of ['+++', '¿!?', '# / +', '...', '   !!!   ']) {
@@ -11,7 +36,7 @@ test('punctuation-only library queries do not display every kit', () => {
     assert.equal(hasUnsearchableQuery(query, terms), true, query);
     assert.equal(!hasUnsearchableQuery(query, terms) && matchesSearch(card, terms), false);
   }
-  for (const query of ['', '  ', '\\n\\t']) {
+  for (const query of ['', '  ', '\n\t']) {
     const terms = searchTerms(query);
     assert.equal(hasUnsearchableQuery(query, terms), false, JSON.stringify(query));
     assert.equal(matchesSearch(card, terms), true);
