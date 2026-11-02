@@ -7,7 +7,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { serve } from './serve.mjs';
 import { launch } from './browser.mjs';
 
-const PORT = 4399, ORIGIN = `http://localhost:${PORT}`, B = '/rodrix-agent-kits';
+const PORT = 4399, ORIGIN = `http://127.0.0.1:${PORT}`, B = '/rodrix-agent-kits';
 let fail = 0; const ok = (c, m) => { console.log(`${c ? '✓' : '✗'} ${m}`); if (!c) fail++; };
 
 // 1. structure
