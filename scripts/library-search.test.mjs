@@ -1,6 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { foldSearchText, matchesSearch, searchTerms } from '../src/lib/library-search.ts';
+import { foldSearchText, hasUnsearchableQuery, matchesSearch, searchTerms } from '../src/lib/library-search.ts';
+
+
+test('punctuation-only library queries do not display every kit', () => {
+  const card = 'C++ and C# coding kits, CLAUDE.md, n8n workflow';
+  for (const query of ['+++', '¿!?', '# / +', '...', '   !!!   ']) {
+    const terms = searchTerms(query);
+    assert.deepEqual(terms, [], query);
+    assert.equal(hasUnsearchableQuery(query, terms), true, query);
+    assert.equal(!hasUnsearchableQuery(query, terms) && matchesSearch(card, terms), false);
+  }
+  for (const query of ['', '  ', '\\n\\t']) {
+    const terms = searchTerms(query);
+    assert.equal(hasUnsearchableQuery(query, terms), false, JSON.stringify(query));
+    assert.equal(matchesSearch(card, terms), true);
+  }
+  for (const query of ['C++', 'C#', 'n8n+workflow', 'CLAUDE.md']) {
+    const terms = searchTerms(query);
+    assert.ok(terms.length > 0, query);
+    assert.equal(hasUnsearchableQuery(query, terms), false, query);
+    assert.equal(matchesSearch(card, terms), true, query);
+  }
+});
 
 test('accented and unaccented Spanish queries match identically', () => {
   const card = 'CLAUDE.md para equipos: el agente explica en español y escribe código en inglés';
