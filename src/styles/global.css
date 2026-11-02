@@ -187,7 +187,7 @@ fieldset.chips{border:0;margin:0;padding:0}
 /* newsletter */
 .news{border:1px solid var(--line);border-radius:22px;padding:clamp(1.5rem,5vw,3.5rem);background:var(--glow),var(--panel);display:grid;grid-template-columns:1.1fr 1fr;gap:2rem;align-items:center}
 @media (max-width:860px){.news{grid-template-columns:1fr}}
-.news form{display:flex;gap:.6rem;flex-wrap:wrap}
+.news form{display:block}.nl-label{display:block;font-weight:600;margin:0 0 .45rem}.nl-row{display:flex;gap:.6rem;flex-wrap:wrap}.nl-row .input{flex:1 1 14rem;min-width:0}.nl-privacy{font-size:var(--t-sm);margin:.5rem 0 0}
 .news .status{font-size:var(--t-sm);min-height:1.4em;margin:.7rem 0 0}
 
 /* tables / legal */

@@ -245,12 +245,27 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
   ok(bad.length === 0, `no other email addresses in src/dist (${bad.join(', ') || 'none'})`);
 }
 
-// newsletter: live action or a working fallback (RSS + X links) on EN/ES home
-for (const l of ['', 'es/']) {
-  const h = readFileSync(`dist/${l}index.html`, 'utf8');
-  const live = /class="nl-form"[^>]*data-live="true"/.test(h);
-  const rss = h.match(/data-nl-fallback[\s\S]*?href="[^"]*?\/((?:es\/)?rss\.xml)"/);
-  ok(live || (rss && existsSync('dist/' + rss[1]) && /data-nl-fallback[\s\S]*?href="https:\/\/x\.com\//.test(h)), `newsletter live or fallback ok: /${l}`);
+// newsletter: Buttondown form on home, every kit page (incl. free secrets pack), EN + ES; fallback when config empty
+{
+  const cfg = readFileSync('src/config.ts', 'utf8');
+  const action = (cfg.match(/NEWSLETTER = \{[\s\S]*?action:\s*'([^']*)'/) || [])[1] ?? '';
+  const kitPages = readdirSync('src/content/kits').map((f) => `kits/${f.replace(/\.md$/, '')}/`);
+  ok(kitPages.includes('kits/agent-secrets-safety-pack/'), 'secrets pack is among newsletter pages');
+  for (const p of ['', ...kitPages].flatMap((x) => [x, 'es/' + x])) {
+    const h = readFileSync(`dist/${p}index.html`, 'utf8');
+    const form = (h.match(/<form[^>]*class="nl-form"[^>]*>[\s\S]*?<\/form>/) || [''])[0];
+    const rss = h.match(/class="nl-fallback[\s\S]*?href="[^"]*?\/((?:es\/)?rss\.xml)"/);
+    ok(rss && existsSync('dist/' + rss[1]) && /class="nl-fallback[\s\S]*?href="https:\/\/x\.com\//.test(h), `newsletter keeps RSS + X links: /${p}`);
+    if (action) {
+      ok(form.includes(`action="${action}"`) && /method="post"/.test(form) && /target="_blank"/.test(form) && /data-live="true"/.test(form), `newsletter form action/method/target: /${p}`);
+      const id = (form.match(/<input[^>]*type="email"[^>]*>/) || [''])[0];
+      const idv = (id.match(/id="([^"]+)"/) || [])[1];
+      ok(/name="email"/.test(id) && /required/.test(id) && idv && new RegExp(`<label[^>]*for="${idv}"[^>]*>[^<]+</label>`).test(form) && !/<label[^>]*sr-only/.test(form), `newsletter email field + visible label: /${p}`);
+      ok(/data-nl-live[\s\S]*?href="https:\/\/buttondown\.com\/rodrixlabs"/.test(h) && !/opens soon|abre pronto/.test(h), `newsletter privacy line + Buttondown link, no 'opens soon': /${p}`);
+    } else {
+      ok(/data-live="false"/.test(form) && /data-nl-fallback/.test(h), `newsletter fallback when action empty: /${p}`);
+    }
+  }
 }
 
 // 2. links + 3. axe
@@ -430,37 +445,25 @@ for (const [locale, suffix, response, expected] of [
   await page.waitForSelector('#finder-out a');
   ok((await page.locator('#finder-out a').count()) > 0, 'finder retries successfully after catalog failure: ' + suffix);
 }
-// Newsletter: synthetic transport outcomes only. Never send a real email or call a provider.
+// Newsletter: native submit is not blocked (live), blocked with 'soon' message (not live). Never sends: submit is cancelled at window level.
 for (const l of ['', 'es/']) {
   await page.goto(`${ORIGIN}${B}/${l}`);
-  const email = 'synthetic@example.test';
-  await page.evaluate(() => {
-    const form = document.querySelector('.nl-form');
-    form.dataset.live = 'true'; // simulate a configured provider without changing config
-    form.action = location.origin + '/synthetic-newsletter-no-network';
-    window.fetch = async () => ({ type: 'opaque', ok: false });
-  });
-  await page.fill('.nl-form input[type=email]', email);
-  await page.locator('.nl-form button[type=submit]').click();
-  await page.waitForFunction(() => {
-    const f = document.querySelector('.nl-form');
-    return f.parentElement.querySelector('.status').textContent === f.dataset.pending;
-  });
-  ok((await page.locator('.nl-form input[type=email]').inputValue()) === email, `opaque newsletter response does not clear email: /${l}`);
-  await page.evaluate(() => { window.fetch = async () => ({ type: 'basic', ok: false }); });
-  await page.locator('.nl-form button[type=submit]').click();
-  await page.waitForFunction(() => {
-    const f = document.querySelector('.nl-form');
-    return f.parentElement.querySelector('.status').textContent === f.dataset.err;
-  });
-  ok((await page.locator('.nl-form input[type=email]').inputValue()) === email, `failed newsletter response preserves email: /${l}`);
-  await page.evaluate(() => { window.fetch = async () => ({ type: 'basic', ok: true }); });
-  await page.locator('.nl-form button[type=submit]').click();
-  await page.waitForFunction(() => {
-    const f = document.querySelector('.nl-form');
-    return f.parentElement.querySelector('.status').textContent === f.dataset.ok;
-  });
-  ok((await page.locator('.nl-form input[type=email]').inputValue()) === '', `confirmed newsletter response clears email: /${l}`);
+  for (const liveFlag of ['true', 'false']) {
+    await page.evaluate((lv) => {
+      const f = document.querySelector('.nl-form');
+      f.dataset.live = lv; if (!f.dataset.soon) f.dataset.soon = 'synthetic-soon';
+      f.action = location.origin + '/synthetic-newsletter-no-network';
+      f.removeAttribute('target');
+      window.__nl = null;
+      window.addEventListener('submit', (e) => { window.__nl = e.defaultPrevented; e.preventDefault(); }, { once: true });
+    }, liveFlag);
+    await page.fill('.nl-form input[type=email]', 'synthetic@example.test');
+    await page.locator('.nl-form button[type=submit]').click();
+    await page.waitForFunction(() => window.__nl !== null);
+    const prevented = await page.evaluate(() => window.__nl);
+    const st = await page.evaluate(() => { const f = document.querySelector('.nl-form'); return f.parentElement.querySelector('.status').textContent === (f.dataset.live === 'true' ? f.dataset.sent : f.dataset.soon); });
+    ok(prevented === (liveFlag === 'false') && st, `newsletter submit behaviour live=${liveFlag}: /${l}`);
+  }
 }
 // conversion: Gumroad CTA above the fold on mobile (390x844) for /pricing/ and every paid kit page (EN/ES)
 {

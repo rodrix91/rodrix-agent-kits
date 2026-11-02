@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-30T15:08:54.403Z",
-  "note": "Local static server, simulated throttling (Lighthouse defaults). SEO measured on localhost. /kits/ re-measured 2026-10-30T15:14:26.463Z after heading fix.",
+  "date": "2026-11-02T13:47:59.833Z",
+  "note": "Local static server, simulated throttling (Lighthouse defaults). SEO measured on localhost.",
   "rows": [
     {
       "formFactor": "mobile",
@@ -23,7 +23,7 @@
       "page": "/kits/nextjs-supabase-cursor-rules/",
       "performance": 100,
       "accessibility": 100,
-      "bestPractices": 96,
+      "bestPractices": 100,
       "seo": 100
     },
     {

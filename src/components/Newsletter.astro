@@ -14,48 +14,33 @@ const live = Boolean(NEWSLETTER.action);
         <p style="margin:0">{s.sub}</p>
       </div>
       <div>
-        <form class="nl-form" action={NEWSLETTER.action || '#'} method="post" data-live={String(live)} data-ok={s.ok} data-pending={s.pending} data-err={s.err} data-soon={s.soon} novalidate>
-          <label class="sr-only" for={`nl-${lang}`}>{s.email}</label>
-          <input class="input" id={`nl-${lang}`} name={NEWSLETTER.emailField} type="email" autocomplete="email" required placeholder="you@domain.com" />
-          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
-          <button class="btn btn-primary" type="submit" style="--h:48px">{s.submit}</button>
+        <form class="nl-form" action={NEWSLETTER.action || '#'} method="post" target={live ? '_blank' : undefined} data-live={String(live)} data-sent={s.sent} data-soon={live ? undefined : s.soon}>
+          <label class="nl-label" for={`nl-${lang}`}>{s.email}</label>
+          <div class="nl-row">
+            <input class="input" id={`nl-${lang}`} name={NEWSLETTER.emailField} type="email" autocomplete="email" required placeholder="you@domain.com" />
+            <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
+            <button class="btn btn-primary" type="submit" style="--h:48px">{s.submit}</button>
+          </div>
         </form>
         <p class="status muted" role="status" aria-live="polite">{!live && s.soon}</p>
-        {!live && (
-          <p class="nl-fallback muted" data-nl-fallback style="margin:.5rem 0 0">
-            {lang === 'es' ? 'Mientras tanto:' : 'Meanwhile:'}{' '}
-            <a href={asset(lang === 'es' ? '/es/rss.xml' : '/rss.xml')}>RSS</a>{' · '}
-            <a href={BRAND.x} rel="noopener">X</a>
-          </p>
-        )}
+        {live && <p class="nl-privacy muted" data-nl-live>{s.privacy} <a href={NEWSLETTER.publicPage} rel="noopener">{s.alt}</a> · <a href={asset(lang === 'es' ? '/es/privacy/' : '/privacy/')}>{lang === 'es' ? 'Privacidad' : 'Privacy'}</a></p>}
+        <p class="nl-fallback muted" data-nl-fallback={live ? undefined : ''} style="margin:.5rem 0 0">
+          {live ? s.also : (lang === 'es' ? 'Mientras tanto:' : 'Meanwhile:')}{' '}
+          <a href={asset(lang === 'es' ? '/es/rss.xml' : '/rss.xml')}>RSS</a>{' · '}
+          <a href={BRAND.x} rel="noopener">X</a>
+        </p>
       </div>
     </div>
   </div>
 </section>
 <script>
+  // Progressive enhancement only: the form is a plain POST that works without JS.
   document.querySelectorAll<HTMLFormElement>('.nl-form').forEach((f) => {
-    f.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    f.addEventListener('submit', (e) => {
       const st = f.parentElement!.querySelector('.status')!;
-      const email = f.querySelector<HTMLInputElement>('input[type=email]')!;
-      if (!email.checkValidity()) { email.focus(); email.reportValidity(); return; }
-      if (f.dataset.live !== 'true') { st.textContent = f.dataset.soon!; return; }
-      if ((f.querySelector('input[name=website]') as HTMLInputElement).value) return;
-      try {
-        const response = await fetch(f.action, {
-          method: 'POST', body: new FormData(f), mode: 'no-cors',
-        });
-        // Cross-origin no-cors hides HTTP status. An opaque response may
-        // represent a provider error, so never claim signup was confirmed.
-        if (response.type === 'opaque' || response.type === 'opaqueredirect') {
-          st.textContent = f.dataset.pending!;
-        } else if (response.ok) {
-          st.textContent = f.dataset.ok!;
-          f.reset();
-        } else {
-          st.textContent = f.dataset.err!;
-        }
-      } catch { st.textContent = f.dataset.err!; }
+      if (f.dataset.live !== 'true') { e.preventDefault(); st.textContent = f.dataset.soon || ''; return; }
+      if ((f.querySelector('input[name=website]') as HTMLInputElement).value) { e.preventDefault(); return; }
+      st.textContent = f.dataset.sent!;
     });
   });
 </script>

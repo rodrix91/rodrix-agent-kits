@@ -44,12 +44,11 @@ export const BING_SITE_VERIFICATION = '';
 
 export const NEWSLETTER = {
   /**
-   * Provider-agnostic: any endpoint that accepts a POST form with an `email` field.
-   * Recommended free provider: Buttondown (free up to 100 subs) -> 'https://buttondown.com/api/emails/embed-subscribe/<username>'
-   * Alternatives: MailerLite free, Kit (ConvertKit) free form action URL.
-   * TODO(Rodrigo): pick a provider and paste the form action URL.
+   * Buttondown free account `rodrixlabs` (Steve, 2026-11-02). Plain POST form, field `email`.
+   * Empty action = 'opens soon' fallback (RSS + X) renders instead of a live form.
    */
-  action: '',
+  action: 'https://buttondown.com/api/emails/embed-subscribe/rodrixlabs',
+  publicPage: 'https://buttondown.com/rodrixlabs',
   emailField: 'email',
 };
 
