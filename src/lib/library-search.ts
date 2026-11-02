@@ -25,8 +25,13 @@ export function matchesSearch(text: string, terms: readonly string[]): boolean {
   // Short queries such as "PR", "AI", "Go" or "C" should match complete
   // technical tokens, not fragments of "productivity", "paid" or "Google".
   // Longer terms retain the existing forgiving substring search.
+  // A dotted technical name stays searchable as a whole, but short queries
+  // may also match complete dot-delimited components (JS in Next.js, MD in
+  // CLAUDE.md). Never split C++ or C# into the ambiguous short token "c".
   const shortTokens = terms.some((term) => term.length <= 2)
-    ? new Set(searchTerms(text))
+    ? new Set(searchTerms(text).flatMap((token) => token.includes('.')
+      ? [token, ...token.split('.').filter(Boolean)]
+      : [token]))
     : null;
   return terms.every((term) => term.length <= 2
     ? shortTokens!.has(term)
