@@ -66,7 +66,7 @@ test('a successful audit preserves scores and closes Chrome and server', async (
   assert.deepEqual(rows.map((row) => row.formFactor), ['mobile', 'mobile', 'desktop', 'desktop']);
   assert.equal(rows[0].performance, 90);
   assert.equal(h.audits.length, 4);
-  assert.equal(h.audits[0][0], 'http://localhost:4397/rodrix-agent-kits/');
+  assert.equal(h.audits[0][0], 'http://127.0.0.1:4397/rodrix-agent-kits/');
   assert.equal(h.audits[0][2], undefined);
   assert.equal(h.audits[2][2].settings.formFactor, 'desktop');
   assert.equal(h.saved.length, 1);
