@@ -142,3 +142,20 @@ test('preserves multilingual characters outside Latin accents', () => {
   assert.equal(matchesSearch('naïve café', searchTerms('naive cafe')), true);
   assert.equal(matchesSearch('日本語', searchTerms('日本語')), true);
 });
+
+test('short queries find dotted extensions without matching arbitrary fragments', () => {
+  const next = 'Use Next.js with the CLAUDE.md instructions for C++ and C# projects';
+  assert.equal(matchesSearch(next, searchTerms('JS')), true);
+  assert.equal(matchesSearch(next, searchTerms('Next JS')), true);
+  assert.equal(matchesSearch(next, searchTerms('.md')), true);
+  assert.equal(matchesSearch(next, searchTerms('MD')), true);
+  assert.equal(matchesSearch(next, searchTerms('C++')), true);
+  assert.equal(matchesSearch(next, searchTerms('C#')), true);
+  assert.equal(matchesSearch(next, searchTerms('C')), false);
+
+  const unrelated = 'Google productivity kit';
+  for (const query of ['Go', 'JS', 'MD']) {
+    assert.equal(matchesSearch(unrelated, searchTerms(query)), false, query);
+  }
+  assert.equal(matchesSearch(next, searchTerms('JS runtime')), false);
+});
