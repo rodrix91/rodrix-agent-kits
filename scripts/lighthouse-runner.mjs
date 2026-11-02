@@ -56,7 +56,7 @@ export async function runLighthouse({
     for (const formFactor of formFactors) {
       for (const page of pages) {
         const result = await audit(
-          'http://localhost:' + port + base + page,
+          'http://127.0.0.1:' + port + base + page,
           { port: chrome.port, output: 'json', logLevel: 'error' },
           desktopConfig(formFactor),
         );
