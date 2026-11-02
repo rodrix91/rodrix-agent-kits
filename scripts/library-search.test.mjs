@@ -36,7 +36,7 @@ test('punctuation-only library queries do not display every kit', () => {
     assert.equal(hasUnsearchableQuery(query, terms), true, query);
     assert.equal(!hasUnsearchableQuery(query, terms) && matchesSearch(card, terms), false);
   }
-  for (const query of ['', '  ', '\\n\\t']) {
+  for (const query of ['', '  ', '\n\t']) {
     const terms = searchTerms(query);
     assert.equal(hasUnsearchableQuery(query, terms), false, JSON.stringify(query));
     assert.equal(matchesSearch(card, terms), true);
