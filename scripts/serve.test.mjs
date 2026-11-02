@@ -6,6 +6,8 @@ import { serve } from './serve.mjs';
 
 test('static preview serves only valid paths inside the configured base', async () => {
   const server = await serve(0);
+  assert.equal(server.address().address, '127.0.0.1',
+    'the static preview must bind only to loopback, never a LAN interface');
   const origin = `http://127.0.0.1:${server.address().port}`;
   const base = '/rodrix-agent-kits';
   try {
