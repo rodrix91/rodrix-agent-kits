@@ -24,3 +24,12 @@ test('four- and five-backtick snippets force a longer safe delimiter', () => {
     assert.equal(output, `${fence}markdown\n${source}\n${fence}`);
   }
 });
+
+test('many short backtick runs cannot exhaust the function argument stack', () => {
+  // The previous Math.max(...runs) passed 150,000 arguments and raised
+  // RangeError. This source also has a longer seven-backtick run.
+  const source = '```````\n' + '`x'.repeat(150000);
+  const wrapper = '`'.repeat(8);
+  const wrapped = fencedKitContent(source, 'markdown');
+  assert.equal(wrapped, `${wrapper}markdown\n${source}\n${wrapper}`);
+});
