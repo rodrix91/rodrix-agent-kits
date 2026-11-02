@@ -2,6 +2,7 @@ import { getCollection } from 'astro:content';
 import { getKits, kitFile, bundlePending, SOON } from './kits';
 import { url, asset, type Lang } from './i18n';
 import { BRAND, PRICES } from '../config';
+import { fencedKitContent } from './markdown-fences';
 const esc = (s: string) => s.replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c]!);
 
 export async function rss(lang: Lang, site: URL) {
@@ -27,7 +28,8 @@ export async function llms(full: boolean, site: URL) {
     s += `\n## Optional\n- [llms.txt](${o}${asset('/llms.txt')})\n\n# Full kit contents\n`;
     for (const k of kits) {
       const d = k.data;
-      s += `\n---\n\n## ${d.en.title}\n\nURL: ${o}${url(`/kits/${k.id}/`)}\nTool: ${d.tool} | Category: ${d.category} | Access: ${bundlePending(k) ? SOON.en + ' (not included yet); template free' : d.tier + (d.price ? ` ($${d.price})` : '')}\nInstall path: ${d.installPath}\nHow it was checked: ${d.tested}\n\n${d.en.summary}\n\nWhat's inside:\n${d.en.inside.map((i) => `- ${i}`).join('\n')}\n\n${k.body?.trim() ?? ''}\n\n\`\`\`${d.file.endsWith('.json') ? 'json' : 'markdown'}\n${d.tier === 'paid' ? kitFile(k).split('\n').slice(0, d.previewLines).join('\n') : kitFile(k)}\n\`\`\`\n`;
+      const content = d.tier === 'paid' ? kitFile(k).split('\n').slice(0, d.previewLines).join('\n') : kitFile(k);
+      s += `\n---\n\n## ${d.en.title}\n\nURL: ${o}${url(`/kits/${k.id}/`)}\nTool: ${d.tool} | Category: ${d.category} | Access: ${bundlePending(k) ? SOON.en + ' (not included yet); template free' : d.tier + (d.price ? ` ($${d.price})` : '')}\nInstall path: ${d.installPath}\nHow it was checked: ${d.tested}\n\n${d.en.summary}\n\nWhat's inside:\n${d.en.inside.map((i) => `- ${i}`).join('\n')}\n\n${k.body?.trim() ?? ''}\n\n${fencedKitContent(content, d.file.endsWith('.json') ? 'json' : 'markdown')}\n`;
     }
   }
   return new Response(s, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
