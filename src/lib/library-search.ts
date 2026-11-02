@@ -14,6 +14,12 @@ export function searchTerms(query: string): string[] {
     .filter((term) => /[\p{L}\p{N}]/u.test(term));
 }
 
+
+/** A nonblank query with no searchable words must not match every card. */
+export function hasUnsearchableQuery(query: string, terms: readonly string[]): boolean {
+  return query.trim().length > 0 && terms.length === 0;
+}
+
 export function matchesSearch(text: string, terms: readonly string[]): boolean {
   const normalized = foldSearchText(text);
   return terms.every((term) => normalized.includes(term));
