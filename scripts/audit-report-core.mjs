@@ -3,7 +3,8 @@
 const SEVERITIES = ['info', 'low', 'moderate', 'high', 'critical'];
 
 export function summarizeAuditReport(report) {
-  if (!report || typeof report !== 'object' || Array.isArray(report) || report.error) {
+  if (!report || typeof report !== 'object' || Array.isArray(report)
+      || Object.hasOwn(report, 'error')) {
     throw new Error('npm audit did not return a valid report object');
   }
   const totals = report.metadata?.vulnerabilities;
