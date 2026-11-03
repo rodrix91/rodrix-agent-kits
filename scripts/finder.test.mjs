@@ -37,6 +37,24 @@ test('C++ and C# are distinct searchable technical terms', () => {
   assert.deepEqual(rank('# + ...', languageDocs), []);
 });
 
+
+test('finder discovers dotted technical extensions without substring false positives', () => {
+  const examples = [
+    { slug: 'nextjs', title: 'Next.js kit', tool: 'Cursor', text: 'Next.js framework setup' },
+    { slug: 'claude', title: 'Claude instructions', tool: 'Claude', text: 'CLAUDE.md agent policies' },
+    { slug: 'productivity', title: 'Unrelated', tool: 'Productivity', text: 'Google productivity and documentation' },
+    { slug: 'cpp', title: 'C++ setup', tool: 'Cursor', text: 'C++ build and C# integration' },
+  ];
+  assert.deepEqual(rank('JS', examples).map((item) => item.doc.slug), ['nextjs']);
+  assert.deepEqual(rank('MD', examples).map((item) => item.doc.slug), ['claude']);
+  assert.deepEqual(rank('Next.js', examples).map((item) => item.doc.slug), ['nextjs']);
+  assert.deepEqual(rank('CLAUDE.md', examples).map((item) => item.doc.slug), ['claude']);
+  assert.deepEqual(rank('Go', examples), []);
+  assert.deepEqual(rank('C', examples), []);
+  assert.deepEqual(rank('C++', examples).map((item) => item.doc.slug), ['cpp']);
+  assert.deepEqual(rank('C#', examples).map((item) => item.doc.slug), ['cpp']);
+});
+
 test('Spanish queries rank identically with and without accent marks', () => {
   for (const [accented, plain] of [
     ['revisión de código', 'revision de codigo'],
