@@ -22,6 +22,28 @@ test('date validation rejects invalid and silently normalized UTC days', () => {
   }
 });
 
+test('future publication and guide review dates cannot become sitemap lastmod', () => {
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  assert.equal(validUtcDate(todayUtc), true, 'the current UTC day remains valid');
+  assert.equal(validUtcDate('2999-12-31'), false, 'a future real day is not a past update');
+
+  assert.throws(
+    () => kitModificationDates([kit('unpublished.md', '', '2999-12-31')]),
+    /Invalid kit UTC date/,
+  );
+  assert.throws(
+    () => kitModificationDates([kit('future-edit.md', 'updated: "2999-12-31"\n')]),
+    /Invalid kit UTC date/,
+  );
+  assert.throws(
+    () => guideModificationDates([{
+      filename: 'future-review.md',
+      content: '---\nupdated: "2999-12-31"\n---\n',
+    }]),
+    /Invalid guide UTC date/,
+  );
+});
+
 test('kit sitemap dates reflect actual added or later updated metadata', () => {
   const dated = kitModificationDates([
     kit('first-kit.md'),

@@ -7,7 +7,11 @@ const DATE_FIELD = /^(added|updated):[ \t]*(?:"([^"]+)"|'([^']+)'|([^\s#]+))[ \t
 export function validUtcDate(value) {
   if (typeof value !== 'string' || !DAY.test(value)) return false;
   const timestamp = Date.parse(value + 'T00:00:00Z');
-  return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value;
+  // A future publication or source review cannot already have happened.
+  // Compare UTC dates, not local dates, for deterministic sitemap metadata.
+  return Number.isFinite(timestamp)
+    && new Date(timestamp).toISOString().slice(0, 10) === value
+    && value <= new Date().toISOString().slice(0, 10);
 }
 
 export function kitModificationDates(files) {
