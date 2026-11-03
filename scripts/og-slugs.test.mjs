@@ -29,6 +29,33 @@ test('paths and malformed filename segments are rejected before OG writes', () =
   }
 });
 
+test('OG filenames are portable across Windows, macOS and Linux', () => {
+  // Windows interprets reserved device basenames even with a .png extension.
+  for (const slug of [
+    'con', 'prn', 'aux', 'nul', 'com1', 'com9', 'lpt1', 'lpt9',
+  ]) {
+    assert.throws(
+      () => validatedOgKits([{ slug }]),
+      /OG image slug must be a lowercase URL-safe filename/,
+      slug,
+    );
+  }
+
+  // Filename bytes are bounded to 255 including the .png extension.
+  const safeMaximum = 'a'.repeat(251);
+  const tooLong = 'a'.repeat(252);
+  assert.deepEqual(validatedOgKits([{ slug: safeMaximum }]), [{ slug: safeMaximum }]);
+  assert.throws(
+    () => validatedOgKits([{ slug: tooLong }]),
+    /OG image slug must be a lowercase URL-safe filename/,
+  );
+
+  // Prefixes containing device names are ordinary valid filenames.
+  for (const slug of ['console', 'con-kit', 'com0', 'com10', 'lpt0']) {
+    assert.deepEqual(validatedOgKits([{ slug }]), [{ slug }]);
+  }
+});
+
 test('default OG image is reserved and duplicate slugs are rejected', () => {
   assert.throws(() => validatedOgKits([{ slug: 'default' }]), /Duplicate or reserved OG image slug: default/);
   assert.throws(
