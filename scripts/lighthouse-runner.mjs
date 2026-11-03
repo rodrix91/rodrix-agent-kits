@@ -12,6 +12,15 @@ export function selectLighthouseTargets(env = process.env) {
   if (!formFactors.length || formFactors.some((mode) => !['mobile', 'desktop'].includes(mode))) {
     throw new Error('LH_FORM_FACTORS must contain mobile and/or desktop');
   }
+  // Duplicate entries silently repeat browser audits and misrepresent the
+  // number of distinct pages/form factors in the saved performance report.
+  // Fail before starting the local server or launching Chrome.
+  if (new Set(pages).size !== pages.length) {
+    throw new Error('LH_PAGES must not contain duplicate paths');
+  }
+  if (new Set(formFactors).size !== formFactors.length) {
+    throw new Error('LH_FORM_FACTORS must not contain duplicate values');
+  }
   return { pages, formFactors };
 }
 
