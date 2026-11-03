@@ -17,6 +17,30 @@ test('accepts valid totals and sorts advisory names consistently', () => {
   assert.deepEqual(result.advisories.map(([name]) => name), ['alpha', 'zeta']);
 });
 
+test('rejects any npm audit error envelope, including falsy error payloads', () => {
+  // npm may include partial counts alongside an error; even a falsy error
+  // value means the response is not a verified audit report.
+  const zeroFindings = {
+    metadata: {
+      vulnerabilities: { info: 0, low: 0, moderate: 0, high: 0, critical: 0, total: 0 },
+    },
+    vulnerabilities: {},
+  };
+  for (const error of [null, false, 0, '', {}, { code: 'EAUDITNOLOCK' }]) {
+    assert.throws(
+      () => summarizeAuditReport({ ...zeroFindings, error }),
+      /valid report object/,
+      String(error),
+    );
+    assert.throws(
+      () => summarizeAuditReport({ ...report(), error }),
+      /valid report object/,
+      String(error),
+    );
+  }
+  assert.deepEqual(summarizeAuditReport(zeroFindings).totals.total, 0);
+});
+
 test('accepts an absent optional zero-valued info count', () => {
   const input = report();
   delete input.metadata.vulnerabilities.info;
