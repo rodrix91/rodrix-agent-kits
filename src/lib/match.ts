@@ -35,7 +35,15 @@ export function rank(query: string, docs: Doc[]) {
   // Compute token frequencies and document frequencies once per corpus.
   // The previous implementation scanned every document for every term of
   // every result (quadratic in the size of the catalog).
-  const tokenLists = docs.map((doc) => tokenize(doc.text));
+  // A filename such as Next.js or CLAUDE.md should match both its complete
+  // technical name and an exact short extension query (JS or MD). The card
+  // library already supports this; keep the kit finder consistent without
+  // allowing broad substring hits (for example, GO in Google).
+  // Preserve C++ / C# as distinct tokens and avoid indexing one-letter
+  // fragments as separate matchable terms.
+  const tokenLists = docs.map((doc) => tokenize(doc.text).flatMap((term) => (
+    term.includes('.') ? [term, ...term.split('.').filter((part) => part.length > 1)] : [term]
+  )));
   const avgLength = tokenLists.reduce((sum, terms) => sum + terms.length, 0) / docs.length;
   const termCounts = tokenLists.map((terms) => {
     const counts = new Map<string, number>();
