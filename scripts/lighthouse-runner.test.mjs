@@ -46,6 +46,9 @@ test('invalid targets fail before any server or Chrome is started', async () => 
     { LH_PAGES: '//example.com', LH_FORM_FACTORS: 'mobile' },
     { LH_PAGES: '/../secrets', LH_FORM_FACTORS: 'mobile' },
     { LH_PAGES: '/valid/,', LH_FORM_FACTORS: 'mobile' },
+    { LH_PAGES: '/,/pricing/,/', LH_FORM_FACTORS: 'mobile' },
+    { LH_PAGES: '/', LH_FORM_FACTORS: 'mobile,mobile' },
+    { LH_PAGES: '/', LH_FORM_FACTORS: 'desktop,mobile,desktop' },
     { LH_PAGES: '/', LH_FORM_FACTORS: '' },
     { LH_PAGES: '/', LH_FORM_FACTORS: 'tablet' },
     { LH_PAGES: '/', LH_FORM_FACTORS: 'mobile,tablet' },
@@ -55,6 +58,23 @@ test('invalid targets fail before any server or Chrome is started', async () => 
     await assert.rejects(runLighthouse({ ...h.deps, env }), /LH_PAGES|LH_FORM_FACTORS/);
     assert.deepEqual(h.events, [], JSON.stringify(env));
   }
+});
+
+test('Lighthouse duplicate targets fail with precise diagnostics', () => {
+  assert.throws(
+    () => selectLighthouseTargets({ LH_PAGES: '/kits/,/kits/', LH_FORM_FACTORS: 'mobile' }),
+    /LH_PAGES must not contain duplicate paths/,
+  );
+  assert.throws(
+    () => selectLighthouseTargets({ LH_PAGES: '/', LH_FORM_FACTORS: 'desktop,desktop' }),
+    /LH_FORM_FACTORS must not contain duplicate values/,
+  );
+  assert.deepEqual(selectLighthouseTargets({
+    LH_PAGES: '/,/kits/,/pricing/', LH_FORM_FACTORS: 'mobile,desktop',
+  }), {
+    pages: ['/', '/kits/', '/pricing/'],
+    formFactors: ['mobile', 'desktop'],
+  });
 });
 
 test('a successful audit preserves scores and closes Chrome and server', async () => {
