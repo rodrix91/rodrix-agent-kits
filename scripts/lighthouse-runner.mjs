@@ -76,10 +76,17 @@ export async function runLighthouse({
   let originalError;
   try {
     server = await serve(port);
+    // When port=0, Node assigns an available ephemeral port. Both the
+    // preflight check and Lighthouse must target the *bound* listener,
+    // not the requested port 0 (which is not an HTTP destination).
+    const boundPort = server.address?.()?.port ?? port;
+    if (!Number.isInteger(boundPort) || boundPort < 1 || boundPort > 65535) {
+      throw new Error('Local Lighthouse preview did not bind a valid TCP port');
+    }
     // Check each distinct page once, before Chrome starts. Redirects,
     // missing pages and failed connections are not valid audit targets.
     for (const page of pages) {
-      const status = await probe('http://127.0.0.1:' + port + base + page);
+      const status = await probe('http://127.0.0.1:' + boundPort + base + page);
       if (status !== 200) {
         throw new Error(`Lighthouse target ${page} returned HTTP ${status}; expected 200`);
       }
@@ -93,7 +100,7 @@ export async function runLighthouse({
     for (const formFactor of formFactors) {
       for (const page of pages) {
         const result = await audit(
-          'http://127.0.0.1:' + port + base + page,
+          'http://127.0.0.1:' + boundPort + base + page,
           { port: chrome.port, output: 'json', logLevel: 'error' },
           desktopConfig(formFactor),
         );
