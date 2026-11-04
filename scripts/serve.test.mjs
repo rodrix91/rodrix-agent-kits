@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { symlink, unlink } from 'node:fs/promises';
+import { open, symlink, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { serve } from './serve.mjs';
 
@@ -24,6 +24,7 @@ test('static preview serves only valid paths inside the configured base', async 
     const head = await fetch(origin + base + '/index.html', { method: 'HEAD' });
     assert.equal(head.status, 200);
     assert.equal(head.headers.get('content-type'), directFile.headers.get('content-type'));
+    assert.equal(head.headers.get('content-length'), directFile.headers.get('content-length'));
     assert.equal(await head.text(), '', 'HEAD must never return a response body');
 
     for (const [method, pathname] of [
@@ -52,6 +53,10 @@ test('static preview serves only valid paths inside the configured base', async 
     const missing = await fetch(origin + base + '/not-a-real-file');
     assert.equal(missing.status, 404);
     assert.match(missing.headers.get('content-type') ?? '', /text\/html/);
+    const missingHead = await fetch(origin + base + '/not-a-real-file', { method: 'HEAD' });
+    assert.equal(missingHead.status, 404);
+    assert.equal(missingHead.headers.get('content-type'), missing.headers.get('content-type'));
+    assert.equal(await missingHead.text(), '');
 
     const traversal = await fetch(origin + base + '/%2F..%2Fpackage.json');
     assert.equal(traversal.status, 400);
@@ -82,6 +87,10 @@ test('static preview serves only valid paths inside the configured base', async 
       const fileAttempt = await fetch(origin + base + '/' + escapedFile);
       assert.equal(fileAttempt.status, 403, 'symlinked file outside dist must be denied');
       assert.ok(!(await fileAttempt.text()).includes('"name": "rodrix-agent-kits"'));
+      assert.equal(
+        (await fetch(origin + base + '/' + escapedFile, { method: 'HEAD' })).status,
+        403, 'HEAD must not bypass symlink containment',
+      );
 
       const dirAttempt = await fetch(origin + base + '/' + escapedDir + '/config.ts');
       assert.equal(dirAttempt.status, 403, 'symlinked parent directory must be denied');
@@ -93,6 +102,37 @@ test('static preview serves only valid paths inside the configured base', async 
     assert.equal((await fetch(origin + base + '/')).status, 200);
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
+test('HEAD on a large sparse asset returns metadata without downloading a body', async () => {
+  const filename = `.preview-large-${process.pid}.bin`;
+  const file = resolve('dist', filename);
+  const size = 64 * 1024 * 1024;
+  const handle = await open(file, 'w');
+  try {
+    await handle.truncate(size);
+  } finally {
+    await handle.close();
+  }
+  let server;
+  try {
+    server = await serve(0);
+    const origin = `http://127.0.0.1:${server.address().port}/rodrix-agent-kits/`;
+    const response = await fetch(origin + filename, {
+      method: 'HEAD', signal: AbortSignal.timeout(4000),
+    });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-length'), String(size));
+    assert.equal(response.headers.get('content-type'), 'application/octet-stream');
+    assert.equal(await response.text(), '');
+    assert.equal((await fetch(origin + 'index.html')).status, 200);
+  } finally {
+    if (server) {
+      await new Promise((resolve, reject) =>
+        server.close((error) => error ? reject(error) : resolve()));
+    }
+    await unlink(file);
   }
 });
 
