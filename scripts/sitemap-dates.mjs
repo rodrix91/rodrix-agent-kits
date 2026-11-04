@@ -77,13 +77,25 @@ export function sitemapLastmod(url, kitDates, guideDates) {
   if (guide) {
     const index = guide[1] ? guideDates?.es : guideDates?.en;
     if (!(index instanceof Map)) return undefined; // No verified guide index supplied.
+    if (!index.has(guide[2])) {
+      throw new Error('Sitemap guide has no verified source date: ' + guide[2]);
+    }
     const lastmod = index.get(guide[2]);
-    if (!lastmod) throw new Error('Sitemap guide has no verified source date: ' + guide[2]);
+    // The public helper can receive date maps built by callers rather than
+    // guideModificationDates(). Never serialize an unchecked lastmod value.
+    if (!validUtcDate(lastmod)) {
+      throw new Error('Sitemap guide has an invalid verified UTC date: ' + guide[2]);
+    }
     return lastmod;
   }
   const match = pathname.match(/\/(?:es\/)?kits\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/);
   if (!match) return undefined; // Never fabricate dates for general pages.
+  if (!kitDates.has(match[1])) {
+    throw new Error('Sitemap kit has no verified source date: ' + match[1]);
+  }
   const lastmod = kitDates.get(match[1]);
-  if (!lastmod) throw new Error('Sitemap kit has no verified source date: ' + match[1]);
+  if (!validUtcDate(lastmod)) {
+    throw new Error('Sitemap kit has an invalid verified UTC date: ' + match[1]);
+  }
   return lastmod;
 }
