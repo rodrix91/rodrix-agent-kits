@@ -204,3 +204,53 @@ test('a late invalid score discards otherwise valid earlier audit rows', async (
   assert.equal(h.saved.length, 0);
   assert.deepEqual(h.events.slice(-2), ['kill-chrome', 'close-server']);
 });
+
+test('Lighthouse runtime failures cannot be published as valid-looking scores', async () => {
+  const scores = Object.fromEntries(
+    ['performance', 'accessibility', 'best-practices', 'seo']
+      .map((key) => [key, { score: 0.9 }]),
+  );
+  for (const runtimeError of [
+    { code: 'NO_FCP', message: 'The page did not paint' },
+    { code: 'PROTOCOL_TIMEOUT' },
+  ]) {
+    const h = harness();
+    h.deps.audit = async () => {
+      h.events.push('audit');
+      return { lhr: { categories: scores, runtimeError } };
+    };
+    await assert.rejects(
+      runLighthouse(h.deps),
+      /Lighthouse runtime error for mobile \/$/,
+    );
+    assert.equal(h.saved.length, 0);
+    assert.deepEqual(h.events, ['serve', 'launch-chrome', 'audit', 'kill-chrome', 'close-server']);
+  }
+});
+
+test('a late Lighthouse runtime failure discards earlier successful audit rows', async () => {
+  const h = harness();
+  h.deps.env.LH_PAGES = '/,/pricing/';
+  let count = 0;
+  h.deps.audit = async () => {
+    h.events.push('audit');
+    count += 1;
+    const categories = Object.fromEntries(
+      ['performance', 'accessibility', 'best-practices', 'seo']
+        .map((key) => [key, { score: 0.9 }]),
+    );
+    return {
+      lhr: {
+        categories,
+        ...(count === 2 ? { runtimeError: { code: 'NO_FCP' } } : {}),
+      },
+    };
+  };
+  await assert.rejects(
+    runLighthouse(h.deps),
+    /Lighthouse runtime error for mobile \/pricing\/$/,
+  );
+  assert.equal(count, 2);
+  assert.equal(h.saved.length, 0);
+  assert.deepEqual(h.events.slice(-2), ['kill-chrome', 'close-server']);
+});
