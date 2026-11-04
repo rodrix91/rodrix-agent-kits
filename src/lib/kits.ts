@@ -24,17 +24,22 @@ export function fileLang(file: string) {
   if (file.endsWith('.json')) return 'json';
   return 'markdown';
 }
+/** Searchable public marketing metadata, shared by the finder and library cards.
+ *  Both locales index both languages; only visible labels and links are localized.
+ */
+export function kitSearchText(k: Kit) {
+  const d = k.data;
+  return [
+    d.en.title, d.en.summary, ...d.en.inside,
+    d.es.title, d.es.summary, ...d.es.inside,
+    d.tool, d.category, ...d.keywords,
+  ].join(' ').toLowerCase();
+}
+
 export function searchDoc(k: Kit, lang: Lang) {
   const d = k.data, L = d[lang];
   return {
     slug: k.id, title: L.title, summary: L.summary, tool: d.tool, category: d.category, languages: d.languages, tier: d.tier, price: d.price ?? 0, soon: bundlePending(k),
-    // Search both languages on either locale without changing localized
-    // titles, summaries or result links. Previously the EN index did not
-    // include Spanish terms, while ES searches included some English terms.
-    text: [
-      d.en.title, d.en.summary, ...d.en.inside,
-      d.es.title, d.es.summary, ...d.es.inside,
-      d.tool, d.category, ...d.keywords,
-    ].join(' ').toLowerCase(),
+    text: kitSearchText(k),
   };
 }
