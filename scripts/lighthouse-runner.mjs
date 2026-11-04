@@ -1,6 +1,8 @@
 // Lifecycle and input validation for the local Lighthouse check.
 // Dependencies are injected so failure paths can be tested without Chrome.
 const DEFAULT_PAGES = '/,/kits/,/kits/nextjs-supabase-cursor-rules/,/pricing/,/es/';
+// A misconfigured list must not start hundreds of expensive Chrome audits.
+export const MAX_LIGHTHOUSE_AUDITS = 50;
 
 export function selectLighthouseTargets(env = process.env) {
   const pages = (env.LH_PAGES ?? DEFAULT_PAGES).split(',');
@@ -20,6 +22,14 @@ export function selectLighthouseTargets(env = process.env) {
   }
   if (new Set(formFactors).size !== formFactors.length) {
     throw new Error('LH_FORM_FACTORS must not contain duplicate values');
+  }
+  // Bound the total work, not just pages: each page is audited separately
+  // for mobile and desktop. A runaway configuration could otherwise keep
+  // Chrome busy far beyond CI's fixed timeout and never save a report.
+  if (pages.length * formFactors.length > MAX_LIGHTHOUSE_AUDITS) {
+    throw new RangeError(
+      `LH_PAGES and LH_FORM_FACTORS must request at most ${MAX_LIGHTHOUSE_AUDITS} Lighthouse audits`,
+    );
   }
   return { pages, formFactors };
 }
