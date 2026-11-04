@@ -172,6 +172,43 @@ test('each page is checked once even when both form factors are audited', async 
   assert.equal(h.saved.length, 1);
 });
 
+test('ephemeral preview port is used for both preflight and Lighthouse audits', async () => {
+  const h = harness();
+  const checked = [];
+  h.deps.serve = async (requestedPort) => {
+    assert.equal(requestedPort, 0);
+    h.events.push('serve');
+    return {
+      address: () => ({ port: 48321 }),
+      close(callback) { h.events.push('close-server'); callback(); },
+    };
+  };
+  h.deps.probe = async (url) => { checked.push(url); return 200; };
+  const rows = await runLighthouse({ ...h.deps, port: 0 });
+  assert.equal(rows.length, 1);
+  assert.deepEqual(checked, ['http://127.0.0.1:48321/rodrix-agent-kits/']);
+  assert.equal(h.audits[0][0], 'http://127.0.0.1:48321/rodrix-agent-kits/');
+  assert.deepEqual(h.events.slice(-3), ['save', 'kill-chrome', 'close-server']);
+});
+
+test('a missing ephemeral listener port fails before launching Chrome', async () => {
+  const h = harness();
+  h.deps.serve = async (requestedPort) => {
+    assert.equal(requestedPort, 0);
+    h.events.push('serve');
+    return {
+      address: () => null,
+      close(callback) { h.events.push('close-server'); callback(); },
+    };
+  };
+  await assert.rejects(
+    runLighthouse({ ...h.deps, port: 0 }),
+    /did not bind a valid TCP port/,
+  );
+  assert.deepEqual(h.events, ['serve', 'close-server']);
+  assert.equal(h.saved.length, 0);
+});
+
 test('Chrome startup failure still closes the server', async () => {
   const h = harness();
   h.deps.launchChrome = async () => { h.events.push('launch-chrome'); throw Error('launch failed'); };
