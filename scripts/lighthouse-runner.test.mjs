@@ -9,6 +9,7 @@ function harness() {
   const deps = {
     env: { LH_PAGES: '/', LH_FORM_FACTORS: 'mobile' },
     log: () => {},
+    probe: async () => 200,
     serve: async () => {
       events.push('serve');
       return { close(callback) { events.push('close-server'); callback(); } };
@@ -116,6 +117,59 @@ test('a successful audit preserves scores and closes Chrome and server', async (
   assert.deepEqual(h.saved[0].rows, rows);
   assert.match(h.saved[0].date, /^\d{4}-\d{2}-\d{2}T/);
   assert.deepEqual(h.events.slice(-3), ['save', 'kill-chrome', 'close-server']);
+});
+
+test('Lighthouse never scores missing or redirected local pages', async () => {
+  for (const status of [301, 302, 404, 500, 0]) {
+    const h = harness();
+    const requested = [];
+    h.deps.probe = async (url) => { requested.push(url); return status; };
+    await assert.rejects(
+      runLighthouse(h.deps),
+      new RegExp('target / returned HTTP ' + status + '; expected 200'),
+    );
+    assert.deepEqual(requested, ['http://127.0.0.1:4397/rodrix-agent-kits/']);
+    assert.deepEqual(h.events, ['serve', 'close-server']);
+    assert.equal(h.saved.length, 0);
+  }
+});
+
+test('a later missing page prevents every Chrome audit and partial report', async () => {
+  const h = harness();
+  h.deps.env.LH_PAGES = '/,/not-found/';
+  const requested = [];
+  h.deps.probe = async (url) => {
+    requested.push(url);
+    return url.endsWith('/not-found/') ? 404 : 200;
+  };
+  await assert.rejects(runLighthouse(h.deps), /target \/not-found\/ returned HTTP 404/);
+  assert.equal(requested.length, 2);
+  assert.deepEqual(h.events, ['serve', 'close-server']);
+  assert.equal(h.saved.length, 0);
+});
+
+test('local preflight request failures still release the preview server', async () => {
+  const h = harness();
+  h.deps.probe = async () => { throw Error('local connection refused'); };
+  await assert.rejects(runLighthouse(h.deps), /local connection refused/);
+  assert.deepEqual(h.events, ['serve', 'close-server']);
+  assert.equal(h.saved.length, 0);
+});
+
+test('each page is checked once even when both form factors are audited', async () => {
+  const h = harness();
+  const requested = [];
+  h.deps.probe = async (url) => { requested.push(url); return 200; };
+  const rows = await runLighthouse({
+    ...h.deps, env: { LH_PAGES: '/,/pricing/', LH_FORM_FACTORS: 'mobile,desktop' },
+  });
+  assert.equal(rows.length, 4);
+  assert.deepEqual(requested, [
+    'http://127.0.0.1:4397/rodrix-agent-kits/',
+    'http://127.0.0.1:4397/rodrix-agent-kits/pricing/',
+  ]);
+  assert.equal(h.audits.length, 4);
+  assert.equal(h.saved.length, 1);
 });
 
 test('Chrome startup failure still closes the server', async () => {
