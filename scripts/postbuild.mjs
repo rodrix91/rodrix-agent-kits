@@ -3,15 +3,15 @@ import { Resvg } from '@resvg/resvg-js';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { validatedOgKits } from './og-slugs.mjs';
+import { validatedOgKits, wrapOgText } from './og-slugs.mjs';
 
 const DIST = 'dist';
 const fonts = ['scripts/fonts/geist.ttf', 'scripts/fonts/geist-mono.ttf'];
 const esc = (s) => s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]);
-function wrap(text, max) { const out = []; let line = ''; for (const w of text.split(' ')) { if ((line + ' ' + w).trim().length > max) { out.push(line.trim()); line = w; } else line += ' ' + w; } out.push(line.trim()); return out; }
+
 
 function og(title, sub, tag) {
-  const t = wrap(title, 30).slice(0, 3), s = wrap(sub, 62).slice(0, 2);
+  const t = wrapOgText(title, 30).slice(0, 3), s = wrapOgText(sub, 62).slice(0, 2);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs><radialGradient id="g" cx="50%" cy="0%" r="75%"><stop offset="0" stop-color="#c6f432" stop-opacity=".22"/><stop offset="1" stop-color="#08090b" stop-opacity="0"/></radialGradient>
   <pattern id="p" width="56" height="56" patternUnits="userSpaceOnUse"><path d="M56 0H0V56" fill="none" stroke="#22262d" stroke-width="1"/></pattern></defs>
