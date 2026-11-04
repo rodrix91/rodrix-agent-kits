@@ -15,6 +15,29 @@ const must = ['index.html', 'es/index.html', 'kits/index.html', 'pricing/index.h
 for (const f of must) ok(existsSync('dist/' + f), `exists: ${f}`);
 const kits = JSON.parse(readFileSync('dist/search-en.json', 'utf8'));
 ok(kits.length >= 6, `${kits.length} kits in index`);
+// Each localized index must search the full EN and ES public metadata, even
+// though the visible card title/summary must stay in its requested language.
+// Also verify that all kit slugs survive translation one-to-one.
+const spanishKits = JSON.parse(readFileSync('dist/search-es.json', 'utf8'));
+const spanishBySlug = new Map(spanishKits.map((kit) => [kit.slug, kit]));
+ok(
+  spanishKits.length === kits.length && spanishBySlug.size === kits.length &&
+  kits.every((en) => {
+    const es = spanishBySlug.get(en.slug);
+    return es && en.text === es.text &&
+      [en.title, en.summary, es.title, es.summary].every((phrase) =>
+        en.text.includes(phrase.toLowerCase()));
+  }),
+  'both localized finder indexes search EN and ES metadata and preserve matching slugs',
+);
+const spanishTeam = kits.find((kit) => kit.slug === 'claude-md-webapp-es');
+const spanishTeamEs = spanishBySlug.get('claude-md-webapp-es');
+ok(
+  spanishTeam?.text.includes('hispanohablantes') &&
+  spanishTeam?.title !== spanishTeamEs?.title &&
+  spanishTeamEs?.text.includes('spanish-speaking teams'),
+  'Spanish search terms are discoverable from the English finder without changing its result language',
+);
 for (const k of kits) for (const l of ['', 'es/']) {
   const html = readFileSync(`dist/${l}kits/${k.slug}/index.html`, 'utf8');
   ok(/hreflang="es"/.test(html) && /rel="canonical"/.test(html) && /og:image/.test(html), `meta ok: /${l}kits/${k.slug}/`);
