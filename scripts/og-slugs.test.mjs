@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatedOgKits } from './og-slugs.mjs';
+import { validatedOgKits, wrapOgText } from './og-slugs.mjs';
 
 test('ordinary generated catalog slugs remain valid and records are unchanged', () => {
   const kits = [
@@ -70,5 +70,42 @@ test('non-array catalog and missing records fail closed', () => {
   }
   for (const kit of [null, undefined, {}, { slug: null }]) {
     assert.throws(() => validatedOgKits([{ slug: 'safe' }, kit]), /OG image slug must be/);
+  }
+});
+
+test('OG text wrapping preserves normal phrases and never fabricates empty lines', () => {
+  assert.deepEqual(wrapOgText('Agent kits that actually ship.', 30), [
+    'Agent kits that actually', 'ship.',
+  ]);
+  assert.deepEqual(wrapOgText('  Alpha   beta\tg a m m a  ', 10), [
+    'Alpha beta', 'g a m m a',
+  ]);
+  assert.deepEqual(wrapOgText('', 30), []);
+  assert.deepEqual(wrapOgText('   ', 30), []);
+});
+
+test('OG text wrapping splits long identifiers without overflowing text widths', () => {
+  assert.deepEqual(wrapOgText('X'.repeat(65), 30), [
+    'X'.repeat(30), 'X'.repeat(30), 'X'.repeat(5),
+  ]);
+  assert.deepEqual(wrapOgText('prefix ' + 'Y'.repeat(33) + ' end', 30), [
+    'prefix', 'Y'.repeat(30), 'YYY end',
+  ]);
+  // An emoji is one Unicode code point even though it occupies two UTF-16 units.
+  assert.deepEqual(wrapOgText('📚'.repeat(21), 20), [
+    '📚'.repeat(20), '📚',
+  ]);
+  for (const line of wrapOgText('long' + '😀'.repeat(65), 30)) {
+    assert.ok(Array.from(line).length <= 30);
+    assert.ok(!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(line));
+  }
+});
+
+test('OG text wrapping refuses invalid render inputs and widths', () => {
+  for (const value of [null, undefined, 8, [], {}]) {
+    assert.throws(() => wrapOgText(value, 30), /OG text must be a string/);
+  }
+  for (const width of [0, -1, 1.5, Infinity, NaN, '30']) {
+    assert.throws(() => wrapOgText('title', width), /OG line width must be/);
   }
 });
