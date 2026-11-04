@@ -55,9 +55,19 @@ function closeServer(server) {
   });
 }
 
+// Verify local pages actually exist before asking Lighthouse to score them.
+// A site fallback/404 page can otherwise produce plausible category scores.
+async function probePage(url) {
+  const response = await fetch(url, {
+    method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(5000),
+  });
+  await response.body?.cancel();
+  return response.status;
+}
+
 export async function runLighthouse({
   serve, launchChrome, audit, save, env = process.env, log = console.log,
-  port = 4397, base = '/rodrix-agent-kits',
+  probe = probePage, port = 4397, base = '/rodrix-agent-kits',
 }) {
   // Reject invalid configuration before opening a port or starting Chrome.
   const { pages, formFactors } = selectLighthouseTargets(env);
@@ -66,6 +76,14 @@ export async function runLighthouse({
   let originalError;
   try {
     server = await serve(port);
+    // Check each distinct page once, before Chrome starts. Redirects,
+    // missing pages and failed connections are not valid audit targets.
+    for (const page of pages) {
+      const status = await probe('http://127.0.0.1:' + port + base + page);
+      if (status !== 200) {
+        throw new Error(`Lighthouse target ${page} returned HTTP ${status}; expected 200`);
+      }
+    }
     chrome = await launchChrome({
       chromePath: env.CHROME_PATH || '/usr/bin/google-chrome',
       chromeFlags: ['--headless=new', '--no-sandbox'],
