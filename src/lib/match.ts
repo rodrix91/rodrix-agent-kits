@@ -62,7 +62,12 @@ export function rank(query: string, docs: Doc[]) {
     const idf = Math.log(1 + (docs.length - df + 0.5) / (df + 0.5));
     return { term, weight, idf };
   });
-  const max = weightedIdf.reduce((sum, { weight, idf }) => sum + weight * idf * 2.2, 0);
+  // Query terms absent from every kit contribute no evidence and must not
+  // shrink every relevant score. Long natural-language prompts can contain
+  // many unmatched words; including their high IDF in this denominator made
+  // a genuine exact technology match fall below the 0.08 result threshold.
+  const max = weightedIdf.reduce((sum, { term, weight, idf }) =>
+    sum + ((frequencies.get(term) ?? 0) > 0 ? weight * idf * 2.2 : 0), 0);
   const scored = docs.map((doc, i) => {
     let score = 0;
     for (const { term, weight, idf } of weightedIdf) {
