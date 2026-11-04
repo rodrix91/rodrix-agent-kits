@@ -138,3 +138,41 @@ test('guide sitemap dates use the verified updated date per language; index page
     assert.equal(guideModificationDates(files).size, files.length, dir);
   }
 });
+
+test('public sitemap helper rejects unvalidated kit date maps', () => {
+  const url = 'https://example.test/p/kits/example-kit/';
+  const invalid = [
+    '2999-12-31', '2026-02-30', '2026-1-01', '2026-10-30junk',
+    true, 20261030, {}, [],
+  ];
+  for (const date of invalid) {
+    assert.throws(
+      () => sitemapLastmod(url, new Map([['example-kit', date]])),
+      /Sitemap kit has an invalid verified UTC date/,
+      String(date),
+    );
+  }
+  assert.equal(
+    sitemapLastmod(url, new Map([['example-kit', '2026-10-30']])),
+    '2026-10-30',
+  );
+});
+
+test('public sitemap helper rejects unvalidated English and Spanish guide dates', () => {
+  const kits = new Map();
+  for (const [prefix, language] of [['', 'en'], ['es/', 'es']]) {
+    const url = 'https://example.test/p/' + prefix + 'guides/a-guide/';
+    for (const invalid of ['2999-12-31', '2026-02-30', false, 20261030]) {
+      const maps = { en: new Map(), es: new Map() };
+      maps[language].set('a-guide', invalid);
+      assert.throws(
+        () => sitemapLastmod(url, kits, maps),
+        /Sitemap guide has an invalid verified UTC date/,
+        String(invalid),
+      );
+    }
+    const maps = { en: new Map(), es: new Map() };
+    maps[language].set('a-guide', '2026-10-30');
+    assert.equal(sitemapLastmod(url, kits, maps), '2026-10-30');
+  }
+});
