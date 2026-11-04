@@ -17,7 +17,14 @@ export function selectLighthouseTargets(env = process.env) {
   // Duplicate entries silently repeat browser audits and misrepresent the
   // number of distinct pages/form factors in the saved performance report.
   // Fail before starting the local server or launching Chrome.
-  if (new Set(pages).size !== pages.length) {
+  // The local static preview resolves '/kits' and '/kits/' to the same
+  // directory index. Do not record both as distinct Lighthouse audits.
+  // Repeated path separators are another noncanonical spelling of a page.
+  if (pages.some((page) => page.includes('//'))) {
+    throw new Error('LH_PAGES must not contain repeated path separators');
+  }
+  const canonicalPages = pages.map((page) => page.replace(/\/$/, '') || '/');
+  if (new Set(canonicalPages).size !== pages.length) {
     throw new Error('LH_PAGES must not contain duplicate paths');
   }
   if (new Set(formFactors).size !== formFactors.length) {
