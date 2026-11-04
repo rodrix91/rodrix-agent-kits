@@ -258,6 +258,7 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
     ok(rss && existsSync('dist/' + rss[1]) && /class="nl-fallback[\s\S]*?href="https:\/\/x\.com\//.test(h), `newsletter keeps RSS + X links: /${p}`);
     if (action) {
       ok(form.includes(`action="${action}"`) && /method="post"/.test(form) && /target="_blank"/.test(form) && /data-live="true"/.test(form), `newsletter form action/method/target: /${p}`);
+      ok(/rel="noopener noreferrer"/.test(form), `newsletter external form blocks opener and referrer: /${p}`);
       const id = (form.match(/<input[^>]*type="email"[^>]*>/) || [''])[0];
       const idv = (id.match(/id="([^"]+)"/) || [])[1];
       ok(/name="email"/.test(id) && /required/.test(id) && idv && new RegExp(`<label[^>]*for="${idv}"[^>]*>[^<]+</label>`).test(form) && !/<label[^>]*sr-only/.test(form), `newsletter email field + visible label: /${p}`);
@@ -448,6 +449,9 @@ for (const [locale, suffix, response, expected] of [
 // Newsletter: native submit is not blocked (live), blocked with 'soon' message (not live). Never sends: submit is cancelled at window level.
 for (const l of ['', 'es/']) {
   await page.goto(`${ORIGIN}${B}/${l}`);
+  ok(await page.locator('.nl-form').evaluate((form) => form.dataset.live !== 'true'
+    || (form.relList.contains('noopener') && form.relList.contains('noreferrer'))),
+  `newsletter external form uses browser-recognized rel protection: /${l}`);
   for (const liveFlag of ['true', 'false']) {
     await page.evaluate((lv) => {
       const f = document.querySelector('.nl-form');
