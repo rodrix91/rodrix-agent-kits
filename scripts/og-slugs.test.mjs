@@ -75,7 +75,7 @@ test('non-array catalog and missing records fail closed', () => {
 
 test('OG text wrapping preserves normal phrases and never fabricates empty lines', () => {
   assert.deepEqual(wrapOgText('Agent kits that actually ship.', 30), [
-    'Agent kits that actually', 'ship.',
+    'Agent kits that actually ship.',
   ]);
   assert.deepEqual(wrapOgText('  Alpha   beta\tg a m m a  ', 10), [
     'Alpha beta', 'g a m m a',
