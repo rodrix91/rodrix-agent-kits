@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { runLighthouse, selectLighthouseTargets } from './lighthouse-runner.mjs';
+import { MAX_LIGHTHOUSE_AUDITS, runLighthouse, selectLighthouseTargets } from './lighthouse-runner.mjs';
 
 function harness() {
   const events = [];
@@ -75,6 +75,29 @@ test('Lighthouse duplicate targets fail with precise diagnostics', () => {
     pages: ['/', '/kits/', '/pricing/'],
     formFactors: ['mobile', 'desktop'],
   });
+});
+
+test('Lighthouse work is capped by total page and form-factor combinations', async () => {
+  const pages = (count) => Array.from({ length: count }, (_, index) => '/audit-' + index).join(',');
+  assert.equal(MAX_LIGHTHOUSE_AUDITS, 50);
+  assert.equal(selectLighthouseTargets({
+    LH_PAGES: pages(25), LH_FORM_FACTORS: 'mobile,desktop',
+  }).pages.length, 25);
+  assert.equal(selectLighthouseTargets({
+    LH_PAGES: pages(50), LH_FORM_FACTORS: 'mobile',
+  }).pages.length, 50);
+
+  for (const env of [
+    { LH_PAGES: pages(26), LH_FORM_FACTORS: 'mobile,desktop' },
+    { LH_PAGES: pages(51), LH_FORM_FACTORS: 'mobile' },
+  ]) {
+    const h = harness();
+    await assert.rejects(
+      runLighthouse({ ...h.deps, env }),
+      /must request at most 50 Lighthouse audits/,
+    );
+    assert.deepEqual(h.events, [], 'over-budget requests must not start the server or Chrome');
+  }
 });
 
 test('a successful audit preserves scores and closes Chrome and server', async () => {
