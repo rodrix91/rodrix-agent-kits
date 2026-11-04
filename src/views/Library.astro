@@ -42,7 +42,7 @@ const list = { '@context': 'https://schema.org', '@type': 'ItemList', itemListEl
       ))}
     </div>
     <h2 class="sr-only">{L.title}</h2>
-    <div class="grid grid-3" id="kits">{kits.map((k) => <KitCard kit={k} lang={lang} />)}</div>
+    <div class="grid grid-3" id="kits">{kits.map((k) => <KitCard kit={k} lang={lang} searchable />)}</div>
     <p id="empty" hidden style="padding:3rem 0;text-align:center">{L.empty}</p>
   </div>
   <Newsletter lang={lang} />
