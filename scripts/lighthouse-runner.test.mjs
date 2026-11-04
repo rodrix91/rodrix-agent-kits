@@ -61,6 +61,43 @@ test('invalid targets fail before any server or Chrome is started', async () => 
   }
 });
 
+test('equivalent directory aliases cannot duplicate local performance audits', async () => {
+  for (const pages of [
+    '/kits/,/kits',
+    '/pricing,/pricing/',
+    '/a/b,/a/b/',
+  ]) {
+    const h = harness();
+    await assert.rejects(
+      runLighthouse({ ...h.deps, env: { LH_PAGES: pages, LH_FORM_FACTORS: 'mobile' } }),
+      /LH_PAGES must not contain duplicate paths/,
+      pages,
+    );
+    assert.deepEqual(h.events, [], 'reject aliases before server or Chrome startup');
+  }
+  // A lone directory path without a trailing slash remains backward compatible.
+  assert.deepEqual(selectLighthouseTargets({
+    LH_PAGES: '/kits', LH_FORM_FACTORS: 'desktop',
+  }), { pages: ['/kits'], formFactors: ['desktop'] });
+});
+
+test('noncanonical repeated separators are rejected before launching Lighthouse', async () => {
+  for (const pages of [
+    '/kits//',
+    '/kits//item/',
+    '/,/pricing//',
+    '/kits//item/,/kits/item/',
+  ]) {
+    const h = harness();
+    await assert.rejects(
+      runLighthouse({ ...h.deps, env: { LH_PAGES: pages, LH_FORM_FACTORS: 'mobile' } }),
+      /LH_PAGES must not contain repeated path separators/,
+      pages,
+    );
+    assert.deepEqual(h.events, [], pages);
+  }
+});
+
 test('Lighthouse duplicate targets fail with precise diagnostics', () => {
   assert.throws(
     () => selectLighthouseTargets({ LH_PAGES: '/kits/,/kits/', LH_FORM_FACTORS: 'mobile' }),
