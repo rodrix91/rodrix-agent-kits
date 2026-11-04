@@ -76,6 +76,23 @@ test('existing English and Spanish finder intents retain relevant top kits', () 
   assert.equal(rank('I want Godot game rules', docs)[0].doc.slug, 'godot-rules');
 });
 
+test('long descriptions preserve exact hits when extra words are absent from every kit', () => {
+  // These words intentionally do not appear in any test kit. A previous
+  // normalization assigned them high IDF despite contributing zero matches,
+  // diluting genuine results below the minimum confidence threshold.
+  const unfamiliar = Array.from({ length: 60 }, (_, i) => `unlistedconcept${i}`).join(' ');
+  for (const goal of ['Godot', 'Next.js', 'automatización de leads', 'revisión de código']) {
+    const expected = rank(goal, docs);
+    assert.ok(expected.length > 0, goal);
+    const detailed = rank(`${goal} ${unfamiliar}`, docs);
+    assert.deepEqual(detailed, expected, goal);
+    assert.ok(detailed.every(({ score }) => score > 0.08), goal);
+  }
+  // An entirely unknown query still returns no fabricated recommendations.
+  assert.deepEqual(rank(unfamiliar, docs), []);
+  assert.deepEqual(rank('unlistedconcept0 unlistedconcept1', docs), []);
+});
+
 test('empty queries, stop-word queries and empty catalogs produce no results', () => {
   assert.deepEqual(rank('', docs), []);
   assert.deepEqual(rank('the and in de con', docs), []);
