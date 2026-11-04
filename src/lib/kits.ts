@@ -28,6 +28,13 @@ export function searchDoc(k: Kit, lang: Lang) {
   const d = k.data, L = d[lang];
   return {
     slug: k.id, title: L.title, summary: L.summary, tool: d.tool, category: d.category, languages: d.languages, tier: d.tier, price: d.price ?? 0, soon: bundlePending(k),
-    text: [L.title, L.summary, ...L.inside, d.tool, d.category, ...d.keywords, d.en.title, d.en.summary].join(' ').toLowerCase(),
+    // Search both languages on either locale without changing localized
+    // titles, summaries or result links. Previously the EN index did not
+    // include Spanish terms, while ES searches included some English terms.
+    text: [
+      d.en.title, d.en.summary, ...d.en.inside,
+      d.es.title, d.es.summary, ...d.es.inside,
+      d.tool, d.category, ...d.keywords,
+    ].join(' ').toLowerCase(),
   };
 }
