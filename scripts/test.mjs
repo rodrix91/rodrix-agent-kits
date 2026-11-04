@@ -38,6 +38,17 @@ ok(
   spanishTeamEs?.text.includes('spanish-speaking teams'),
   'Spanish search terms are discoverable from the English finder without changing its result language',
 );
+// The on-page library filter has a separate code path from the homepage
+// finder. Keep its card search metadata bilingual as well, on both URLs.
+for (const locale of ['', 'es/']) {
+  const libraryHtml = readFileSync(`dist/${locale}kits/index.html`, 'utf8');
+  const card = libraryHtml.match(/<article\\b[^>]*data-slug="claude-md-webapp-es"[^>]*>/)?.[0] ?? '';
+  const indexed = card.match(/data-search="([^"]+)"/)?.[1] ?? '';
+  ok(
+    indexed.includes('hispanohablantes') && indexed.includes('spanish-speaking teams'),
+    `kit library filter indexes both language variants: /${locale}kits/`,
+  );
+}
 for (const k of kits) for (const l of ['', 'es/']) {
   const html = readFileSync(`dist/${l}kits/${k.slug}/index.html`, 'utf8');
   ok(/hreflang="es"/.test(html) && /rel="canonical"/.test(html) && /og:image/.test(html), `meta ok: /${l}kits/${k.slug}/`);
