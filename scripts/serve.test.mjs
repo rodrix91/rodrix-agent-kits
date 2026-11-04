@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { symlink, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { serve } from './serve.mjs';
@@ -92,6 +93,41 @@ test('static preview serves only valid paths inside the configured base', async 
     assert.equal((await fetch(origin + base + '/')).status, 200);
   } finally {
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
+test('a FIFO inside dist cannot hang a preview GET or HEAD request', async (t) => {
+  if (process.platform === 'win32') {
+    t.skip('mkfifo is not available on Windows');
+    return;
+  }
+  const name = `.preview-fifo-${process.pid}`;
+  const pipe = resolve('dist', name);
+  try {
+    execFileSync('mkfifo', [pipe]);
+  } catch {
+    t.skip('This runner does not support creating named pipes');
+    return;
+  }
+
+  let server;
+  try {
+    server = await serve(0);
+    const origin = `http://127.0.0.1:${server.address().port}/rodrix-agent-kits/`;
+    for (const method of ['GET', 'HEAD']) {
+      const response = await fetch(origin + name, {
+        method, signal: AbortSignal.timeout(4000),
+      });
+      assert.equal(response.status, 403, `${method}: nonregular files must be denied`);
+    }
+    // A denied FIFO must not prevent subsequent regular static files.
+    assert.equal((await fetch(origin + 'index.html')).status, 200);
+  } finally {
+    if (server) {
+      await new Promise((resolve, reject) =>
+        server.close((error) => error ? reject(error) : resolve()));
+    }
+    await unlink(pipe);
   }
 });
 

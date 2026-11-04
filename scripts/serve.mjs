@@ -19,6 +19,14 @@ async function readContained(file) {
     error.code = 'OUTSIDE_DIST';
     throw error;
   }
+  // Only regular files may be served. Reading an in-tree FIFO/device could
+  // block the preview worker indefinitely even when the path is contained.
+  const details = await stat(target);
+  if (!details.isFile()) {
+    const error = new Error('Preview target is not a regular file');
+    error.code = 'INVALID_DIST_FILE';
+    throw error;
+  }
   return readFile(target);
 }
 
@@ -63,7 +71,7 @@ export function serve(port = Number(process.env.PORT) || 4321) {
       res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream' });
       return res.end(bytes);
     } catch (error) {
-      if (error?.code === 'OUTSIDE_DIST') {
+      if (error?.code === 'OUTSIDE_DIST' || error?.code === 'INVALID_DIST_FILE') {
         res.writeHead(403); return res.end('Forbidden');
       }
       res.writeHead(404, { 'Content-Type': TYPES['.html'] });
