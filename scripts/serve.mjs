@@ -1,7 +1,7 @@
 // Tiny static server that mimics GitHub Pages under the configured base path.
 // This is a LOCAL development/test server, not an Internet-facing production host.
 import { createServer } from 'node:http';
-import { readFile, realpath, stat } from 'node:fs/promises';
+import { open, readFile, realpath, stat } from 'node:fs/promises';
 import { resolve, sep, extname } from 'node:path';
 
 const BASE = (process.env.SITE_BASE ?? '/rodrix-agent-kits').replace(/\/$/, '');
@@ -12,21 +12,26 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 
 // resolve() checks the lexical path; realpath() also follows symlinks.
 // Never serve a file outside the canonical dist directory, even through
 // a symlinked file or parent directory.
-async function readContained(file) {
+async function containedFile(file) {
   const [root, target] = await Promise.all([realpath(DIST), realpath(file)]);
   if (target !== root && !target.startsWith(root + sep)) {
     const error = new Error('Resolved path escapes dist');
     error.code = 'OUTSIDE_DIST';
     throw error;
   }
-  // Only regular files may be served. Reading an in-tree FIFO/device could
-  // block the preview worker indefinitely even when the path is contained.
+  // Both GET and HEAD must reject special files and escaped symlinks.
+  // An in-tree FIFO can otherwise block a read indefinitely.
   const details = await stat(target);
   if (!details.isFile()) {
     const error = new Error('Preview target is not a regular file');
     error.code = 'INVALID_DIST_FILE';
     throw error;
   }
+  return { target, details };
+}
+
+async function readContained(file) {
+  const { target } = await containedFile(file);
   return readFile(target);
 }
 
@@ -67,14 +72,30 @@ export function serve(port = Number(process.env.PORT) || 4321) {
     }
     try {
       if ((await stat(file)).isDirectory()) file = resolve(file, 'index.html');
+      const contentType = TYPES[extname(file)] || 'application/octet-stream';
+      if (req.method === 'HEAD') {
+        // HEAD needs the same path and readability checks as GET, but must
+        // never allocate the entire asset just to discard its response body.
+        const { target, details } = await containedFile(file);
+        const handle = await open(target, 'r');
+        await handle.close();
+        res.writeHead(200, {
+          'Content-Type': contentType, 'Content-Length': details.size,
+        });
+        return res.end();
+      }
       const bytes = await readContained(file);
-      res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream' });
+      res.writeHead(200, {
+        'Content-Type': contentType, 'Content-Length': bytes.length,
+      });
       return res.end(bytes);
     } catch (error) {
       if (error?.code === 'OUTSIDE_DIST' || error?.code === 'INVALID_DIST_FILE') {
         res.writeHead(403); return res.end('Forbidden');
       }
       res.writeHead(404, { 'Content-Type': TYPES['.html'] });
+      // HEAD must not read a fallback page either.
+      if (req.method === 'HEAD') return res.end();
       // Apply the same containment check to the fallback response.
       try { return res.end(await readContained(resolve(DIST, '404.html'))); }
       catch { return res.end('Not found'); }
