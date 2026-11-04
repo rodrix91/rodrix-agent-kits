@@ -14,7 +14,7 @@ const live = Boolean(NEWSLETTER.action);
         <p style="margin:0">{s.sub}</p>
       </div>
       <div>
-        <form class="nl-form" action={NEWSLETTER.action || '#'} method="post" target={live ? '_blank' : undefined} data-live={String(live)} data-sent={s.sent} data-soon={live ? undefined : s.soon}>
+        <form class="nl-form" action={NEWSLETTER.action || '#'} method="post" target={live ? '_blank' : undefined} rel={live ? 'noopener noreferrer' : undefined} data-live={String(live)} data-sent={s.sent} data-soon={live ? undefined : s.soon}>
           <label class="nl-label" for={`nl-${lang}`}>{s.email}</label>
           <div class="nl-row">
             <input class="input" id={`nl-${lang}`} name={NEWSLETTER.emailField} type="email" autocomplete="email" required placeholder="you@domain.com" />
