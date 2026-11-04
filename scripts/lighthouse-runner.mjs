@@ -69,6 +69,12 @@ export async function runLighthouse({
           { port: chrome.port, output: 'json', logLevel: 'error' },
           desktopConfig(formFactor),
         );
+        // Lighthouse may return a runtime failure alongside partially
+        // populated category scores. Never publish those numbers as a
+        // successful audit, even if every score is in the expected range.
+        if (result?.lhr?.runtimeError != null) {
+          throw new Error(`Lighthouse runtime error for ${formFactor} ${page}`);
+        }
         const categories = result?.lhr?.categories;
         // Missing or malformed Lighthouse results must never be published as
         // scores: JSON.stringify would silently convert NaN/Infinity to null.
