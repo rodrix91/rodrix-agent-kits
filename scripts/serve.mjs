@@ -36,6 +36,26 @@ async function readContained(file) {
   return readFile(target);
 }
 
+// Open and verify the same canonical regular file for both GET and HEAD.
+// An entry under dist can be replaced between realpath()/stat() and open();
+// never trust stale metadata or a swapped-in external file descriptor.
+async function openContained(file) {
+  const { target, details } = await containedFile(file);
+  const handle = await open(target, 'r');
+  try {
+    const opened = await handle.stat();
+    if (!opened.isFile() || opened.dev !== details.dev || opened.ino !== details.ino) {
+      const error = new Error('Preview file changed while opening');
+      error.code = 'INVALID_DIST_FILE';
+      throw error;
+    }
+    return { handle, details: opened };
+  } catch (error) {
+    await handle.close();
+    throw error;
+  }
+}
+
 export function serve(port = Number(process.env.PORT) || 4321) {
   const srv = createServer(async (req, res) => {
     // This is a static preview only. Reject mutating HTTP methods even if
@@ -77,39 +97,22 @@ export function serve(port = Number(process.env.PORT) || 4321) {
       if (req.method === 'HEAD') {
         // HEAD needs the same path and readability checks as GET, but must
         // never allocate the entire asset just to discard its response body.
-        const { target, details } = await containedFile(file);
-        const handle = await open(target, 'r');
+        const { handle, details } = await openContained(file);
         await handle.close();
         res.writeHead(200, {
           'Content-Type': contentType, 'Content-Length': details.size,
         });
         return res.end();
       }
-      // GET must not buffer the entire asset in RAM. Open the verified
-      // canonical path and stream it in bounded chunks with backpressure.
-      // Recheck the opened file identity to refuse a file swapped between
-      // the containment check and open(). Do not expose its contents on error.
-      const { target, details } = await containedFile(file);
-      const handle = await open(target, 'r');
-      let opened;
-      try {
-        opened = await handle.stat();
-      } catch (error) {
-        await handle.close();
-        throw error;
-      }
-      if (!opened.isFile() || opened.dev !== details.dev || opened.ino !== details.ino) {
-        await handle.close();
-        const error = new Error('Preview file changed while opening');
-        error.code = 'INVALID_DIST_FILE';
-        throw error;
-      }
+      // GET must not buffer the entire asset in RAM. The opened file
+      // identity and containment are shared with HEAD and checked above.
+      const { handle, details } = await openContained(file);
       const stream = handle.createReadStream();
       // A disconnected browser must not leave an asset stream running.
       res.once('close', () => stream.destroy());
       stream.once('error', () => res.destroy());
       res.writeHead(200, {
-        'Content-Type': contentType, 'Content-Length': opened.size,
+        'Content-Type': contentType, 'Content-Length': details.size,
       });
       stream.pipe(res);
       return;
