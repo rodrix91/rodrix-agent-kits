@@ -106,11 +106,21 @@ export async function runLighthouse({
     const rows = [];
     for (const formFactor of formFactors) {
       for (const page of pages) {
+        const requestedUrl = 'http://127.0.0.1:' + boundPort + base + page;
         const result = await audit(
-          'http://127.0.0.1:' + boundPort + base + page,
+          requestedUrl,
           { port: chrome.port, output: 'json', logLevel: 'error' },
           desktopConfig(formFactor),
         );
+        // Lighthouse can follow a client-side redirect after our HTTP
+        // preflight has returned 200. Never attribute a destination page's
+        // scores to the originally requested page. Older injected test
+        // results may not expose finalUrl; validate it when supplied.
+        if (Object.hasOwn(result?.lhr ?? {}, 'finalUrl')
+            && (typeof result.lhr.finalUrl !== 'string'
+                || result.lhr.finalUrl !== requestedUrl)) {
+          throw new Error(`Lighthouse audited a different final URL for ${formFactor} ${page}`);
+        }
         // Lighthouse may return a runtime failure alongside partially
         // populated category scores. Never publish those numbers as a
         // successful audit, even if every score is in the expected range.
