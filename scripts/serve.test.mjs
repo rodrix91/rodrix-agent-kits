@@ -54,7 +54,7 @@ test('static preview serves only valid paths inside the configured base', async 
 
     const missing = await fetch(origin + base + '/not-a-real-file');
     assert.equal(missing.status, 404);
-    assert.match(missing.headers.get('content-type') ?? '', /text\\/html/);
+    assert.match(missing.headers.get('content-type') ?? '', /text\/html/);
     const expected404 = await readFile(resolve('dist', '404.html'));
     assert.deepEqual(Buffer.from(await missing.arrayBuffer()), expected404,
       'the fallback must preserve its original generated HTML bytes');
