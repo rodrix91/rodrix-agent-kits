@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
-import { copyFile, mkdtemp, open, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { copyFile, mkdtemp, open, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { once } from 'node:events';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -55,9 +55,14 @@ test('static preview serves only valid paths inside the configured base', async 
     const missing = await fetch(origin + base + '/not-a-real-file');
     assert.equal(missing.status, 404);
     assert.match(missing.headers.get('content-type') ?? '', /text\/html/);
+    const expected404 = await readFile(resolve('dist', '404.html'));
+    assert.deepEqual(Buffer.from(await missing.arrayBuffer()), expected404,
+      'the fallback must preserve its original generated HTML bytes');
+    assert.equal(missing.headers.get('content-length'), String(expected404.byteLength));
     const missingHead = await fetch(origin + base + '/not-a-real-file', { method: 'HEAD' });
     assert.equal(missingHead.status, 404);
     assert.equal(missingHead.headers.get('content-type'), missing.headers.get('content-type'));
+    assert.equal(missingHead.headers.get('content-length'), missing.headers.get('content-length'));
     assert.equal(await missingHead.text(), '');
 
     const traversal = await fetch(origin + base + '/%2F..%2Fpackage.json');
