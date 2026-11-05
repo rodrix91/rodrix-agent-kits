@@ -2,6 +2,18 @@
 // An incomplete audit response must never be presented as a clean result.
 const SEVERITIES = ['info', 'low', 'moderate', 'high', 'critical'];
 
+// Avoid forged workflow annotations and excessive output from npm JSON.
+export function auditLogLabel(value) {
+  const raw = String(value);
+  const clipped = raw.length > 160 ? raw.slice(0, 160) + '…[truncated]' : raw;
+  return JSON.stringify(clipped).replace(
+    /[\u007f-\u009f\u2028\u2029\u200e\u200f\u202a-\u202e\u2066-\u2069]/gu,
+    (char) => '\\u' + char.codePointAt(0).toString(16).padStart(4, '0'),
+  );
+}
+
+
+
 export function summarizeAuditReport(report) {
   if (!report || typeof report !== 'object' || Array.isArray(report)
       || Object.hasOwn(report, 'error')) {
@@ -40,10 +52,10 @@ export function summarizeAuditReport(report) {
   const detailCounts = Object.fromEntries(SEVERITIES.map((severity) => [severity, 0]));
   for (const [name, advisory] of advisories) {
     if (!advisory || typeof advisory !== 'object' || Array.isArray(advisory)) {
-      throw new Error('npm audit returned malformed advisory details for ' + name);
+      throw new Error('npm audit returned malformed advisory details for ' + auditLogLabel(name));
     }
     if (!SEVERITIES.includes(advisory.severity) || normalized[advisory.severity] === 0) {
-      throw new Error('npm audit advisory severity contradicts metadata for ' + name);
+      throw new Error('npm audit advisory severity contradicts metadata for ' + auditLogLabel(name));
     }
     detailCounts[advisory.severity] += 1;
   }

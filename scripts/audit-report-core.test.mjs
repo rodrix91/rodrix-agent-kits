@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeAuditReport } from './audit-report-core.mjs';
+import { auditLogLabel, summarizeAuditReport } from './audit-report-core.mjs';
 
 const counts = { info: 0, low: 1, moderate: 1, high: 0, critical: 0, total: 2 };
 const report = () => ({
@@ -141,4 +141,34 @@ test('accepts a genuine report with zero findings', () => {
   });
   assert.equal(result.totals.total, 0);
   assert.deepEqual(result.advisories, []);
+});
+
+test('audit log labels remain one line, bounded, and resistant to fake annotations', () => {
+  const unsafe = 'package\n::error::forged\u001b[31m\u202e' + 'x'.repeat(30_000);
+  const label = auditLogLabel(unsafe);
+  assert.ok(label.length < 240);
+  assert.ok(!/[\u0000-\u001f\u007f-\u009f\u202e]/u.test(label));
+  assert.ok(label.includes('\\n'));
+  assert.ok(label.includes('\\u001b'));
+  assert.ok(label.includes('\\u202e'));
+  assert.ok(label.includes('[truncated]'));
+  assert.equal(auditLogLabel('@scope/normal-pkg'), '"@scope/normal-pkg"');
+  assert.equal(auditLogLabel('\u2028\u2029'), '"\\u2028\\u2029"');
+});
+
+test('invalid npm audit package names are escaped even in failure messages', () => {
+  const unsafe = 'package\n::error::forged\u001b[31m';
+  const input = report();
+  input.vulnerabilities = {
+    [unsafe]: null,
+    ...input.vulnerabilities,
+  };
+  assert.throws(
+    () => summarizeAuditReport(input),
+    (error) => error instanceof Error
+      && /malformed advisory details/.test(error.message)
+      && !error.message.includes('\n')
+      && !error.message.includes('\u001b')
+      && !error.message.includes('::error::forged\n'),
+  );
 });

@@ -2,7 +2,7 @@
 // Diagnostic only: summarize npm's advisory JSON without modifying dependencies.
 // Production advisories are blocked separately in CI; these diagnostics must be honest.
 import { spawnSync } from 'node:child_process';
-import { summarizeAuditReport } from './audit-report-core.mjs';
+import { auditLogLabel, summarizeAuditReport } from './audit-report-core.mjs';
 
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const checks = [
@@ -41,8 +41,8 @@ for (const check of checks) {
   console.log(`Counts: critical=${totals.critical ?? 0}, high=${totals.high ?? 0}, moderate=${totals.moderate ?? 0}, low=${totals.low ?? 0}, total=${totals.total ?? '?'}`);
   for (const [name, advisory] of advisories) {
     const fix = advisory.fixAvailable === false ? 'no suggested fix' : advisory.fixAvailable === true ? 'fix suggested' :
-      advisory.fixAvailable && typeof advisory.fixAvailable === 'object' ? `fix: ${advisory.fixAvailable.name}@${advisory.fixAvailable.version}${advisory.fixAvailable.isSemVerMajor ? ' (major)' : ''}` : 'fix status unknown';
-    console.log(`  ${name}: ${advisory.severity ?? 'unknown'}, ${advisory.isDirect ? 'direct' : 'transitive'}, ${fix}`);
+      advisory.fixAvailable && typeof advisory.fixAvailable === 'object' ? `fix: ${auditLogLabel(advisory.fixAvailable.name)}@${auditLogLabel(advisory.fixAvailable.version)}${advisory.fixAvailable.isSemVerMajor ? ' (major)' : ''}` : 'fix status unknown';
+    console.log(`  ${auditLogLabel(name)}: ${advisory.severity}, ${advisory.isDirect ? 'direct' : 'transitive'}, ${fix}`);
   }
   if (![0, 1].includes(run.status)) {
     hadAuditFailure = true;
