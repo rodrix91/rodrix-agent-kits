@@ -3,6 +3,7 @@
 import { createServer } from 'node:http';
 import { open, readFile, realpath, stat } from 'node:fs/promises';
 import { resolve, sep, extname } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const BASE = (process.env.SITE_BASE ?? '/rodrix-agent-kits').replace(/\/$/, '');
 const DIST = resolve('dist');
@@ -113,7 +114,9 @@ export function serve(port = Number(process.env.PORT) || 4321) {
     });
   });
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Module URLs percent-encode spaces, # and %, and use file:///C:/... on Windows.
+// Construct the entrypoint URL with Node instead of concatenating a raw path.
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   serve().then((server) => {
     console.log(`Serving dist at http://127.0.0.1:${server.address().port}${BASE}/`);
   }).catch((error) => {
