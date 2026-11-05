@@ -1,7 +1,7 @@
 // Tiny static server that mimics GitHub Pages under the configured base path.
 // This is a LOCAL development/test server, not an Internet-facing production host.
 import { createServer } from 'node:http';
-import { open, readFile, realpath, stat } from 'node:fs/promises';
+import { open, realpath, stat } from 'node:fs/promises';
 import { resolve, sep, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -29,11 +29,6 @@ async function containedFile(file) {
     throw error;
   }
   return { target, details };
-}
-
-async function readContained(file) {
-  const { target } = await containedFile(file);
-  return readFile(target);
 }
 
 // Open and verify the same canonical regular file for both GET and HEAD.
@@ -120,12 +115,30 @@ export function serve(port = Number(process.env.PORT) || 4321) {
       if (error?.code === 'OUTSIDE_DIST' || error?.code === 'INVALID_DIST_FILE') {
         res.writeHead(403); return res.end('Forbidden');
       }
-      res.writeHead(404, { 'Content-Type': TYPES['.html'] });
-      // HEAD must not read a fallback page either.
-      if (req.method === 'HEAD') return res.end();
-      // Apply the same containment check to the fallback response.
-      try { return res.end(await readContained(resolve(DIST, '404.html'))); }
-      catch { return res.end('Not found'); }
+      // The generated 404 page is a static asset too. Do not buffer a
+      // potentially large fallback page while serving a missing request.
+      // HEAD must perform the same containment and identity checks as GET.
+      try {
+        const { handle, details } = await openContained(resolve(DIST, '404.html'));
+        if (req.method === 'HEAD') {
+          await handle.close();
+          res.writeHead(404, {
+            'Content-Type': TYPES['.html'], 'Content-Length': details.size,
+          });
+          return res.end();
+        }
+        const stream = handle.createReadStream();
+        res.once('close', () => stream.destroy());
+        stream.once('error', () => res.destroy());
+        res.writeHead(404, {
+          'Content-Type': TYPES['.html'], 'Content-Length': details.size,
+        });
+        stream.pipe(res);
+        return;
+      } catch {
+        res.writeHead(404, { 'Content-Type': TYPES['.html'] });
+        return res.end(req.method === 'HEAD' ? undefined : 'Not found');
+      }
     }
   });
   // A local preview must never listen on public/LAN interfaces by default.
