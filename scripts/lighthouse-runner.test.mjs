@@ -405,3 +405,51 @@ test('a late Lighthouse runtime failure discards earlier successful audit rows',
   assert.equal(h.saved.length, 0);
   assert.deepEqual(h.events.slice(-2), ['kill-chrome', 'close-server']);
 });
+
+
+test('Lighthouse finalUrl must be the exact page requested, even after a 200 preflight', async () => {
+  for (const finalUrl of [
+    'https://different.example.org/',
+    'http://127.0.0.1:4397/rodrix-agent-kits/pricing/',
+    'http://127.0.0.1:4397/rodrix-agent-kits/?ref=redirect',
+    null,
+    42,
+  ]) {
+    const h = harness();
+    h.deps.audit = async () => {
+      h.events.push('audit');
+      const categories = Object.fromEntries(
+        ['performance', 'accessibility', 'best-practices', 'seo']
+          .map((key) => [key, { score: 1 }]),
+      );
+      return { lhr: { finalUrl, categories } };
+    };
+    await assert.rejects(
+      runLighthouse(h.deps),
+      /Lighthouse audited a different final URL for mobile \/$/,
+      String(finalUrl),
+    );
+    assert.equal(h.saved.length, 0, 'never publish redirected-page scores');
+    assert.deepEqual(h.events.slice(-2), ['kill-chrome', 'close-server']);
+  }
+});
+
+test('Lighthouse accepts matching finalUrl and preserves accurate scores', async () => {
+  const h = harness();
+  h.deps.audit = async (url) => {
+    h.events.push('audit');
+    const categories = Object.fromEntries(
+      ['performance', 'accessibility', 'best-practices', 'seo']
+        .map((key) => [key, { score: 0.97 }]),
+    );
+    return { lhr: { finalUrl: url, categories } };
+  };
+  const rows = await runLighthouse(h.deps);
+  assert.equal(rows.length, 1);
+  assert.deepEqual(rows[0], {
+    formFactor: 'mobile', page: '/', performance: 97, accessibility: 97,
+    bestPractices: 97, seo: 97,
+  });
+  assert.equal(h.saved.length, 1);
+  assert.deepEqual(h.events.slice(-3), ['save', 'kill-chrome', 'close-server']);
+});
