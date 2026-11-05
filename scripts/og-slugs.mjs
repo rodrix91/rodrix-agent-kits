@@ -1,5 +1,9 @@
 // Keep long unbroken identifiers within the OG SVG text width.
-// Iterate Unicode code points to avoid splitting emoji surrogate pairs.
+// Use grapheme clusters: a displayed character can contain several code points
+// (combining accents, flags, skin-tone modifiers, or ZWJ emoji sequences).
+// Splitting on code points can put half a visible character on another line.
+const GRAPHEMES = new Intl.Segmenter('und', { granularity: 'grapheme' });
+
 export function wrapOgText(text, maxChars) {
   if (typeof text !== 'string') throw new TypeError('OG text must be a string');
   if (!Number.isSafeInteger(maxChars) || maxChars < 1) {
@@ -10,7 +14,7 @@ export function wrapOgText(text, maxChars) {
   let lineLength = 0;
   for (const word of text.trim().split(/\s+/u)) {
     if (!word) continue;
-    const characters = Array.from(word);
+    const characters = Array.from(GRAPHEMES.segment(word), ({ segment }) => segment);
     let position = 0;
     while (position < characters.length) {
       const space = line ? 1 : 0;
