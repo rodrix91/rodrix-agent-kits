@@ -109,3 +109,42 @@ test('OG text wrapping refuses invalid render inputs and widths', () => {
     assert.throws(() => wrapOgText('title', width), /OG line width must be/);
   }
 });
+
+test('OG wrapping never splits combining accents or multi-code-point emoji', () => {
+  // In these strings one visible grapheme uses two or more Unicode code
+  // points. A code-point split would create broken image text.
+  const family = '👨‍👩‍👧‍👦';
+  const flag = '🇧🇴';
+  const worker = '👩‍💻';
+  const accented = 'e\u0301';
+  const thumbs = '👍🏽';
+
+  assert.deepEqual(wrapOgText(family.repeat(3), 2), [
+    family.repeat(2), family,
+  ]);
+  assert.deepEqual(wrapOgText(flag.repeat(3), 2), [
+    flag.repeat(2), flag,
+  ]);
+  assert.deepEqual(wrapOgText(worker.repeat(3), 2), [
+    worker.repeat(2), worker,
+  ]);
+  assert.deepEqual(wrapOgText(accented.repeat(3), 2), [
+    accented.repeat(2), accented,
+  ]);
+  assert.deepEqual(wrapOgText(thumbs.repeat(3), 2), [
+    thumbs.repeat(2), thumbs,
+  ]);
+});
+
+test('OG wrapping respects limits by displayed grapheme, including a single column', () => {
+  const parts = ['e\u0301', '👩‍💻', '🇧🇴', '👍🏽', 'ñ'];
+  assert.deepEqual(wrapOgText(parts.join(''), 1), parts);
+
+  const graphemes = new Intl.Segmenter('und', { granularity: 'grapheme' });
+  const rendered = wrapOgText(parts.join('') + ' simple', 3);
+  assert.deepEqual(rendered.flatMap((line) =>
+    Array.from(graphemes.segment(line), ({ segment }) => segment)
+      .filter((part) => part !== ' ')), [...parts, ...'simple']);
+  assert.ok(rendered.every((line) => Array.from(graphemes.segment(line)).length <= 3));
+  assert.ok(rendered.every(Boolean));
+});
