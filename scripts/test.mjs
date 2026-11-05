@@ -42,7 +42,7 @@ ok(
 // finder. Keep its card search metadata bilingual as well, on both URLs.
 for (const locale of ['', 'es/']) {
   const libraryHtml = readFileSync(`dist/${locale}kits/index.html`, 'utf8');
-  const card = libraryHtml.match(/<article\\b[^>]*data-slug="claude-md-webapp-es"[^>]*>/)?.[0] ?? '';
+  const card = libraryHtml.match(/<article\b[^>]*data-slug="claude-md-webapp-es"[^>]*>/)?.[0] ?? '';
   const indexed = card.match(/data-search="([^"]+)"/)?.[1] ?? '';
   ok(
     indexed.includes('hispanohablantes') && indexed.includes('spanish-speaking teams'),
