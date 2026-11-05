@@ -72,10 +72,15 @@ const list = { '@context': 'https://schema.org', '@type': 'ItemList', itemListEl
     document.getElementById('empty')!.hidden = n > 0;
     document.querySelectorAll<HTMLFieldSetElement>('fieldset[data-group]').forEach((fs) =>
       fs.querySelectorAll<HTMLButtonElement>('.chip').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === state[fs.dataset.group!]))));
-    const p = new URLSearchParams();
+    // Update only our own filter keys. Keep campaign attribution, other
+    // integrations' parameters and the current in-page anchor intact.
+    const p = new URLSearchParams(location.search);
+    p.delete('q');
+    for (const key of Object.keys(state)) p.delete(key);
     if (q.value) p.set('q', q.value);
     for (const [k, v] of Object.entries(state)) if (v) p.set(k, v);
-    history.replaceState(null, '', p.size ? '?' + p : location.pathname);
+    history.replaceState(null, '',
+      location.pathname + (p.size ? '?' + p.toString() : '') + location.hash);
   }
   document.querySelectorAll<HTMLFieldSetElement>('fieldset[data-group]').forEach((fs) =>
     fs.addEventListener('click', (e) => { const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.chip'); if (!b) return; state[fs.dataset.group!] = b.dataset.v!; apply(); }));
