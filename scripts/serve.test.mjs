@@ -271,3 +271,34 @@ test('GET streams a multi-megabyte preview asset with unchanged bytes and length
     await unlink(file);
   }
 });
+
+test('GET and HEAD serve an in-tree file alias consistently', async () => {
+  const suffix = String(process.pid);
+  const target = resolve('dist', '.preview-inside-' + suffix + '.txt');
+  const alias = resolve('dist', '.preview-alias-' + suffix + '.txt');
+  const contents = 'A regular static asset with an in-tree alias.\\n';
+  await writeFile(target, contents);
+  let server;
+  let linked = false;
+  try {
+    await symlink(target, alias, 'file');
+    linked = true;
+    server = await serve(0);
+    const url = `http://127.0.0.1:${server.address().port}/rodrix-agent-kits/` +
+      '.preview-alias-' + suffix + '.txt';
+    const get = await fetch(url);
+    const head = await fetch(url, { method: 'HEAD' });
+    assert.equal(get.status, 200);
+    assert.equal(head.status, 200);
+    assert.equal(await get.text(), contents);
+    assert.equal(get.headers.get('content-length'), String(Buffer.byteLength(contents)));
+    assert.equal(head.headers.get('content-length'), get.headers.get('content-length'));
+    assert.equal(head.headers.get('content-type'), get.headers.get('content-type'));
+    assert.equal(await head.text(), '');
+  } finally {
+    if (server) await new Promise((resolve, reject) =>
+      server.close((error) => error ? reject(error) : resolve()));
+    if (linked) await unlink(alias);
+    await unlink(target);
+  }
+});
