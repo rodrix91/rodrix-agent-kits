@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
-import { copyFile, mkdtemp, open, rm, symlink, unlink } from 'node:fs/promises';
+import { copyFile, mkdtemp, open, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { once } from 'node:events';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -243,5 +243,31 @@ test('direct CLI starts from a folder with spaces and URL metacharacters', async
       await closed;
     }
     await rm(temporary, { recursive: true, force: true });
+  }
+});
+
+test('GET streams a multi-megabyte preview asset with unchanged bytes and length', async () => {
+  const name = `.preview-stream-${process.pid}.bin`;
+  const file = resolve('dist', name);
+  const data = Buffer.alloc(3 * 1024 * 1024 + 17);
+  for (let index = 0; index < data.length; index++) data[index] = index % 251;
+  await writeFile(file, data);
+  let server;
+  try {
+    server = await serve(0);
+    const url = `http://127.0.0.1:${server.address().port}/rodrix-agent-kits/${name}`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-length'), String(data.length));
+    assert.equal(response.headers.get('content-type'), 'application/octet-stream');
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), data);
+    const head = await fetch(url, { method: 'HEAD' });
+    assert.equal(head.status, 200);
+    assert.equal(head.headers.get('content-length'), String(data.length));
+    assert.equal(await head.text(), '');
+  } finally {
+    if (server) await new Promise((resolve, reject) =>
+      server.close((error) => error ? reject(error) : resolve()));
+    await unlink(file);
   }
 });

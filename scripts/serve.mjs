@@ -85,11 +85,34 @@ export function serve(port = Number(process.env.PORT) || 4321) {
         });
         return res.end();
       }
-      const bytes = await readContained(file);
+      // GET must not buffer the entire asset in RAM. Open the verified
+      // canonical path and stream it in bounded chunks with backpressure.
+      // Recheck the opened file identity to refuse a file swapped between
+      // the containment check and open(). Do not expose its contents on error.
+      const { target, details } = await containedFile(file);
+      const handle = await open(target, 'r');
+      let opened;
+      try {
+        opened = await handle.stat();
+      } catch (error) {
+        await handle.close();
+        throw error;
+      }
+      if (!opened.isFile() || opened.dev !== details.dev || opened.ino !== details.ino) {
+        await handle.close();
+        const error = new Error('Preview file changed while opening');
+        error.code = 'INVALID_DIST_FILE';
+        throw error;
+      }
+      const stream = handle.createReadStream();
+      // A disconnected browser must not leave an asset stream running.
+      res.once('close', () => stream.destroy());
+      stream.once('error', () => res.destroy());
       res.writeHead(200, {
-        'Content-Type': contentType, 'Content-Length': bytes.length,
+        'Content-Type': contentType, 'Content-Length': opened.size,
       });
-      return res.end(bytes);
+      stream.pipe(res);
+      return;
     } catch (error) {
       if (error?.code === 'OUTSIDE_DIST' || error?.code === 'INVALID_DIST_FILE') {
         res.writeHead(403); return res.end('Forbidden');
