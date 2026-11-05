@@ -235,7 +235,7 @@ test('direct CLI starts from a folder with spaces and URL metacharacters', async
       signal: AbortSignal.timeout(4000),
     });
     assert.equal(page.status, 200);
-    assert.match(page.headers.get('content-type') ?? '', /text\\/html/);
+    assert.ok((page.headers.get('content-type') ?? '').startsWith('text/html'));
   } finally {
     if (child && child.exitCode === null) {
       const closed = once(child, 'close');
