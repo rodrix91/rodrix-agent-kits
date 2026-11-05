@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { open, symlink, unlink } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { execFileSync, spawn } from 'node:child_process';
+import { copyFile, mkdtemp, open, rm, symlink, unlink } from 'node:fs/promises';
+import { once } from 'node:events';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { serve } from './serve.mjs';
 
 test('static preview serves only valid paths inside the configured base', async () => {
@@ -185,5 +187,61 @@ test('an occupied preview port rejects cleanly without disrupting the existing s
   } finally {
     await new Promise((resolve, reject) =>
       first.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
+
+test('direct CLI starts from a folder with spaces and URL metacharacters', async () => {
+  // Previously the module URL comparison used file:// + an unescaped raw
+  // pathname, so Node never entered the CLI branch when the path contained
+  // whitespace, # or %. pathToFileURL also handles Windows drive paths.
+  const temporary = await mkdtemp(join(tmpdir(), 'preview # percent-'));
+  const entrypoint = join(temporary, 'serve preview.mjs');
+  let child;
+  try {
+    await copyFile(new URL('./serve.mjs', import.meta.url), entrypoint);
+    // Let the OS choose a free loopback port, then release it for the CLI.
+    const probe = await serve(0);
+    const port = probe.address().port;
+    await new Promise((resolve, reject) =>
+      probe.close((error) => error ? reject(error) : resolve()));
+
+    child = spawn(process.execPath, [entrypoint], {
+      cwd: process.cwd(),
+      env: { ...process.env, PORT: String(port) },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    await new Promise((resolve, reject) => {
+      let stdout = '';
+      let stderr = '';
+      const timeout = setTimeout(() => {
+        reject(new Error('Preview CLI did not report a listening server: ' + stderr));
+      }, 8000);
+      const finish = (error) => {
+        clearTimeout(timeout);
+        if (error) reject(error);
+        else resolve();
+      };
+      child.stdout.on('data', (chunk) => {
+        stdout += chunk.toString();
+        if (stdout.includes('Serving dist at http://127.0.0.1:' + port + '/')) finish();
+      });
+      child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+      child.once('error', finish);
+      child.once('exit', (code) =>
+        finish(new Error('Preview CLI exited before listening (' + code + '): ' + stderr)));
+    });
+    const page = await fetch('http://127.0.0.1:' + port + '/rodrix-agent-kits/', {
+      signal: AbortSignal.timeout(4000),
+    });
+    assert.equal(page.status, 200);
+    assert.match(page.headers.get('content-type') ?? '', /text\\/html/);
+  } finally {
+    if (child && child.exitCode === null) {
+      const closed = once(child, 'close');
+      child.kill();
+      await closed;
+    }
+    await rm(temporary, { recursive: true, force: true });
   }
 });
