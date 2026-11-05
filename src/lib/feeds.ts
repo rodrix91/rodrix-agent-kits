@@ -3,7 +3,7 @@ import { getKits, kitFile, bundlePending, SOON } from './kits';
 import { url, asset, type Lang } from './i18n';
 import { BRAND, PRICES } from '../config';
 import { fencedKitContent } from './markdown-fences';
-const esc = (s: string) => s.replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c]!);
+import { escapeXmlText as esc } from './xml-text';
 
 export async function rss(lang: Lang, site: URL) {
   const kits = (await getKits()).sort((a, b) => +b.data.added - +a.data.added);
