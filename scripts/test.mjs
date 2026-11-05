@@ -330,6 +330,30 @@ for (const theme of ['dark', 'light']) {
 }
 // functional: library filter + finder
 const page = await browser.newPage();
+// Filtering must not silently remove shared anchors or marketing attribution.
+// Check the live browser, not just URLSearchParams in isolation, in both locales.
+for (const locale of ['', 'es/']) {
+  const libraryUrl = `${ORIGIN}${B}/${locale}kits/?utm_source=newsletter&utm_campaign=fall%20launch&q=godot#kits`;
+  await page.goto(libraryUrl);
+  let current = new URL(page.url());
+  ok(current.hash === '#kits' && current.searchParams.get('utm_source') === 'newsletter'
+      && current.searchParams.get('utm_campaign') === 'fall launch'
+      && current.searchParams.get('q') === 'godot',
+  `library preserves campaign parameters and anchor on initial load: ${locale || 'en'}`);
+  await page.fill('#q', 'n8n');
+  await page.locator('fieldset[data-group="tier"] button[data-v="free"]').click();
+  current = new URL(page.url());
+  ok(current.hash === '#kits' && current.searchParams.get('utm_source') === 'newsletter'
+      && current.searchParams.get('utm_campaign') === 'fall launch'
+      && current.searchParams.get('q') === 'n8n'
+      && current.searchParams.get('tier') === 'free',
+  `library retains anchor and external query params after search and filter: ${locale || 'en'}`);
+  await page.fill('#q', '');
+  current = new URL(page.url());
+  ok(!current.searchParams.has('q') && current.searchParams.get('tier') === 'free'
+      && current.hash === '#kits' && current.searchParams.get('utm_source') === 'newsletter',
+  `clearing search removes only its own key and retains attribution: ${locale || 'en'}`);
+}
 await page.goto(`${ORIGIN}${B}/kits/?tool=n8n`);
 ok((await page.locator('#kits > article:not([hidden])').count()) === 1, 'library filter by tool=n8n shows 1 kit');
 await page.fill('#q', 'godot'); await page.goto(`${ORIGIN}${B}/kits/?q=godot`);
