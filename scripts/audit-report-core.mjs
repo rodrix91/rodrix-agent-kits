@@ -14,6 +14,29 @@ export function auditLogLabel(value) {
 
 
 
+
+ // npm's advisory scope is a boolean, not a truthiness test. Missing or
+ // malformed fields must not be advertised as transitive dependencies.
+export function describeAuditScope(value) {
+  if (value === true) return 'direct';
+  if (value === false) return 'transitive';
+  return 'scope unknown';
+}
+
+// Fix data can be a boolean or a package/version record. Unknown or malformed
+// objects must not be presented as an actionable upgrade recommendation.
+export function describeAuditFix(value) {
+  if (value === false) return 'no suggested fix';
+  if (value === true) return 'fix suggested';
+  if (!value || typeof value !== 'object' || Array.isArray(value)
+      || typeof value.name !== 'string' || !value.name.trim()
+      || typeof value.version !== 'string' || !value.version.trim()
+      || typeof value.isSemVerMajor !== 'boolean') {
+    return 'fix status unknown';
+  }
+  return `fix: ${auditLogLabel(value.name)}@${auditLogLabel(value.version)}${value.isSemVerMajor ? ' (major)' : ''}`;
+}
+
 export function summarizeAuditReport(report) {
   if (!report || typeof report !== 'object' || Array.isArray(report)
       || Object.hasOwn(report, 'error')) {
