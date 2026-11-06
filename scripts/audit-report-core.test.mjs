@@ -189,12 +189,12 @@ test('audit fixes are actionable only with complete, correctly typed metadata', 
 test('suggested fix labels safely escape untrusted package/version strings', () => {
   const secretSuffix = 'SENSITIVE-SUFFIX';
   const label = describeAuditFix({
-    name: 'pkg\\n::error::forged\\u001b' + 'x'.repeat(300) + secretSuffix,
-    version: '2.0.0\\u202e\\n' + 'z'.repeat(300) + secretSuffix,
+    name: 'pkg\n::error::forged\u001b' + 'x'.repeat(300) + secretSuffix,
+    version: '2.0.0\u202e\n' + 'z'.repeat(300) + secretSuffix,
     isSemVerMajor: true,
   });
   assert.ok(label.length < 500);
-  assert.ok(!/[\\u0000-\\u001f\\u007f-\\u009f\\u202e]/u.test(label));
+  assert.ok(!/[\u0000-\u001f\u007f-\u009f\u202e]/u.test(label));
   assert.ok(!label.includes(secretSuffix));
   assert.ok(label.includes('[truncated]'));
   assert.ok(label.includes(' (major)'));
