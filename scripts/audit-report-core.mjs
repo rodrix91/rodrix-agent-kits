@@ -16,7 +16,7 @@ export function auditLogLabel(value) {
 
 
  // npm's advisory scope is a boolean, not a truthiness test. Missing or
- // malformed fields must not be advertised as transitive dependencies.
+// malformed fields must not be advertised as transitive dependencies.
 export function describeAuditScope(value) {
   if (value === true) return 'direct';
   if (value === false) return 'transitive';
