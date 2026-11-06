@@ -11,8 +11,8 @@ const origin = Astro.site!.origin;
 const pageUrl = origin + url('/guides/', lang);
 const title = es ? 'Guías: reglas para agentes de IA' : 'Guides: AI coding agent rules';
 const description = es
-  ? 'Guías verificadas sobre AGENTS.md, CLAUDE.md y reglas de Cursor: qué archivo lee cada agente, dónde va y cómo evitar que se desincronicen.'
-  : 'Verified guides on AGENTS.md, CLAUDE.md and Cursor rules: which file each coding agent reads, where it goes, and how to keep them in sync.';
+  ? 'Guías verificadas sobre AGENTS.md, CLAUDE.md, reglas de Cursor y cómo mantener el .env lejos de Claude Code, Cursor y Codex.'
+  : 'Verified guides on AGENTS.md, CLAUDE.md, Cursor rules, and how to keep .env away from Claude Code, Cursor and Codex.';
 const ld = [
   { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, description, url: pageUrl, inLanguage: lang,
     mainEntity: { '@type': 'ItemList', itemListElement: guides.map((g, i) => ({ '@type': 'ListItem', position: i + 1, name: g.data.title, url: origin + url(`/guides/${g.id}/`, lang) })) } },

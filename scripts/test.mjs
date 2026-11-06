@@ -151,7 +151,7 @@ for (const f of ['about/index.html', 'pricing/index.html', 'es/about/index.html'
 ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync('dist/llms-full.txt', 'utf8').includes('## Answers'), 'llms.txt has ## Answers; llms-full.txt unchanged');
 
 // guides (F-SEO-4)
-{ const guides = ['agents-md-vs-claude-md-vs-cursor-rules', 'one-agents-md-for-claude-code-cursor-codex', 'where-to-put-cursor-rules-mdc'];
+{ const guides = ['agents-md-vs-claude-md-vs-cursor-rules', 'one-agents-md-for-claude-code-cursor-codex', 'where-to-put-cursor-rules-mdc', 'keep-coding-agents-away-from-env-files'];
   const sm = readFileSync('dist/sitemap-0.xml', 'utf8'), llmsTxt = readFileSync('dist/llms.txt', 'utf8');
   ok(llmsTxt.includes('## Guides'), 'llms.txt has ## Guides');
   for (const g of guides) {
