@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { auditLogLabel, summarizeAuditReport } from './audit-report-core.mjs';
+import { auditLogLabel, describeAuditFix, describeAuditScope, summarizeAuditReport } from './audit-report-core.mjs';
 
 const counts = { info: 0, low: 1, moderate: 1, high: 0, critical: 0, total: 2 };
 const report = () => ({
@@ -154,6 +154,50 @@ test('audit log labels remain one line, bounded, and resistant to fake annotatio
   assert.ok(label.includes('[truncated]'));
   assert.equal(auditLogLabel('@scope/normal-pkg'), '"@scope/normal-pkg"');
   assert.equal(auditLogLabel('\u2028\u2029'), '"\\u2028\\u2029"');
+});
+
+
+test('audit scope never mislabels missing or malformed isDirect as transitive', () => {
+  assert.equal(describeAuditScope(true), 'direct');
+  assert.equal(describeAuditScope(false), 'transitive');
+  for (const invalid of [undefined, null, 0, 1, '', 'false', 'true', {}, []]) {
+    assert.equal(describeAuditScope(invalid), 'scope unknown');
+  }
+});
+
+test('audit fixes are actionable only with complete, correctly typed metadata', () => {
+  assert.equal(describeAuditFix(false), 'no suggested fix');
+  assert.equal(describeAuditFix(true), 'fix suggested');
+  assert.equal(describeAuditFix({
+    name: '@example/tools', version: '3.2.1', isSemVerMajor: false,
+  }), 'fix: "@example/tools"@"3.2.1"');
+  assert.equal(describeAuditFix({
+    name: 'legacy-pkg', version: '4.0.0', isSemVerMajor: true,
+  }), 'fix: "legacy-pkg"@"4.0.0" (major)');
+  for (const invalid of [
+    undefined, null, 0, 1, '', 'upgrade', [], {},
+    { name: 'pkg', version: '2.0.0' },
+    { name: 'pkg', version: '2.0.0', isSemVerMajor: 'false' },
+    { name: 'pkg', version: 2, isSemVerMajor: false },
+    { name: '', version: '2.0.0', isSemVerMajor: false },
+    { name: 'pkg', version: ' ', isSemVerMajor: false },
+  ]) {
+    assert.equal(describeAuditFix(invalid), 'fix status unknown');
+  }
+});
+
+test('suggested fix labels safely escape untrusted package/version strings', () => {
+  const secretSuffix = 'SENSITIVE-SUFFIX';
+  const label = describeAuditFix({
+    name: 'pkg\\n::error::forged\\u001b' + 'x'.repeat(300) + secretSuffix,
+    version: '2.0.0\\u202e\\n' + 'z'.repeat(300) + secretSuffix,
+    isSemVerMajor: true,
+  });
+  assert.ok(label.length < 500);
+  assert.ok(!/[\\u0000-\\u001f\\u007f-\\u009f\\u202e]/u.test(label));
+  assert.ok(!label.includes(secretSuffix));
+  assert.ok(label.includes('[truncated]'));
+  assert.ok(label.includes(' (major)'));
 });
 
 test('invalid npm audit package names are escaped even in failure messages', () => {
