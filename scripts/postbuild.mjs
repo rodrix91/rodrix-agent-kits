@@ -1,9 +1,10 @@
 // Post-build: OG images, CSP with script hashes, static host files.
 import { Resvg } from '@resvg/resvg-js';
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { validatedOgKits, wrapOgText } from './og-slugs.mjs';
+import { listBuildHtmlFiles } from './safe-dist-html.mjs';
 
 const DIST = 'dist';
 const fonts = ['scripts/fonts/geist.ttf', 'scripts/fonts/geist-mono.ttf'];
@@ -27,12 +28,13 @@ function og(title, sub, tag) {
 
 // Validate the complete output filename set before any OG image is written.
 const kits = validatedOgKits(JSON.parse(readFileSync(join(DIST, 'search-en.json'), 'utf8')));
+// Refuse linked/non-regular build paths before any files are written.
+const htmlFiles = listBuildHtmlFiles(DIST);
 mkdirSync(join(DIST, 'og'), { recursive: true });
 writeFileSync(join(DIST, 'og/default.png'), og('Agent kits that actually ship.', 'Tested Cursor rules, CLAUDE.md, AGENTS.md, agent skills and n8n flows. EN / ES.', 'Free library · Kit Club $7/mo'));
 for (const k of kits) writeFileSync(join(DIST, `og/${k.slug}.png`), og(k.title, k.summary, `${k.tool} · ${k.tier === 'free' ? 'Free' : k.soon ? 'Coming to Full-stack Pro' : '$' + k.price}`));
 
 // CSP: hash every inline <script> (non-JSON) per page.
-const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
 const policy = (hashes) => [
   "default-src 'self'",
   `script-src 'self' ${hashes.map((h) => `'sha256-${h}'`).join(' ')} https://gumroad.com https://assets.gumroad.com`,
@@ -47,7 +49,7 @@ const policy = (hashes) => [
   'upgrade-insecure-requests',
 ].join('; ');
 let pages = 0;
-for (const f of walk(DIST).filter((f) => f.endsWith('.html'))) {
+for (const f of htmlFiles) {
   let html = readFileSync(f, 'utf8');
   const hashes = [...html.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>([\s\S]*?)<\/script>/g)].map((m) => createHash('sha256').update(m[1]).digest('base64'));
   html = html.replace('__CSP__', policy([...new Set(hashes)]));
