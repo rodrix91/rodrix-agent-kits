@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawn } from 'node:child_process';
-import { copyFile, mkdtemp, open, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { copyFile, mkdir, mkdtemp, open, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { once } from 'node:events';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -305,5 +305,51 @@ test('GET and HEAD serve an in-tree file alias consistently', async () => {
       server.close((error) => error ? reject(error) : resolve()));
     if (linked) await unlink(alias);
     await unlink(target);
+  }
+});
+
+
+test('a linked dist root cannot serve external files through GET or HEAD', async (t) => {
+  const temp = await mkdtemp(join(tmpdir(), 'preview-linked-root-'));
+  const outside = join(temp, 'outside-private-files');
+  const linkedRoot = join(temp, 'dist');
+  try {
+    await mkdir(outside);
+    await writeFile(join(outside, 'private.txt'), 'sensitive-preview-marker');
+    try {
+      await symlink(outside, linkedRoot, process.platform === 'win32' ? 'junction' : 'dir');
+    } catch (error) {
+      if (['EPERM', 'EACCES', 'ENOTSUP'].includes(error?.code)) {
+        t.skip('Directory symlinks unavailable on this runner: ' + error.code);
+        return;
+      }
+      throw error;
+    }
+    // A separate process is essential: serve.mjs resolves dist/ from cwd
+    // during module initialization. Keep the repository build untouched.
+    const sourceUrl = new URL('./serve.mjs', import.meta.url).href;
+    const script = [
+      'import { serve } from ' + JSON.stringify(sourceUrl) + ';',
+      'const server = await serve(0);',
+      'try {',
+      "  const url = 'http://127.0.0.1:' + server.address().port + '/rodrix-agent-kits/private.txt';",
+      '  const get = await fetch(url);',
+      "  const head = await fetch(url, { method: 'HEAD' });",
+      '  console.log(JSON.stringify({get: get.status, head: head.status, body: await get.text()}));',
+      '} finally {',
+      '  await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));',
+      '}',
+    ].join('\n');
+    const child = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
+      cwd: temp, encoding: 'utf8', timeout: 10000,
+      env: { ...process.env, SITE_BASE: '/rodrix-agent-kits' },
+    });
+    assert.equal(child.status, 0, child.stderr || String(child.error));
+    assert.deepEqual(JSON.parse(child.stdout.trim()), {
+      get: 403, head: 403, body: 'Forbidden',
+    });
+    assert.equal(await readFile(join(outside, 'private.txt'), 'utf8'), 'sensitive-preview-marker');
+  } finally {
+    await rm(temp, { recursive: true, force: true });
   }
 });
