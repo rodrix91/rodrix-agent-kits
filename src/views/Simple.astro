@@ -13,7 +13,7 @@ const meta = {
   privacy: [es ? 'Privacidad' : 'Privacy', es ? 'Qué datos recogemos (casi ninguno).' : 'What data we collect (almost none).'],
   terms: [es ? 'Términos' : 'Terms', es ? 'Términos de uso y licencias.' : 'Terms of use and licensing.'],
 }[page];
-const updated = '2026-10-31';
+const updated = '2026-11-07';
 ---
 <Base title={meta[0]} description={meta[1]} lang={lang} path={`/${page}/`}>
   <div class="wrap">
@@ -49,14 +49,16 @@ const updated = '2026-10-31';
     </div>}
     {page === 'privacy' && (es ? <>
       <p class="muted">Actualizado: {updated}</p>
-      <h2>Resumen</h2><p>Este sitio es estático. No usa cookies de rastreo ni analítica de terceros.</p>
+      <h2>Resumen</h2><p>Este sitio es estático. No usa cookies. Contamos visitas de forma agregada con GoatCounter.</p>
       <h2>Qué guardamos</h2><ul><li><strong>Preferencia de tema</strong> en el almacenamiento local de tu navegador. Nunca sale de tu dispositivo.</li><li><strong>Email del newsletter</strong>, solo si te suscribes, guardado por nuestro proveedor de newsletter. Puedes darte de baja en cada envío.</li><li><strong>Compras</strong>: las procesa Gumroad, que actúa como vendedor responsable; aplica su política de privacidad.</li></ul>
+      <h2>Conteo de visitas</h2><p>Cada página carga una imagen de 1×1 de <a href="https://www.goatcounter.com/help/privacy">GoatCounter</a>, sin JavaScript ni cookies. Registra la página visitada y datos agregados como navegador, sistema y país. GoatCounter no guarda direcciones IP, cookies ni identificadores de seguimiento. Solo vemos totales.</p>
       <h2>Buscador de kits</h2><p>Funciona totalmente en tu navegador. Lo que escribes no se envía a ningún servidor.</p>
       <h2>Hosting</h2><p>GitHub Pages puede registrar direcciones IP en logs técnicos según su propia política.</p>
       <h2>Contacto</h2><p>Para pedir acceso o borrado de tus datos, escríbenos a <a href={`mailto:${BRAND.email}`}>{BRAND.email}</a> o por <a href={BRAND.x}>X</a>.</p></> : <>
       <p class="muted">Updated: {updated}</p>
-      <h2>Summary</h2><p>This is a static site. It uses no tracking cookies and no third-party analytics.</p>
+      <h2>Summary</h2><p>This is a static site. It uses no cookies. We count page views in aggregate with GoatCounter.</p>
       <h2>What we store</h2><ul><li><strong>Theme preference</strong> in your browser's local storage. It never leaves your device.</li><li><strong>Newsletter email</strong>, only if you subscribe, stored by our newsletter provider. Every issue has an unsubscribe link.</li><li><strong>Purchases</strong> are processed by Gumroad as merchant of record; their privacy policy applies.</li></ul>
+      <h2>Page-view counting</h2><p>Each page loads a 1×1 image from <a href="https://www.goatcounter.com/help/privacy">GoatCounter</a>, with no JavaScript and no cookies. It records the page visited and aggregate data such as browser, system and country. GoatCounter does not store IP addresses, cookies or tracker IDs. We only see totals.</p>
       <h2>Kit finder</h2><p>Runs entirely in your browser. What you type is never sent to a server.</p>
       <h2>Hosting</h2><p>GitHub Pages may log IP addresses in technical logs under its own policy.</p>
       <h2>Contact</h2><p>To request access to or deletion of your data, email <a href={`mailto:${BRAND.email}`}>{BRAND.email}</a> or contact us on <a href={BRAND.x}>X</a>.</p></>)}

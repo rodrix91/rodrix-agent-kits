@@ -42,6 +42,15 @@ export const PAYHIP = {
 export const GOOGLE_SITE_VERIFICATION = 'ZtPoEPg8NinMyCsJ78acEyxd46AO3bJxT2z6dfDGVHA';
 export const BING_SITE_VERIFICATION = '';
 
+/**
+ * GoatCounter page-view counting (F-W45-2, approved by Steve 2026-11-02; site code 2026-11-06).
+ * No-JS image pixel only: no script, no cookies, no CSP change (img-src already allows https:).
+ * Empty code = no pixel emitted.
+ */
+export const GOATCOUNTER = { code: 'launchlatam' };
+export const goatcounterPixel = (path: string) =>
+  GOATCOUNTER.code ? `https://${GOATCOUNTER.code}.goatcounter.com/count?p=${encodeURIComponent(path)}` : '';
+
 export const NEWSLETTER = {
   /**
    * Buttondown free account `rodrixlabs` (Steve, 2026-11-02). Plain POST form, field `email`.

@@ -264,6 +264,17 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
   ok(!/msvalidate\.01/.test(readFileSync('dist/index.html', 'utf8')), 'Bing verification still empty (no msvalidate tag)');
 }
 
+// F-W45-2 GoatCounter no-JS pixel (Steve 2026-11-06): exactly one img per page, correct path, no script, CSP unchanged
+for (const [f, p] of [['index.html', '/rodrix-agent-kits/'], ['es/index.html', '/rodrix-agent-kits/es/'], ['kits/agent-secrets-safety-pack/index.html', '/rodrix-agent-kits/kits/agent-secrets-safety-pack/'], ['pricing/index.html', '/rodrix-agent-kits/pricing/']]) {
+  const h = readFileSync('dist/' + f, 'utf8');
+  const imgs = h.match(/<img[^>]*goatcounter\.com[^>]*>/g) || [];
+  ok(imgs.length === 1 && imgs[0].includes(`src="https://launchlatam.goatcounter.com/count?p=${encodeURIComponent(p)}"`) && /alt=""/.test(imgs[0]), `GoatCounter pixel once with path ${p}: /${f}`);
+  ok(!/<script[^>]*goatcounter|gc\.zgo\.at/.test(h), `no GoatCounter script: /${f}`);
+  ok(/img-src 'self' data: https:/.test(h) && !/goatcounter/.test((h.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || ''), `CSP unchanged for pixel: /${f}`);
+}
+{ const pv = readFileSync('dist/privacy/index.html', 'utf8'), pvEs = readFileSync('dist/es/privacy/index.html', 'utf8');
+  ok(/GoatCounter/.test(pv) && !/no third-party analytics/.test(pv) && /GoatCounter/.test(pvEs) && !/ni analítica de terceros/.test(pvEs), 'privacy discloses GoatCounter page-view counting (EN/ES)'); }
+
 // support email (F-STV-3)
 { const EMAIL = 'rodrixlabs@mail.grokbot.com'; const re = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
   ok(re.test(EMAIL), 'support email format valid');
@@ -313,9 +324,13 @@ await checker.check({ path: `${ORIGIN}${B}/es/`, recurse: true, linksToSkip: [`^
 ok(broken.length === 0, `internal links: ${broken.length} broken`); broken.forEach((b) => console.log('   ', b));
 
 const browser = await launch();
+// F-W45-2: never send real GoatCounter hits from tests; stub the pixel and record requests.
+const GIF = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+const gcHits = [];
+const stubGc = (target) => target.route(/^https:\/\/[a-z0-9-]+\.goatcounter\.com\//, (route) => { gcHits.push(route.request().url()); return route.fulfill({ status: 200, contentType: 'image/gif', body: GIF }); });
 const pages = ['/', '/es/', '/guides/', '/es/guides/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/', '/kits/agent-secrets-safety-pack/', '/kits/agent-handoff-kit/', '/es/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/es/guides/one-agents-md-for-claude-code-cursor-codex/', '/es/guides/where-to-put-cursor-rules-mdc/'];
 for (const theme of ['dark', 'light']) {
-  const ctx = await browser.newContext({ colorScheme: theme, reducedMotion: 'reduce' });
+  const ctx = await browser.newContext({ colorScheme: theme, reducedMotion: 'reduce' }); await stubGc(ctx);
   for (const p of pages) {
     const page = await ctx.newPage();
     const errors = []; page.on('console', (m) => m.type() === 'error' && errors.push(m.text())); page.on('pageerror', (e) => errors.push(e.message));
@@ -328,8 +343,9 @@ for (const theme of ['dark', 'light']) {
   }
   await ctx.close();
 }
+ok(gcHits.some((u) => u === 'https://launchlatam.goatcounter.com/count?p=%2Frodrix-agent-kits%2F') && gcHits.some((u) => u.endsWith('?p=%2Frodrix-agent-kits%2Fes%2F')), `GoatCounter pixel requested in browser for / and /es/ (${gcHits.length} stubbed hits)`);
 // functional: library filter + finder
-const page = await browser.newPage();
+const page = await browser.newPage(); await stubGc(page);
 // Filtering must not silently remove shared anchors or marketing attribution.
 // Check the live browser, not just URLSearchParams in isolation, in both locales.
 for (const locale of ['', 'es/']) {
@@ -530,7 +546,7 @@ for (const l of ['', 'es/']) {
 // conversion: Gumroad CTA above the fold on mobile (390x844) for /pricing/ and every paid kit page (EN/ES)
 {
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
-  const mp = await mctx.newPage();
+  await stubGc(mctx); const mp = await mctx.newPage();
   const paid = readdirSync('src/content/kits').filter((f) => /^tier:\s*"?paid/m.test(readFileSync(`src/content/kits/${f}`, 'utf8'))).map((f) => `/kits/${f.replace(/\.md$/, '')}/`);
   for (const p of ['/pricing/', ...paid].flatMap((x) => [x, '/es' + x])) {
     await mp.goto(ORIGIN + B + p, { waitUntil: 'load' });

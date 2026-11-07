@@ -43,6 +43,7 @@ code,pre,kbd{font-family:var(--mono);font-size:.9em}
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(1.1rem,4vw,2rem)}
 .skip{position:absolute;left:-999px;top:.5rem;z-index:99;background:var(--accent);color:var(--accent-ink);padding:.5rem 1rem;border-radius:8px}
 .skip:focus{left:.5rem}
+.gc-pixel{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .eyebrow{display:inline-flex;align-items:center;gap:.5rem;font:500 var(--t-xs)/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--fg-2);border:1px solid var(--line);padding:.45rem .7rem;border-radius:99px;background:var(--bg-2)}
 .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
