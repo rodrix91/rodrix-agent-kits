@@ -79,3 +79,31 @@ export function validatePostbuildDestinations(root, slugs) {
     }
   }
 }
+
+
+/**
+ * Check generated inputs before reading any of their bytes or writing any
+ * postbuild assets. These fixed sources must not alias files outside dist:
+ * search-en.json feeds the public OG images and sitemap-index.xml is copied
+ * into the publicly served sitemap.xml. Unlike symlinks, hardlinks survive
+ * a canonical-path check, so require a single-link regular inode.
+ */
+export function validatePostbuildInputs(root) {
+  const rootInfo = lstatSync(root);
+  if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) {
+    throw new Error('Build output root must be a real directory');
+  }
+  for (const relative of ['search-en.json', 'sitemap-index.xml']) {
+    let info;
+    try { info = lstatSync(join(root, relative)); }
+    catch (error) {
+      if (error?.code === 'ENOENT') {
+        throw new Error('Postbuild input file is missing: ' + relative);
+      }
+      throw error;
+    }
+    if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1) {
+      throw new Error('Postbuild input must be a single-link regular file: ' + relative);
+    }
+  }
+}
