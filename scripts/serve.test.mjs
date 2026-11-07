@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { copyFile, mkdir, mkdtemp, open, readFile, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { copyFile, link, mkdir, mkdtemp, open, readFile, rm, stat, symlink, unlink, writeFile } from 'node:fs/promises';
 import { once } from 'node:events';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -351,5 +351,49 @@ test('a linked dist root cannot serve external files through GET or HEAD', async
     assert.equal(await readFile(join(outside, 'private.txt'), 'utf8'), 'sensitive-preview-marker');
   } finally {
     await rm(temp, { recursive: true, force: true });
+  }
+});
+
+
+test('GET and HEAD reject a hardlink to a private file outside dist', async (t) => {
+  const suffix = String(process.pid);
+  const outside = resolve('.preview-private-' + suffix + '.txt');
+  const alias = resolve('dist', '.preview-hardlink-' + suffix + '.txt');
+  const secret = 'external-private-fixture-DO-NOT-SERVE';
+  let linked = false;
+  let server;
+  try {
+    await writeFile(outside, secret);
+    try {
+      await link(outside, alias);
+      linked = true;
+    } catch (error) {
+      if (['EPERM', 'EACCES', 'ENOTSUP', 'EXDEV'].includes(error?.code)) {
+        t.skip('Hardlinks unavailable on this runner: ' + error.code);
+        return;
+      }
+      throw error;
+    }
+    const details = await stat(alias);
+    if (details.nlink <= 1) {
+      t.skip('File system does not report hardlink counts');
+      return;
+    }
+    server = await serve(0);
+    const origin = 'http://127.0.0.1:' + server.address().port + '/rodrix-agent-kits/';
+    for (const method of ['GET', 'HEAD']) {
+      const response = await fetch(origin + '.preview-hardlink-' + suffix + '.txt', {
+        method, signal: AbortSignal.timeout(4000),
+      });
+      assert.equal(response.status, 403, method + ' must deny a private hardlink');
+      assert.equal((await response.text()).includes(secret), false);
+    }
+    assert.equal((await fetch(origin + 'index.html')).status, 200);
+    assert.equal(await readFile(outside, 'utf8'), secret);
+  } finally {
+    if (server) await new Promise((resolve, reject) =>
+      server.close((error) => error ? reject(error) : resolve()));
+    if (linked) await unlink(alias);
+    await rm(outside, { force: true });
   }
 });
