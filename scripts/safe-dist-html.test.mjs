@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, symlink, link, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { listBuildHtmlFiles, validatePostbuildDestinations } from './safe-dist-html.mjs';
+import { listBuildHtmlFiles, validatePostbuildDestinations, validatePostbuildInputs } from './safe-dist-html.mjs';
 
 test('postbuild HTML inventory includes nested regular files, not assets', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'og-postbuild-'));
@@ -132,5 +132,87 @@ test('postbuild rejects a linked OG directory and malformed generated slugs', as
     }
   } finally {
     await rm(dir, { recursive: true, force: true });
+  }
+});
+
+
+test('postbuild accepts single-link generated catalog and sitemap inputs', async () => {
+  const workspace = await mkdtemp(join(tmpdir(), 'og-sources-normal-'));
+  try {
+    const dist = join(workspace, 'dist');
+    await mkdir(dist);
+    await writeFile(join(dist, 'search-en.json'), '[]\n');
+    await writeFile(join(dist, 'sitemap-index.xml'), '<sitemapindex />\n');
+    assert.doesNotThrow(() => validatePostbuildInputs(dist));
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('postbuild rejects linked generated input sources before any publication', async (t) => {
+  const workspace = await mkdtemp(join(tmpdir(), 'og-sources-links-'));
+  try {
+    const dist = join(workspace, 'dist');
+    await mkdir(dist);
+    const normal = { 'search-en.json': '[]\n', 'sitemap-index.xml': '<sitemapindex />\n' };
+    for (const [name, content] of Object.entries(normal)) {
+      await writeFile(join(dist, name), content);
+    }
+    for (const [name, content] of Object.entries(normal)) {
+      const input = join(dist, name);
+      const outside = join(workspace, 'external-' + name);
+      const secret = 'private-source-content-not-for-publication';
+      await writeFile(outside, secret);
+      await rm(input);
+      try {
+        await symlink(outside, input, 'file');
+      } catch (error) {
+        if (['EPERM', 'EACCES', 'ENOTSUP', 'EOPNOTSUPP', 'ENOSYS'].includes(error?.code)) {
+          t.diagnostic('Symlink unavailable on this runner: ' + error.code);
+        } else {
+          throw error;
+        }
+      }
+      const symlinkPresent = await readFile(input, 'utf8').then(() => true, () => false);
+      if (symlinkPresent) {
+        assert.throws(() => validatePostbuildInputs(dist), /Postbuild input must be a single-link regular file/);
+        await rm(input);
+      }
+      try {
+        await link(outside, input);
+      } catch (error) {
+        if (['EPERM', 'EACCES', 'ENOTSUP', 'EOPNOTSUPP', 'ENOSYS', 'EXDEV'].includes(error?.code)) {
+          t.diagnostic('Hardlink unavailable on this runner: ' + error.code);
+        } else {
+          throw error;
+        }
+      }
+      const hardlinkPresent = await readFile(input, 'utf8').then(() => true, () => false);
+      if (hardlinkPresent) {
+        assert.throws(() => validatePostbuildInputs(dist), /Postbuild input must be a single-link regular file/);
+        await rm(input);
+      }
+      assert.equal(await readFile(outside, 'utf8'), secret);
+      await writeFile(input, content);
+      assert.doesNotThrow(() => validatePostbuildInputs(dist));
+    }
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test('postbuild rejects missing inputs and nonregular input directories', async () => {
+  const workspace = await mkdtemp(join(tmpdir(), 'og-sources-missing-'));
+  try {
+    const dist = join(workspace, 'dist');
+    await mkdir(dist);
+    assert.throws(() => validatePostbuildInputs(dist), /Postbuild input file is missing: search-en.json/);
+    await writeFile(join(dist, 'search-en.json'), '[]\n');
+    assert.throws(() => validatePostbuildInputs(dist), /Postbuild input file is missing: sitemap-index.xml/);
+    await mkdir(join(dist, 'sitemap-index.xml'));
+    assert.throws(() => validatePostbuildInputs(dist), /Postbuild input must be a single-link regular file/);
+    assert.throws(() => validatePostbuildInputs(join(dist, 'search-en.json')), /Build output root must be a real directory/);
+  } finally {
+    await rm(workspace, { recursive: true, force: true });
   }
 });
