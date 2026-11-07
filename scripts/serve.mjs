@@ -32,8 +32,10 @@ async function containedFile(file) {
   // Both GET and HEAD must reject special files and escaped symlinks.
   // An in-tree FIFO can otherwise block a read indefinitely.
   const details = await stat(target);
-  if (!details.isFile()) {
-    const error = new Error('Preview target is not a regular file');
+  // A hardlink inside dist can expose a private file outside dist: realpath()
+  // cannot distinguish those aliases. Refuse multiply linked inodes.
+  if (!details.isFile() || details.nlink !== 1) {
+    const error = new Error('Preview target must be an unlinked regular file');
     error.code = 'INVALID_DIST_FILE';
     throw error;
   }
@@ -48,7 +50,10 @@ async function openContained(file) {
   const handle = await open(target, 'r');
   try {
     const opened = await handle.stat();
-    if (!opened.isFile() || opened.dev !== details.dev || opened.ino !== details.ino) {
+    // Recheck the live descriptor as well: an attacker could add a hardlink
+    // between the path stat and open, or while replacing the entry.
+    if (!opened.isFile() || opened.nlink !== 1
+      || opened.dev !== details.dev || opened.ino !== details.ino) {
       const error = new Error('Preview file changed while opening');
       error.code = 'INVALID_DIST_FILE';
       throw error;
