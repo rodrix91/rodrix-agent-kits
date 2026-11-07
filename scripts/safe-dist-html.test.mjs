@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, readFile, symlink, link, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { listBuildHtmlFiles } from './safe-dist-html.mjs';
+import { listBuildHtmlFiles, validatePostbuildDestinations } from './safe-dist-html.mjs';
 
 test('postbuild HTML inventory includes nested regular files, not assets', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'og-postbuild-'));
@@ -71,6 +71,65 @@ test('postbuild refuses linked files and parent directories outside dist', async
     await symlink(externalDir, join(dist, 'nested'), 'dir');
     assert.throws(() => listBuildHtmlFiles(dist), /symbolic link/);
     assert.equal(await readFile(external, 'utf8'), '<html>private content</html>');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('postbuild refuses hardlinked generated assets before rewriting external files', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'og-output-hardlink-'));
+  try {
+    const dist = join(dir, 'dist');
+    await mkdir(join(dist, 'og'), { recursive: true });
+    const outside = join(dir, 'important-data.txt');
+    await writeFile(outside, 'must remain unchanged');
+    for (const relative of ['og/default.png', 'og/sample-kit.png', '_headers', '.nojekyll', 'sitemap.xml']) {
+      const target = join(dist, relative);
+      try {
+        await link(outside, target);
+      } catch (error) {
+        if (['EPERM', 'EOPNOTSUPP', 'ENOSYS'].includes(error?.code)) {
+          t.skip('Hard links unavailable on this runner');
+          return;
+        }
+        throw error;
+      }
+      assert.throws(
+        () => validatePostbuildDestinations(dist, ['sample-kit']),
+        /regular file without links/,
+        relative,
+      );
+      assert.equal(await readFile(outside, 'utf8'), 'must remain unchanged');
+      await rm(target);
+    }
+    // Existing ordinary generated files and absent output paths are safe.
+    await writeFile(join(dist, 'og', 'default.png'), 'generated preview');
+    assert.doesNotThrow(() => validatePostbuildDestinations(dist, ['sample-kit']));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('postbuild rejects a linked OG directory and malformed generated slugs', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'og-output-directory-'));
+  try {
+    const dist = join(dir, 'dist');
+    const outside = join(dir, 'external');
+    await mkdir(dist);
+    await mkdir(outside);
+    try { await symlink(outside, join(dist, 'og'), 'dir'); }
+    catch (error) {
+      if (['EPERM', 'EOPNOTSUPP', 'ENOSYS'].includes(error?.code)) {
+        t.skip('Symbolic links unavailable on this runner');
+        return;
+      }
+      throw error;
+    }
+    assert.throws(() => validatePostbuildDestinations(dist, []), /OG asset directory/);
+    await rm(join(dist, 'og'));
+    for (const bad of ['../escape', '/absolute', 'nested/path', '', 'A UPPER']) {
+      assert.throws(() => validatePostbuildDestinations(dist, [bad]), /safe filename components/);
+    }
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
