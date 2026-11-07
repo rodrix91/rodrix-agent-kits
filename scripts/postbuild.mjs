@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { validatedOgKits, wrapOgText } from './og-slugs.mjs';
-import { listBuildHtmlFiles, validatePostbuildDestinations } from './safe-dist-html.mjs';
+import { listBuildHtmlFiles, validatePostbuildDestinations, validatePostbuildInputs } from './safe-dist-html.mjs';
 
 const DIST = 'dist';
 const fonts = ['scripts/fonts/geist.ttf', 'scripts/fonts/geist-mono.ttf'];
@@ -26,6 +26,10 @@ function og(title, sub, tag) {
   return new Resvg(svg, { font: { fontFiles: fonts, loadSystemFonts: false, defaultFontFamily: 'Geist' } }).render().asPng();
 }
 
+// Validate both generated read sources before parsing or copying them.
+// A linked JSON catalog could influence published OG images; a linked sitemap
+// index could be copied verbatim into a publicly served sitemap.xml.
+validatePostbuildInputs(DIST);
 // Validate the complete output filename set before any OG image is written.
 const kits = validatedOgKits(JSON.parse(readFileSync(join(DIST, 'search-en.json'), 'utf8')));
 // Refuse linked/non-regular build paths before any files are written.
