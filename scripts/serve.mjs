@@ -1,7 +1,7 @@
 // Tiny static server that mimics GitHub Pages under the configured base path.
 // This is a LOCAL development/test server, not an Internet-facing production host.
 import { createServer } from 'node:http';
-import { open, realpath, stat } from 'node:fs/promises';
+import { lstat, open, realpath, stat } from 'node:fs/promises';
 import { resolve, sep, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -14,6 +14,15 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 
 // Never serve a file outside the canonical dist directory, even through
 // a symlinked file or parent directory.
 async function containedFile(file) {
+  // Never make an externally linked dist/ directory the trusted root.
+  // Relative file containment alone would accept arbitrary files inside
+  // that external directory as legitimate preview assets.
+  const rootInfo = await lstat(DIST);
+  if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) {
+    const error = new Error('Preview dist root must be a real directory');
+    error.code = 'INVALID_DIST_ROOT';
+    throw error;
+  }
   const [root, target] = await Promise.all([realpath(DIST), realpath(file)]);
   if (target !== root && !target.startsWith(root + sep)) {
     const error = new Error('Resolved path escapes dist');
@@ -112,7 +121,7 @@ export function serve(port = Number(process.env.PORT) || 4321) {
       stream.pipe(res);
       return;
     } catch (error) {
-      if (error?.code === 'OUTSIDE_DIST' || error?.code === 'INVALID_DIST_FILE') {
+      if (error?.code === 'OUTSIDE_DIST' || error?.code === 'INVALID_DIST_FILE' || error?.code === 'INVALID_DIST_ROOT') {
         res.writeHead(403); return res.end('Forbidden');
       }
       // The generated 404 page is a static asset too. Do not buffer a
