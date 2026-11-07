@@ -35,3 +35,47 @@ export function listBuildHtmlFiles(root) {
   visit(root);
   return result;
 }
+
+/**
+ * Preflight every known write target, not just HTML. A file with additional
+ * hardlinks could alias source material outside dist even though its path is
+ * within the generated tree. Validate before writing *any* postbuild asset.
+ * The generated slug inventory is also checked before composing filenames.
+ */
+export function validatePostbuildDestinations(root, slugs) {
+  if (!Array.isArray(slugs) ||
+      slugs.some((slug) => typeof slug !== 'string' || !/^[a-z0-9-]+$/.test(slug))) {
+    throw new TypeError('Postbuild asset slugs must be safe filename components');
+  }
+
+  const rootInfo = lstatSync(root);
+  if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) {
+    throw new Error('Build output root must be a real directory');
+  }
+
+  const generatedDir = join(root, 'og');
+  let ogInfo;
+  try { ogInfo = lstatSync(generatedDir); }
+  catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+  if (ogInfo && (!ogInfo.isDirectory() || ogInfo.isSymbolicLink())) {
+    throw new Error('Postbuild OG asset directory must be a real directory');
+  }
+
+  const targets = [
+    'og/default.png', ...slugs.map((slug) => 'og/' + slug + '.png'),
+    '_headers', '.nojekyll', 'sitemap.xml',
+  ];
+  for (const relative of targets) {
+    let details;
+    try { details = lstatSync(join(root, relative)); }
+    catch (error) {
+      if (error?.code === 'ENOENT') continue;
+      throw error;
+    }
+    if (!details.isFile() || details.isSymbolicLink() || details.nlink !== 1) {
+      throw new Error('Postbuild output must be a regular file without links: ' + relative);
+    }
+  }
+}
