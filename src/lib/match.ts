@@ -79,5 +79,15 @@ export function rank(query: string, docs: Doc[]) {
     }
     return { doc, score: max ? Math.min(1, score / (max * 0.45)) : 0 };
   });
-  return scored.filter((item) => item.score > 0.08).sort((a, b) => b.score - a.score);
+  const ranked = scored.filter((item) => item.score > 0.08).sort((a, b) => b.score - a.score);
+  // Defend the visible suggestions against a duplicated catalog slug. The
+  // published catalog is validated separately, but malformed in-memory data
+  // must not use multiple recommendation slots for the same kit. Keep the
+  // highest-scoring entry because ranking happens before deduplication.
+  const seen = new Set<string>();
+  return ranked.filter(({ doc }) => {
+    if (seen.has(doc.slug)) return false;
+    seen.add(doc.slug);
+    return true;
+  });
 }
