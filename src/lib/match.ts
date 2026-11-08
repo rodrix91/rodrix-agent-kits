@@ -27,7 +27,10 @@ export function rank(query: string, docs: Doc[]) {
   const weights = new Map<string, number>();
   for (const w of q) {
     weights.set(w, Math.max(weights.get(w) ?? 0, 1));
-    for (const synonym of SYN[w] ?? []) {
+    // Only expand explicitly defined synonyms. A plain object's inherited
+    // "constructor" property is a function, not an iterable synonym list.
+    const synonyms = Object.hasOwn(SYN, w) ? SYN[w] : [];
+    for (const synonym of synonyms) {
       weights.set(synonym, Math.max(weights.get(synonym) ?? 0, 0.5));
     }
   }
