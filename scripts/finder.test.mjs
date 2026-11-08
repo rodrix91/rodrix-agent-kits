@@ -93,6 +93,21 @@ test('long descriptions preserve exact hits when extra words are absent from eve
   assert.deepEqual(rank('unlistedconcept0 unlistedconcept1', docs), []);
 });
 
+test('inherited object keys never crash synonym expansion or hide valid kits', () => {
+  // A plain object exposes an inherited "constructor" function. This term
+  // must be treated like any other query term, not as a synonym array.
+  assert.deepEqual(rank('constructor', docs), []);
+  assert.equal(rank('constructor Next.js', docs)[0]?.doc.slug, 'nextjs-supabase');
+  const constructorKits = [
+    { slug: 'javascript-classes', title: 'JavaScript classes', tool: 'Codex', text: 'JavaScript constructor patterns for web apps' },
+    { slug: 'python-data', title: 'Python data', tool: 'Codex', text: 'Python pandas analytics' },
+  ];
+  assert.deepEqual(
+    rank('constructor', constructorKits).map(({ doc }) => doc.slug),
+    ['javascript-classes'],
+  );
+});
+
 test('empty queries, stop-word queries and empty catalogs produce no results', () => {
   assert.deepEqual(rank('', docs), []);
   assert.deepEqual(rank('the and in de con', docs), []);
