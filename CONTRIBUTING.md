@@ -47,7 +47,7 @@ The Lighthouse command is a local diagnostic, not evidence of real-world user pe
 - Keep client-side search offline and respect the site's CSP; explain and test any proposed network request or new external script.
 - Do not claim a security audit, production deployment, a customer, a performance result or a third-party integration test that did not occur.
 - Preserve authorship and license notices. Review any third-party copied material for its license and provenance before adding it.
-- Avoid disclosing live credentials or exploitation details in public issues or pull requests. Use an available private contact/reporting channel with the maintainer for sensitive reports.
+- Avoid disclosing live credentials or exploitation details in public issues or pull requests. Follow [SECURITY.md](SECURITY.md) for the documented security reporting contact and safe disclosure guidance.
 
 ## Pull request checklist
 
