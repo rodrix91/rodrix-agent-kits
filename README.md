@@ -12,6 +12,8 @@ Live: https://rodrix91.github.io/rodrix-agent-kits/
 - SEO/AEO: canonical + hreflang, OG/Twitter, JSON-LD (Organization, WebSite, Product, BreadcrumbList, ItemList, FAQPage), sitemap, robots.txt, `llms.txt`, `llms-full.txt`, RSS (EN + ES), raw kit files at `/files/*`.
 - Sitemap `lastmod` values are derived from each kit's validated `added` / `updated` frontmatter, including both language routes. Pages without a documented source update date omit `lastmod` rather than claiming that every rebuild changed the content. Missing, contradictory or invalid kit dates fail the build. Run `node --test scripts/sitemap-dates.test.mjs` for offline regressions; `npm test` also checks the generated XML against real kit metadata.
 
+For proposed fixes, new kits, and external contributions, see [CONTRIBUTING.md](CONTRIBUTING.md) for verification, EN/ES quality, security and data-privacy requirements.
+
 ## Commands
 | | |
 |---|---|
