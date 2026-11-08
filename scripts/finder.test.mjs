@@ -108,6 +108,28 @@ test('inherited object keys never crash synonym expansion or hide valid kits', (
   );
 });
 
+test('dotted names find their canonical aliases without unrelated matches', () => {
+  // Users may search by a framework's printed name or its compact package
+  // spelling, and by the name of an instructions file or its underlying tool.
+  const compactNext = [
+    { slug: 'nextjs-app', title: 'Framework', tool: 'Cursor', text: 'NextJS application routing' },
+    { slug: 'unrelated', title: 'Other', tool: 'n8n', text: 'Workflow automation reports' },
+  ];
+  const dottedNext = [
+    { slug: 'nextjs-guide', title: 'Framework', tool: 'Cursor', text: 'Next.js app configuration' },
+    compactNext[1],
+  ];
+  const namedClaude = [
+    { slug: 'claude-agent', title: 'Agent guide', tool: 'Claude', text: 'Claude coding instructions' },
+    compactNext[1],
+  ];
+  assert.equal(rank('Next.js', compactNext)[0]?.doc.slug, 'nextjs-app');
+  assert.equal(rank('nextjs', dottedNext)[0]?.doc.slug, 'nextjs-guide');
+  assert.equal(rank('CLAUDE.md', namedClaude)[0]?.doc.slug, 'claude-agent');
+  assert.deepEqual(rank('Next.js', [compactNext[1]]), []);
+  assert.deepEqual(rank('CLAUDE.md', [compactNext[1]]), []);
+});
+
 test('empty queries, stop-word queries and empty catalogs produce no results', () => {
   assert.deepEqual(rank('', docs), []);
   assert.deepEqual(rank('the and in de con', docs), []);
