@@ -100,6 +100,30 @@ test('empty queries, stop-word queries and empty catalogs produce no results', (
   assert.deepEqual(rank('godot', [{ slug: 'empty', title: '', tool: '', text: '' }]), []);
 });
 
+test('duplicate kit slugs cannot take multiple recommendation slots', () => {
+  const duplicates = [
+    { slug: 'repeated', title: 'First preview', tool: 'n8n', text: 'n8n workflow' },
+    { slug: 'repeated', title: 'Second preview', tool: 'n8n', text: 'n8n workflow' },
+    { slug: 'independent', title: 'Other workflow', tool: 'n8n', text: 'n8n workflow' },
+  ];
+  const results = rank('n8n', duplicates);
+  assert.deepEqual(results.map(({ doc }) => doc.slug), ['repeated', 'independent']);
+  // Identical scores retain source order: the first duplicate remains.
+  assert.equal(results[0].doc.title, 'First preview');
+});
+
+test('duplicate slug retains its strongest match even when that appears later', () => {
+  const duplicates = [
+    { slug: 'repeated', title: 'Weak', tool: 'n8n', text: 'n8n general' },
+    { slug: 'independent', title: 'Unique', tool: 'n8n', text: 'n8n workflow' },
+    { slug: 'repeated', title: 'Strong', tool: 'n8n', text: 'n8n n8n workflow' },
+  ];
+  const results = rank('n8n', duplicates);
+  assert.equal(results.find(({ doc }) => doc.slug === 'repeated')?.doc.title, 'Strong');
+  assert.equal(results.filter(({ doc }) => doc.slug === 'repeated').length, 1);
+  assert.ok(results.some(({ doc }) => doc.slug === 'independent'));
+});
+
 test('larger catalogs preserve finite, deterministic scores and stable ranking', () => {
   const catalog = Array.from({ length: 600 }, (_, i) => ({
     slug: 'kit-' + i,
