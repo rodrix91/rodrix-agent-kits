@@ -116,9 +116,11 @@ test('duplicate slug retains its strongest match even when that appears later', 
   const duplicates = [
     { slug: 'repeated', title: 'Weak', tool: 'n8n', text: 'n8n general' },
     { slug: 'independent', title: 'Unique', tool: 'n8n', text: 'n8n workflow' },
-    { slug: 'repeated', title: 'Strong', tool: 'n8n', text: 'n8n n8n workflow' },
+    { slug: 'repeated', title: 'Strong', tool: 'n8n', text: 'n8n n8n python workflow' },
   ];
-  const results = rank('n8n', duplicates);
+  // A second matched concept distinguishes genuine relevance from saturated
+  // display scores. A single-term query can cap both candidates at 100%.
+  const results = rank('n8n python', duplicates);
   assert.equal(results.find(({ doc }) => doc.slug === 'repeated')?.doc.title, 'Strong');
   assert.equal(results.filter(({ doc }) => doc.slug === 'repeated').length, 1);
   assert.ok(results.some(({ doc }) => doc.slug === 'independent'));
