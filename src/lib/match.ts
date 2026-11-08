@@ -2,8 +2,10 @@
  * Lightweight local "kit finder": tokenization + synonym expansion + BM25-style scoring.
  * Runs fully client-side; no network calls, no AI API.
  */
+// Preserve reciprocal aliases for dotted filenames and framework names.
+// Exact token expansion avoids broad substring matches for unrelated kits.
 const SYN: Record<string, string[]> = {
-  next: ['nextjs', 'next.js', 'react'], nextjs: ['next', 'react', 'web'], react: ['nextjs', 'web'], supabase: ['postgres', 'rls', 'auth'],
+  next: ['nextjs', 'next.js', 'react'], nextjs: ['next', 'next.js', 'react', 'web'], 'next.js': ['nextjs'], react: ['nextjs', 'web'], supabase: ['postgres', 'rls', 'auth'],
   saas: ['nextjs', 'supabase', 'auth', 'web'], auth: ['supabase', 'login', 'security'], login: ['auth'], db: ['database', 'postgres', 'sql'],
   database: ['postgres', 'sql', 'supabase'], postgres: ['sql', 'supabase', 'database'], security: ['rls', 'auth', 'review'],
   python: ['data', 'pandas'], pandas: ['python', 'data'], data: ['python', 'analytics', 'ml'], ml: ['python', 'machine', 'learning', 'data'],
@@ -11,7 +13,7 @@ const SYN: Record<string, string[]> = {
   monorepo: ['pnpm', 'turborepo', 'typescript'], typescript: ['monorepo', 'ts', 'node'], ts: ['typescript'], pnpm: ['monorepo'],
   review: ['code', 'pr', 'diff'], revision: ['review'], pr: ['review', 'pull'], automation: ['n8n', 'workflow'], automatizar: ['automation', 'n8n'], automatizacion: ['automation', 'n8n'],
   leads: ['lead', 'n8n', 'form'], lead: ['leads'], form: ['webhook', 'lead'], formulario: ['form', 'lead'], crm: ['lead', 'n8n'], sheets: ['google', 'n8n'],
-  espanol: ['spanish', 'es'], spanish: ['espanol'], claude: ['claude.md'], cursor: ['rules'], codex: ['agents.md'], web: ['nextjs'], app: ['web'],
+  espanol: ['spanish', 'es'], spanish: ['espanol'], claude: ['claude.md'], 'claude.md': ['claude'], cursor: ['rules'], codex: ['agents.md'], web: ['nextjs'], app: ['web'],
 };
 const STOP = new Set('a an and the for with of to in on my i is it un una el la los las de del con para mi y que en por with using build building want quiero hacer'.split(' '));
 // Keep C++ and C# as distinct searchable terms. Other plus signs remain
