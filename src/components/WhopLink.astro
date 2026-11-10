@@ -1,0 +1,8 @@
+---
+import { WHOP } from '../config';
+import type { Lang } from '../lib/i18n';
+// Secondary Kit Club checkout (F-WHOP-1). Outline/ghost style so Gumroad stays the primary button.
+const { lang, block = false } = Astro.props as { lang: Lang; block?: boolean };
+const es = lang === 'es';
+---
+{WHOP.kitClub && <a class="btn btn-ghost btn-sm whop-link" href={WHOP.kitClub} rel="noopener" data-whop style={block ? 'width:100%' : undefined}>{es ? 'O paga con Whop' : 'Or pay with Whop'}</a>}

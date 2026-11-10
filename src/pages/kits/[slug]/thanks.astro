@@ -1,0 +1,6 @@
+---
+import KitThanks from '../../../views/KitThanks.astro';
+import { getKits, signupGated } from '../../../lib/kits';
+export async function getStaticPaths() { return (await getKits()).filter(signupGated).map((kit) => ({ params: { slug: kit.id }, props: { kit } })); }
+---
+<KitThanks lang="en" kit={Astro.props.kit} />

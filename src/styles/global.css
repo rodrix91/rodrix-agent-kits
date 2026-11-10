@@ -153,7 +153,9 @@ fieldset.chips{border:0;margin:0;padding:0}
 .buy-top{display:none;align-items:center;gap:1rem;flex-wrap:wrap;margin:0 0 1.5rem}
 @media (max-width:960px){.buy-top{display:flex}}
 .buy-top .btn,.aside .btn{white-space:normal;height:auto;min-height:var(--h);line-height:1.25;padding-top:.55rem;padding-bottom:.55rem;text-align:center;max-width:100%}
-.head-cta{margin-top:1.25rem;display:flex;justify-content:center}
+.head-cta{margin-top:1.25rem;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:.6rem}
+.whop-link{white-space:normal;height:auto;min-height:var(--h)}
+.kit-layout .gate{grid-template-columns:1fr}
 .aside{position:sticky;top:84px;display:grid;gap:1rem}
 .check{list-style:none;padding:0;margin:0;display:grid;gap:.6rem}
 .check li{display:flex;gap:.6rem;color:var(--fg-2);font-size:var(--t-sm)}

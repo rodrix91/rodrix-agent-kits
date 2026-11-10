@@ -1,5 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { GUMROAD, BUNDLE_PENDING_KITS } from '../config';
+import { GUMROAD, BUNDLE_PENDING_KITS, SIGNUP_GATED_KITS, NEWSLETTER } from '../config';
+/** True when a free kit is delivered after newsletter signup (only while the Buttondown form is live). */
+export const signupGated = (k: { id: string }) => Boolean(NEWSLETTER.action) && SIGNUP_GATED_KITS.includes(k.id);
 /** True when a paid kit is announced but not yet inside its Gumroad bundle. */
 export const bundlePending = (k: { id: string }) => BUNDLE_PENDING_KITS.includes(k.id);
 export const SOON = { en: 'Coming to Full-stack Pro & Kit Club', es: 'Próximamente en Full-stack Pro y Kit Club' } as const;

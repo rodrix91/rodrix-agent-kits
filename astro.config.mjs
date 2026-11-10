@@ -29,7 +29,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       i18n: { defaultLocale: 'en', locales: { en: 'en', es: 'es' } },
-      filter: (p) => !p.includes('/404'),
+      filter: (p) => !p.includes('/404') && !p.includes('/thanks/'),
       serialize: (item) => {
         const date = sitemapLastmod(item.url, kitDates, guideDates);
         if (date) item.lastmod = date;

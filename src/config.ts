@@ -33,6 +33,21 @@ export const GUMROAD = {
   overlay: true,
 };
 
+/**
+ * Whop: secondary Kit Club checkout (F-WHOP-1, Steve 2026-11-09). Plan plan_wl0RBfMmENiah = $7/month,
+ * same price as PRICES.kitClubMonthly (checked read-only on whop.com 2026-11-09). Gumroad stays primary.
+ * Empty = no Whop link rendered.
+ */
+export const WHOP = { kitClub: 'https://whop.com/checkout/plan_wl0RBfMmENiah' };
+
+/**
+ * Free kits delivered after a newsletter signup (F-W45-3). The kit page shows the Buttondown form
+ * instead of the file; submitting opens Buttondown (confirm there) and sends this tab to the
+ * noindex thanks page, which has the download. Empty list = every free kit is downloadable directly.
+ */
+export const SIGNUP_GATED_KITS: string[] = ['agent-secrets-safety-pack'];
+export const thanksPath = (kitId: string) => `/kits/${kitId}/thanks/`;
+
 export const PAYHIP = {
   /** Optional mirror store. TODO: e.g. 'https://payhip.com/rodrix' */
   store: '',

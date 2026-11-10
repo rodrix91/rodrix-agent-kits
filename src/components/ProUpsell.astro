@@ -1,0 +1,21 @@
+---
+import BuyButton from './BuyButton.astro';
+import { GUMROAD, HANDOFF_IN_BUNDLE } from '../config';
+import { url, type Lang } from '../lib/i18n';
+import { getKits } from '../lib/kits';
+// Full-stack Pro upsell for the free secrets pack (F-W45-3). Price comes from the Full-stack Pro kit data (unchanged).
+const { lang } = Astro.props as { lang: Lang };
+const price = (await getKits()).find((k) => k.data.product === 'fullstack-pro-bundle')!.data.price;
+const es = lang === 'es';
+const href = GUMROAD.products['fullstack-pro-bundle'];
+---
+<section class="card upsell" data-testid="pro-upsell" aria-labelledby={`upsell-h-${lang}`} style="margin-top:2.5rem">
+  <span class="kicker">{es ? 'Siguiente paso' : 'Next step'}</span>
+  <h2 id={`upsell-h-${lang}`} style="font-size:var(--t-lg);margin:.3rem 0 .5rem">{es ? `Full-stack Pro: $${price} pago único` : `Full-stack Pro: $${price} one-time`}</h2>
+  <p style="margin:0 0 .8rem">{es ? 'Este pack protege tus secretos. Full-stack Pro suma las reglas de seguridad para tu base de datos y la continuidad entre agentes:' : 'This pack keeps your secrets safe. Full-stack Pro adds security rules for your database and continuity between agents:'}</p>
+  <ul class="check">
+    <li><a href={url('/kits/supabase-rls-security-rules/', lang)}>{es ? 'Reglas de RLS y seguridad para Supabase' : 'Supabase RLS & security rules'}</a></li>
+    {HANDOFF_IN_BUNDLE && <li><a href={url('/kits/agent-handoff-kit/', lang)}>{es ? 'Kit de handoff entre agentes' : 'Agent handoff kit'}</a></li>}
+  </ul>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.8rem"><BuyButton href={href} label={es ? `Comprar Full-stack Pro · $${price}` : `Get Full-stack Pro · $${price}`} lang={lang} /><a class="btn" href={url('/pricing/', lang)}>{es ? 'O todo con Kit Club · $7/mes' : 'Or everything in Kit Club · $7/mo'}</a></div>
+</section>

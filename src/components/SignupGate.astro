@@ -1,0 +1,40 @@
+---
+import { NEWSLETTER } from '../config';
+import { url, asset, type Lang } from '../lib/i18n';
+import { thanksPath } from '../config';
+// F-W45-3: free pack delivered after newsletter signup. Plain POST to Buttondown (new tab, confirm there);
+// with JS this tab then opens the noindex thanks page that holds the download. Without JS a link is shown.
+const { lang, kitId, title } = Astro.props as { lang: Lang; kitId: string; title: string };
+const es = lang === 'es';
+const next = url(thanksPath(kitId), lang);
+---
+<section class="news gate" id="get-pack" data-testid="signup-gate" aria-labelledby={`gate-h-${lang}`} style="margin-top:2.5rem">
+  <div>
+    <span class="kicker">{es ? 'Gratis con tu email' : 'Free with your email'}</span>
+    <h2 id={`gate-h-${lang}`} style="font-size:var(--t-lg)">{es ? 'Recibe el pack gratis' : 'Get the free pack'}</h2>
+    <p style="margin:0">{es ? `Suscríbete al newsletter y la descarga de «${title}» se abre en esta pestaña. Buttondown se abre en otra pestaña: confirma tu correo allí. Date de baja cuando quieras.` : `Subscribe to the newsletter and the "${title}" download opens in this tab. Buttondown opens in a new tab: confirm your email there. Unsubscribe anytime.`}</p>
+  </div>
+  <div>
+    <form class="gate-form" action={NEWSLETTER.action} method="post" target="_blank" rel="noopener noreferrer" data-next={next} data-sent={es ? 'Listo. Abriendo la descarga…' : 'Done. Opening the download…'}>
+      <label class="nl-label" for={`gate-${lang}`}>{es ? 'Correo electrónico' : 'Email address'}</label>
+      <div class="nl-row">
+        <input class="input" id={`gate-${lang}`} name={NEWSLETTER.emailField} type="email" autocomplete="email" required placeholder="you@domain.com" />
+        <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
+        <button class="btn btn-primary" type="submit" style="--h:48px">{es ? 'Suscribirme y descargar' : 'Subscribe & download'}</button>
+      </div>
+    </form>
+    <p class="status muted" role="status" aria-live="polite"></p>
+    <p class="nl-privacy muted">{es ? 'Lo gestiona Buttondown. Solo usamos tu correo para este newsletter.' : 'Handled by Buttondown. We only use your email for this newsletter.'} <a href={asset(es ? '/es/privacy/' : '/privacy/')}>{es ? 'Privacidad' : 'Privacy'}</a></p>
+    <noscript><p class="muted" style="margin:.5rem 0 0">{es ? 'Sin JavaScript: después de suscribirte, ' : 'No JavaScript: after subscribing, '}<a href={next}>{es ? 'abre la página de descarga' : 'open the download page'}</a>.</p></noscript>
+  </div>
+</section>
+<script>
+  // Progressive enhancement: the POST still goes to Buttondown in a new tab; this tab moves to the download page.
+  document.querySelectorAll<HTMLFormElement>('.gate-form').forEach((f) => {
+    f.addEventListener('submit', (e) => {
+      if ((f.querySelector('input[name=website]') as HTMLInputElement).value) { e.preventDefault(); return; }
+      f.parentElement!.querySelector('.status')!.textContent = f.dataset.sent!;
+      setTimeout(() => { location.href = f.dataset.next!; }, 800);
+    });
+  });
+</script>

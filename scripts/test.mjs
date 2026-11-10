@@ -255,6 +255,47 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
   ok(readFileSync('dist/llms.txt', 'utf8').includes('/kits/agent-secrets-safety-pack/') && readFileSync('dist/sitemap-0.xml', 'utf8').includes('/kits/agent-secrets-safety-pack/'), 'secrets pack in llms.txt + sitemap');
 }
 
+// F-WHOP-1 Whop as secondary Kit Club checkout (Steve 2026-11-09): next to every Gumroad Kit Club button, outline style, Gumroad stays primary
+{ const WHOP = 'https://whop.com/checkout/plan_wl0RBfMmENiah', CLUB = 'https://rodrix91.gumroad.com/l/kit-club';
+  const cfg = readFileSync('src/config.ts', 'utf8');
+  ok(/kitClubMonthly: 7\b/.test(cfg) && cfg.includes(`kitClub: '${WHOP}'`), 'Whop plan configured; Kit Club price unchanged ($7)');
+  const paid = readdirSync('src/content/kits').filter((f) => /tier: "paid"/.test(readFileSync('src/content/kits/' + f, 'utf8'))).map((f) => `kits/${f.replace(/\.md$/, '')}/`);
+  for (const p of ['pricing/', ...paid].flatMap((x) => [x, 'es/' + x])) {
+    const h = readFileSync(`dist/${p}index.html`, 'utf8');
+    const clubs = h.match(new RegExp(`<a[^>]*href="${CLUB}"[^>]*>`, 'g')) || [];
+    const whops = h.match(new RegExp(`<a[^>]*href="${WHOP}"[^>]*>[^<]*</a>`, 'g')) || [];
+    ok(clubs.length >= 1 && whops.length === clubs.length, `Whop link next to each Gumroad Kit Club button (${whops.length}/${clubs.length}): /${p}`);
+    ok(whops.every((a) => !/btn-primary/.test(a) && /btn-ghost/.test(a) && /rel="noopener"/.test(a) && !/data-gumroad/.test(a)), `Whop link is secondary/outline: /${p}`);
+    ok(whops.every((a) => (p.startsWith('es/') ? /O paga con Whop/ : /Or pay with Whop/).test(a)), `Whop label in page language: /${p}`);
+    ok(h.indexOf(CLUB) < h.indexOf(WHOP), `Gumroad Kit Club comes before Whop: /${p}`);
+  }
+  const top = readFileSync('dist/pricing/index.html', 'utf8').match(/data-testid="pricing-top-cta"[\s\S]*?<\/div>/)[0];
+  ok(/class="btn btn-primary gumroad-button" href="https:\/\/rodrix91\.gumroad\.com\/l\/kit-club"/.test(top) && top.includes(WHOP), 'pricing top CTA: Gumroad primary + Whop secondary');
+  ok(/Gumroad \(or Whop/.test(readFileSync('dist/terms/index.html', 'utf8')) && /or by Whop/.test(readFileSync('dist/privacy/index.html', 'utf8')) && /o Whop/.test(readFileSync('dist/es/privacy/index.html', 'utf8')), 'terms/privacy mention Whop as payment option');
+}
+
+// F-W45-3 secrets pack signup gate + Full-stack Pro upsell (EN/ES); download lives on the noindex thanks page
+{ const ACTION = 'https://buttondown.com/api/emails/embed-subscribe/rodrixlabs', PRO = 'https://rodrix91.gumroad.com/l/full-stack-pro';
+  for (const [lp, es] of [['', false], ['es/', true]]) {
+    const h = readFileSync(`dist/${lp}kits/agent-secrets-safety-pack/index.html`, 'utf8');
+    const gate = (h.match(/<section[^>]*data-testid="signup-gate"[\s\S]*?<\/section>/) || [''])[0];
+    ok(gate.includes(`action="${ACTION}"`) && /method="post"/.test(gate) && /name="email"[^>]*type="email"[^>]*required|type="email"[^>]*required/.test(gate) && /<label[^>]*for="gate-/.test(gate), `gate: Buttondown POST form with labelled email: /${lp}secrets`);
+    ok(gate.includes(`data-next="/rodrix-agent-kits/${lp}kits/agent-secrets-safety-pack/thanks/"`) && gate.includes(`href="/rodrix-agent-kits/${lp}kits/agent-secrets-safety-pack/thanks/"`), `gate: next + noscript link to thanks page: /${lp}secrets`);
+    ok(!h.includes('/files/agent-secrets-safety.md') && !/id="kit-src"/.test(h) && !/data-target="kit-src"/.test(h), `gate: no direct download/copy on kit page: /${lp}secrets`);
+    ok((es ? /Suscribirme y descargar/ : /Subscribe &amp; download/).test(gate) && /href="#get-pack"/.test(h), `gate: CTA text in language + aside points to gate: /${lp}secrets`);
+    const up = (h.match(/<section[^>]*data-testid="pro-upsell"[\s\S]*?<\/section>/) || [''])[0];
+    ok(up.includes(`href="${PRO}"`) && /btn-primary gumroad-button/.test(up) && /\$19/.test(up) && up.includes(`/rodrix-agent-kits/${lp}kits/supabase-rls-security-rules/`), `upsell: Full-stack Pro $19 Gumroad button: /${lp}secrets`);
+    const th = readFileSync(`dist/${lp}kits/agent-secrets-safety-pack/thanks/index.html`, 'utf8');
+    ok(/<meta name="robots" content="noindex"/.test(th) && th.includes('href="/rodrix-agent-kits/files/agent-secrets-safety.md"') && /data-testid="thanks-download"/.test(th) && /data-testid="pro-upsell"/.test(th) && th.includes(PRO), `thanks page: noindex + download + upsell: /${lp}thanks`);
+    ok(/permissions/.test(th) && /gitleaks/.test(th), `thanks page shows the pack: /${lp}thanks`);
+  }
+  ok(existsSync('dist/files/agent-secrets-safety.md'), 'gated download path still built (no broken link)');
+  const sm = readFileSync('dist/sitemap-0.xml', 'utf8'), llm = readFileSync('dist/llms.txt', 'utf8'), full = readFileSync('dist/llms-full.txt', 'utf8');
+  ok(!/\/thanks\//.test(sm) && !/\/thanks\//.test(llm), 'thanks pages not in sitemap or llms.txt');
+  ok(/free with newsletter signup/.test(llm) && !llm.includes('/files/agent-secrets-safety.md') && !full.includes('Read(**/.env)'), 'llms.txt/llms-full: secrets pack gated, no raw file');
+  ok(!/no signup\./.test(readFileSync('dist/pricing/index.html', 'utf8')) && !/sin registro\./.test(readFileSync('dist/es/pricing/index.html', 'utf8')), 'pricing FAQ no longer claims every free kit is no-signup');
+}
+
 // F-SEO-1 Google Search Console verification tag (Steve 2026-10-31 11:38)
 { const GSV = 'ZtPoEPg8NinMyCsJ78acEyxd46AO3bJxT2z6dfDGVHA';
   for (const f of ['index.html', 'es/index.html', 'kits/index.html']) {
@@ -328,7 +369,7 @@ const browser = await launch();
 const GIF = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
 const gcHits = [];
 const stubGc = (target) => target.route(/^https:\/\/[a-z0-9-]+\.goatcounter\.com\//, (route) => { gcHits.push(route.request().url()); return route.fulfill({ status: 200, contentType: 'image/gif', body: GIF }); });
-const pages = ['/', '/es/', '/guides/', '/es/guides/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/', '/kits/agent-secrets-safety-pack/', '/kits/agent-handoff-kit/', '/es/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/es/guides/one-agents-md-for-claude-code-cursor-codex/', '/es/guides/where-to-put-cursor-rules-mdc/'];
+const pages = ['/', '/es/', '/guides/', '/es/guides/', '/kits/', '/kits/nextjs-supabase-cursor-rules/', '/kits/n8n-lead-capture-flow/', '/pricing/', '/sponsors/', '/about/', '/changelog/', '/privacy/', '/es/kits/', '/es/pricing/', '/404.html', '/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/guides/where-to-put-cursor-rules-mdc/', '/kits/agent-secrets-safety-pack/', '/kits/agent-secrets-safety-pack/thanks/', '/es/kits/agent-secrets-safety-pack/', '/es/kits/agent-secrets-safety-pack/thanks/', '/kits/agent-handoff-kit/', '/es/guides/agents-md-vs-claude-md-vs-cursor-rules/', '/es/guides/one-agents-md-for-claude-code-cursor-codex/', '/es/guides/where-to-put-cursor-rules-mdc/'];
 for (const theme of ['dark', 'light']) {
   const ctx = await browser.newContext({ colorScheme: theme, reducedMotion: 'reduce' }); await stubGc(ctx);
   for (const p of pages) {
@@ -344,6 +385,22 @@ for (const theme of ['dark', 'light']) {
   await ctx.close();
 }
 ok(gcHits.some((u) => u === 'https://launchlatam.goatcounter.com/count?p=%2Frodrix-agent-kits%2F') && gcHits.some((u) => u.endsWith('?p=%2Frodrix-agent-kits%2Fes%2F')), `GoatCounter pixel requested in browser for / and /es/ (${gcHits.length} stubbed hits)`);
+// functional: secrets-pack gate (F-W45-3). Buttondown is intercepted, so no real signup ever leaves the box.
+{ const gctx = await browser.newContext(); await stubGc(gctx); const posts = [];
+  await gctx.route('https://buttondown.com/**', (r) => { posts.push([r.request().method(), r.request().postData() || '']); return r.fulfill({ status: 200, contentType: 'text/html', body: '<p>stub</p>' }); });
+  for (const lp of ['', 'es/']) {
+    const pg = await gctx.newPage();
+    await pg.goto(`${ORIGIN}${B}/${lp}kits/agent-secrets-safety-pack/`);
+    await pg.fill('.gate-form input[type=email]', 'test@example.com');
+    await Promise.all([pg.waitForURL(`**/${lp}kits/agent-secrets-safety-pack/thanks/`, { timeout: 8000 }).catch(() => {}), pg.click('.gate-form button[type=submit]')]);
+    ok(pg.url().endsWith(`/${lp}kits/agent-secrets-safety-pack/thanks/`), `gate submit sends this tab to thanks page: ${lp || 'en'}`);
+    const res = await pg.request.get(`${ORIGIN}${B}/files/agent-secrets-safety.md`);
+    ok(res.status() === 200, `thanks page download resolves 200: ${lp || 'en'}`);
+    await pg.close();
+  }
+  ok(posts.length === 2 && posts.every(([m, d]) => m === 'POST' && /email=test%40example\.com/.test(d)), `gate POSTs email to Buttondown (stubbed, ${posts.length} intercepted)`);
+  await gctx.close();
+}
 // functional: library filter + finder
 const page = await browser.newPage(); await stubGc(page);
 // Filtering must not silently remove shared anchors or marketing attribution.

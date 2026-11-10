@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import ProUpsell from '../components/ProUpsell.astro';
+import { t, url, asset, type Lang } from '../lib/i18n';
+import { kitFile, type Kit } from '../lib/kits';
+import { thanksPath } from '../config';
+// F-W45-3: download page for signup-gated free kits. noindex, not in sitemap or llms.txt.
+const { lang, kit } = Astro.props as { lang: Lang; kit: Kit };
+const s = t[lang], d = kit.data, L = d[lang], es = lang === 'es';
+const src = kitFile(kit);
+---
+<Base title={es ? `Descarga: ${L.title}` : `Download: ${L.title}`} description={L.summary} lang={lang} path={thanksPath(kit.id)} noindex>
+  <div class="wrap" style="max-width:860px">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href={url('/', lang)}>Home</a><span aria-hidden="true">/</span><a href={url(`/kits/${kit.id}/`, lang)}>{L.title}</a><span aria-hidden="true">/</span><span aria-current="page">{es ? 'Descarga' : 'Download'}</span></nav>
+    <span class="kicker">{es ? 'Gracias por suscribirte' : 'Thanks for subscribing'}</span>
+    <h1 style="font-size:var(--t-xl)">{es ? 'Tu pack está listo' : 'Your pack is ready'}</h1>
+    <p class="answer" data-testid="thanks-confirm">{es ? 'Confirma tu correo en la pestaña de Buttondown (revisa spam si no llega). La suscripción solo queda activa después de confirmar.' : 'Confirm your email in the Buttondown tab (check spam if it does not arrive). Your subscription is only active after you confirm.'}</p>
+    <p>{es ? `Guárdalo como ${d.installPath} y copia cada bloque a la ruta de su título.` : `Save it as ${d.installPath} and copy each block to the path in its heading.`}</p>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0 1.5rem">
+      <a class="btn btn-primary" href={asset(`/files/${d.file}`)} download={d.file} data-testid="thanks-download">{s.cta.download} {d.file}</a>
+      <button class="btn copy" type="button" data-target="kit-src" data-done={s.cta.copied}>{s.cta.copy}</button>
+    </div>
+    <div class="code">
+      <div class="code-head"><span>{d.file}</span></div>
+      <pre tabindex="0" aria-label={d.file}><code id="kit-src">{src}</code></pre>
+    </div>
+    <ProUpsell lang={lang} />
+  </div>
+</Base>
+<script>
+  document.querySelectorAll<HTMLButtonElement>('button.copy').forEach((b) => b.addEventListener('click', async () => {
+    const txt = document.getElementById(b.dataset.target!)!.textContent!;
+    const orig = b.textContent;
+    try { await navigator.clipboard.writeText(txt); b.textContent = '✓ ' + b.dataset.done; } catch { b.textContent = 'Select & copy (Ctrl+C)'; }
+    setTimeout(() => (b.textContent = orig), 1800);
+  }));
+</script>
