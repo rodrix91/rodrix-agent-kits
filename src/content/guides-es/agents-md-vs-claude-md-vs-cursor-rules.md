@@ -3,7 +3,7 @@ title: "AGENTS.md vs CLAUDE.md vs reglas de Cursor: ¿qué archivo lee cada agen
 description: "Qué archivo de instrucciones leen Cursor, Claude Code y Codex, dónde va cada uno y cómo evitar que se desincronicen."
 answer: "Cursor lee las reglas del proyecto en .cursor/rules/*.mdc y también AGENTS.md. Claude Code lee CLAUDE.md, que puede importar otros archivos con @ruta; las versiones recientes también leen AGENTS.md si no existe CLAUDE.md. Codex lee AGENTS.md. Para usar los tres sin desajustes, deja las reglas comunes en AGENTS.md y haz que los demás archivos apunten a él."
 kits: [one-source-of-truth, agents-md-typescript-monorepo, claude-md-python-data, nextjs-supabase-cursor-rules]
-updated: "2026-10-31"
+updated: "2026-11-13"
 sources:
   - https://cursor.com/docs/rules
   - https://code.claude.com/docs/en/memory
@@ -16,13 +16,15 @@ faq:
     a: "Sí. Pon @AGENTS.md en la primera línea de CLAUDE.md para que Claude Code lo importe. Por defecto, si existen los dos, Claude Code solo lee CLAUDE.md, así que la importación es clave."
   - q: "¿Necesito los tres archivos?"
     a: "No. Agrega solo los archivos de los agentes que de verdad usas."
+  - q: "¿Por qué Claude Code ignora mi AGENTS.md?"
+    a: "Leer AGENTS.md directamente requiere Claude Code v2.1.277 o posterior, y en algunas sesiones no puede, así que mantén la importación @AGENTS.md desde CLAUDE.md como opción segura. Cualquier CLAUDE.md, .claude/CLAUDE.md o CLAUDE.local.md en el directorio de trabajo o por encima también cuenta, así que añadir uno hace que Claude deje de leer AGENTS.md. En /config, pon Project instructions en claude-md-and-agents-md para cargar ambos (el valor por defecto es claude-md-or-agents-md; los otros son claude-md y managed-only). Un AGENTS.md ya importado o enlazado simbólicamente no se lee dos veces."
 ---
 ## Los tres archivos de un vistazo
 
 | Agente | Archivo que lee | Dónde | Notas |
 |---|---|---|---|
 | Cursor | `.cursor/rules/*.mdc` y además `AGENTS.md` | `.cursor/rules/`; `AGENTS.md` en la raíz o en subcarpetas | Frontmatter del `.mdc`: `description`, `globs`, `alwaysApply`. Los `.md` simples dentro de `.cursor/rules/` se ignoran. |
-| Claude Code | `CLAUDE.md` | `./CLAUDE.md` o `./.claude/CLAUDE.md` | `@AGENTS.md` importa otro archivo. Las versiones recientes leen `AGENTS.md` directamente si no hay `CLAUDE.md`. |
+| Claude Code | `CLAUDE.md` | `./CLAUDE.md` o `./.claude/CLAUDE.md` | `@AGENTS.md` importa otro archivo. Claude Code v2.1.277+ lee `AGENTS.md` directamente si no hay `CLAUDE.md` ni `CLAUDE.local.md`; mantén la importación `@AGENTS.md` como opción segura. |
 | Codex | `AGENTS.md` | `~/.codex/` (global) y desde la raíz del repo hasta la carpeta actual | Markdown simple; `AGENTS.override.md` tiene prioridad en la misma carpeta. |
 
 Muchos otros agentes también leen `AGENTS.md`; la lista está en [agents.md](https://agents.md/).
