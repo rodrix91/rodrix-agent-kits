@@ -1,0 +1,37 @@
+---
+description: Next.js 15 App Router + Supabase (SSR) conventions
+globs: ["app/**/*.{ts,tsx}", "lib/**/*.ts", "middleware.ts", "supabase/**/*.sql"]
+alwaysApply: false
+---
+
+# Next.js 15 + Supabase rules
+
+## Stack facts (do not contradict)
+- Next.js App Router. Server Components by default; add `"use client"` only for state, effects, or browser APIs.
+- Auth/data via `@supabase/ssr` (NOT the deprecated `@supabase/auth-helpers-nextjs`).
+- TypeScript strict. Generated DB types live in `lib/database.types.ts` (`supabase gen types typescript --linked > lib/database.types.ts`).
+
+## Supabase clients
+- Server (RSC, Route Handlers, Server Actions): `lib/supabase/server.ts` using `createServerClient` with `cookies()` from `next/headers`. In Next 15 `cookies()` is async: `const cookieStore = await cookies()`.
+- Browser: `lib/supabase/client.ts` using `createBrowserClient`. Create it once per component tree, never at module scope on the server.
+- `middleware.ts` refreshes the session on every request with `supabase.auth.getUser()`.
+- To check who the user is on the server, ALWAYS call `supabase.auth.getUser()` (validates the JWT). Never trust `getSession()` on the server.
+
+## Security
+- Every table has Row Level Security enabled. New table = migration with `alter table ... enable row level security;` plus explicit policies.
+- Policies use `(select auth.uid())` (wrapped in select for performance), e.g. `using ((select auth.uid()) = user_id)`.
+- The `service_role` key is server-only: read it from `process.env.SUPABASE_SERVICE_ROLE_KEY` in code that never ships to the client. Never prefix it with `NEXT_PUBLIC_`.
+- Validate all Server Action / Route Handler input with `zod` before touching the database.
+
+## Data fetching
+- Fetch in Server Components; pass plain serializable props to client components.
+- Mutations go through Server Actions; after a write call `revalidatePath()` or `revalidateTag()`.
+- Handle `{ data, error }` from every Supabase call. Throw or return a typed error; never ignore `error`.
+
+## Schema changes
+- Use `supabase migration new <name>`; never edit the remote DB by hand. Regenerate types after each migration.
+
+## Style
+- Named exports, small components, `async` Server Components.
+- Tailwind for styling; no inline style objects except for dynamic values.
+- When unsure about an API, say so and point to the official docs instead of guessing.
