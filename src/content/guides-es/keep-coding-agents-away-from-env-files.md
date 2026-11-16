@@ -32,7 +32,7 @@ La documentación de Claude Code dice que las reglas de permisos las aplica Clau
 
 1. Listá `.env`, `.env.*`, `secrets/` y rutas de claves en `.cursorignore`.
 2. Cursor bloquea esos archivos en el código accesible por Agent y Tab, y en referencias `@`.
-3. Límite duro (docs de Cursor): la terminal y las herramientas MCP del Agent **no** quedan bloqueadas por `.cursorignore`. La ayuda lo repite: corren fuera de los controles de acceso a archivos. La protección completa no está garantizada por la imprevisibilidad del LLM—decilo en la página; no vendas de más.
+3. Límite duro (docs de Cursor): la terminal y las herramientas MCP del Agent **no** quedan bloqueadas por `.cursorignore`. La ayuda lo repite: corren fuera de los controles de acceso a archivos. La protección completa no está garantizada por la imprevisibilidad del LLM.
 
 ## Codex: shell_environment_policy
 
