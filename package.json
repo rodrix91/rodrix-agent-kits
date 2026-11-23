@@ -10,10 +10,10 @@
     "test": "node --test scripts/og-slugs.test.mjs scripts/safe-dist-html.test.mjs scripts/finder.test.mjs scripts/sitemap-dates.test.mjs scripts/audit-report-core.test.mjs scripts/library-search.test.mjs scripts/kit-content-type.test.mjs scripts/markdown-fences.test.mjs scripts/xml-text.test.mjs scripts/jsonld-script.test.mjs scripts/deployment-template-contract.test.mjs && npm run build && node --test scripts/serve.test.mjs scripts/lighthouse-runner.test.mjs && node scripts/test.mjs"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/sitemap": "^3.7.6",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
-    "astro": "^7.4.11"
+    "astro": "^7.4.13"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
