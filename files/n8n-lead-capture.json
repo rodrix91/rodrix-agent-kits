@@ -1,0 +1,188 @@
+{
+  "name": "Lead capture: webhook → validate → Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1f0c1e2-0001-4c1a-9a01-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "rodrix-lead-capture"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inputs can become spreadsheet cells; keep untrusted text as text.\nconst sheetText = (value, maxLength) => {\n  const text = String(value ?? '').replace(/[\\u0000-\\u001f\\u007f]/g, ' ').trim();\n  // Leading =, +, -, @ are spreadsheet formula triggers.\n  return /^[=+\\-@]/.test(text) ? \"'\" + text.slice(0, maxLength - 1) : text.slice(0, maxLength);\n};\nconst out = [];\nfor (const item of $input.all()) {\n  const candidate = item.json.body ?? item.json;\n  const b = candidate && typeof candidate === 'object' && !Array.isArray(candidate) ? candidate : {};\n  const email = typeof b.email === 'string' ? b.email.trim().toLowerCase() : '';\n  const name = sheetText(typeof b.name === 'string' ? b.name : '', 120);\n  const source = sheetText(typeof b.source === 'string' ? b.source : 'site', 60);\n  // A filled honeypot is rejected even if its value is false or 0.\n  const emptyHoneypot = b.website === undefined || b.website === null || b.website === '';\n  const valid = email.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email) && !/^[=+\\-@]/.test(email) && emptyHoneypot;\n  out.push({ json: { valid, email, name, source, created_at: new Date().toISOString() } });\n}\nreturn out;"
+      },
+      "id": "a1f0c1e2-0002-4c1a-9a01-000000000002",
+      "name": "Normalize & validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c0ffee00-0000-4000-8000-000000000001",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1f0c1e2-0003-4c1a-9a01-000000000003",
+      "name": "Is valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "a1f0c1e2-0004-4c1a-9a01-000000000004",
+      "name": "Append to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        660,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "a1f0c1e2-0005-4c1a-9a01-000000000005",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: 'invalid email' } }}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "id": "a1f0c1e2-0006-4c1a-9a01-000000000006",
+      "name": "Respond invalid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize & validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & validate": {
+      "main": [
+        [
+          {
+            "node": "Is valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is valid?": {
+      "main": [
+        [
+          {
+            "node": "Append to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}
