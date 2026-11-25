@@ -28,6 +28,9 @@ export const GUMROAD = {
     'fullstack-pro-bundle': 'https://rodrix91.gumroad.com/l/full-stack-pro',
     'agent-skills-pack': 'https://rodrix91.gumroad.com/l/agent-skills-pack',
     'n8n-automation-pack': 'https://rodrix91.gumroad.com/l/n8n-automation-pack',
+    // Standalone $12 kit (H-10). No Gumroad listing yet: empty = page shows "Coming soon · get notified" and says checkout is pending.
+    // TODO(Rodrigo): create the Gumroad product (permalink e.g. agent-config-hygiene-kit), then paste its URL here.
+    'agent-config-hygiene-kit': '',
   } as Record<string, string>,
   /** Use Gumroad's free overlay checkout (gumroad.js) when links exist. */
   overlay: true,

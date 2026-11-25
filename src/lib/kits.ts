@@ -4,6 +4,8 @@ import { GUMROAD, BUNDLE_PENDING_KITS, SIGNUP_GATED_KITS, NEWSLETTER } from '../
 export const signupGated = (k: { id: string }) => Boolean(NEWSLETTER.action) && SIGNUP_GATED_KITS.includes(k.id);
 /** True when a paid kit is announced but not yet inside its Gumroad bundle. */
 export const bundlePending = (k: { id: string }) => BUNDLE_PENDING_KITS.includes(k.id);
+/** True when a standalone paid kit has no Gumroad URL yet (GUMROAD.products[key] empty): page says checkout is pending, never links a dead buy button or claims Kit Club inclusion. */
+export const checkoutPending = (k: { id: string; data: { tier: string; product?: string } }) => k.data.tier === 'paid' && !bundlePending(k) && !(k.data.product && GUMROAD.products[k.data.product]);
 export const SOON = { en: 'Coming to Full-stack Pro & Kit Club', es: 'Próximamente en Full-stack Pro y Kit Club' } as const;
 import type { Lang } from './i18n';
 

@@ -1,9 +1,10 @@
 ---
 import { url, t, type Lang } from '../lib/i18n';
-import { bundlePending, SOON, kitSearchText, type Kit } from '../lib/kits';
+import { bundlePending, checkoutPending, SOON, kitSearchText, type Kit } from '../lib/kits';
 const { kit, lang, searchable = false } = Astro.props as { kit: Kit; lang: Lang; searchable?: boolean };
 const d = kit.data, L = d[lang], s = t[lang];
 const soon = bundlePending(kit);
+const pending = checkoutPending(kit);
 ---
 <article class="card kit-card reveal" data-slug={kit.id} data-tool={d.tool} data-category={d.category} data-langs={d.languages.join(',')} data-tier={d.tier} data-search={searchable ? kitSearchText(kit) : d.keywords.join(' ')}>
   <div class="kit-top"><span>{d.tool}</span><span>{d.tier === 'free' ? s.library.free : soon ? (lang === 'es' ? 'Próximamente' : 'Coming soon') : `$${d.price}`}</span></div>
@@ -13,6 +14,7 @@ const soon = bundlePending(kit);
     <span class="tag">{d.category}</span>
     {d.languages.map((l) => <span class="tag">{l.toUpperCase()}</span>)}
     <span class={d.tier === 'free' ? 'tag tag-accent' : 'tag'}>{d.tier === 'free' ? s.library.free : s.library.paid}</span>
+    {pending && <span class="tag" data-checkout-pending>{lang === 'es' ? 'Compra pronto' : 'Checkout soon'}</span>}
     {soon && <span class="tag" data-soon>{SOON[lang]}</span>}
   </div>
 </article>

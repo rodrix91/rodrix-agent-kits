@@ -8,6 +8,7 @@ import { serve } from './serve.mjs';
 import { launch } from './browser.mjs';
 
 const PORT = 4399, ORIGIN = `http://127.0.0.1:${PORT}`, B = '/rodrix-agent-kits';
+const pendingCheckoutKit = (f) => { const m = readFileSync(`src/content/kits/${f}`, 'utf8').match(/^product:\s*"([^"]+)"/m); return !!m && new RegExp(`'${m[1]}': '',`).test(readFileSync('src/config.ts', 'utf8')); }; // paid kit with empty GUMROAD.products value: no buy/Kit Club buttons by design
 let fail = 0; const ok = (c, m) => { console.log(`${c ? '✓' : '✗'} ${m}`); if (!c) fail++; };
 
 // 1. structure
@@ -240,6 +241,33 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
   ok(readFileSync('dist/llms.txt', 'utf8').includes('/kits/agent-handoff-kit/') && readFileSync('dist/sitemap-0.xml', 'utf8').includes('/kits/agent-handoff-kit/'), 'handoff kit in llms.txt + sitemap');
 }
 
+// H-10 Agent config hygiene kit (paid $12, standalone; Gumroad checkout pending while GUMROAD.products value is empty)
+{ const cfgT = readFileSync('src/config.ts', 'utf8');
+  const pendingCfg = /'agent-config-hygiene-kit': '',/.test(cfgT);
+  const url = (cfgT.match(/'agent-config-hygiene-kit': '([^']+)'/) || [])[1];
+  const slug = 'agent-config-hygiene-kit';
+  const he = readFileSync(`dist/kits/${slug}/index.html`, 'utf8'), hs = readFileSync(`dist/es/kits/${slug}/index.html`, 'utf8');
+  ok(/data-testid="buy-top"/.test(he) && /\$12/.test(he) && /\$12/.test(hs), 'config hygiene kit: paid $12 on EN + ES pages');
+  ok(['.claude/hooks/block-dangerous-bash.sh', '.claude/hooks/reinject-after-compact.sh', '.claude/hooks/verify-before-done.sh', 'CHECKLIST.md', '.claude/settings.json'].every((f) => he.includes(f) && hs.includes(f)), 'config hygiene kit: all file names listed on EN + ES pages');
+  if (pendingCfg) {
+    ok(/Coming soon · get notified/.test(he) && /Muy pronto · avísame/.test(hs) && /data-checkout-note/.test(he) && /data-checkout-note/.test(hs), 'config hygiene kit: checkout pending note + "Coming soon" button EN/ES');
+    ok(!/class="[^"]*gumroad-button"[^>]*href="[^"]*agent-config/.test(he) && !/Join Kit Club|Unirme al Kit Club/.test(he + hs) && !/Or get it in Kit Club/.test(he) && !/O inclúyelo en Kit Club/.test(hs), 'config hygiene kit: no dead buy link, no Kit Club inclusion claim while pending');
+    ok(/PreOrder/.test(he.match(/"@type":"Product"[\s\S]*?\}\}/)?.[0] || '') && /Not in Kit Club yet|not included in Kit Club yet/.test(he), 'config hygiene kit: PreOrder offer + not-in-Kit-Club note');
+    ok(/Checkout soon/.test(readFileSync('dist/kits/index.html', 'utf8')) && /Compra pronto/.test(readFileSync('dist/es/kits/index.html', 'utf8')), 'config hygiene kit: library cards show checkout-soon tag EN/ES');
+    ok(/agent-config-hygiene-kit\/\)[^\n]*paid \$12, checkout not open yet/.test(readFileSync('dist/llms.txt', 'utf8')) && /Access: paid \(\$12\) \(checkout not open yet\)/.test(readFileSync('dist/llms-full.txt', 'utf8')), 'config hygiene kit: llms.txt + llms-full say checkout not open yet');
+  } else {
+    ok(he.includes(url) && hs.includes(url) && /gumroad-button/.test(he), 'config hygiene kit: Gumroad link live on EN + ES');
+  }
+  const t = readFileSync('dist/files/AGENTS.config-hygiene.md', 'utf8');
+  ok(t.split('\n').length <= 40 && /^## Never/m.test(t) && /enforced:/.test(t), 'config hygiene preview: AGENTS.md template <= previewLines, has Never + enforced');
+  ok(!/permissionDecision|stop_hook_active|reinject-after-compact\.sh\n|"hooks"\s*:/.test(t) && !existsSync('dist/files/verify-before-done.sh') && !existsSync('dist/files/settings.json'), 'config hygiene preview: no paid hook/settings files published');
+  ok(!secretRe.test(t) && !/@mail\.grokbot\.com|pantoja/i.test(t), 'config hygiene preview: no secrets or personal data');
+  ok(/AGENTS\.md<\/code> import\. We use the import, not a symlink/.test(he) && !/Forge|Herald|Scout/.test(he + hs), 'config hygiene kit: @AGENTS.md import vs symlink explained, no internal names');
+  const clog = readFileSync('dist/changelog/index.html', 'utf8'), clogEs = readFileSync('dist/es/changelog/index.html', 'utf8');
+  ok(/New paid kit: Agent config hygiene kit/.test(clog) && /Nuevo kit de pago: higiene de configuración de agentes/.test(clogEs), 'config hygiene kit: changelog entry EN + ES');
+  ok(readFileSync('dist/sitemap-0.xml', 'utf8').includes(`/kits/${slug}/`) && readFileSync('dist/llms.txt', 'utf8').includes(`/kits/${slug}/`), 'config hygiene kit in sitemap + llms.txt');
+}
+
 // F-SCO-8 secrets & safety pack
 { const f = 'dist/files/agent-secrets-safety.md'; ok(existsSync(f), 'secrets pack raw file'); const t = readFileSync(f, 'utf8');
   const j = t.slice(t.indexOf('{\n  "permissions"'), t.indexOf('Notes:'));
@@ -259,7 +287,7 @@ ok(readFileSync('dist/llms.txt', 'utf8').includes('## Answers') && !readFileSync
 { const WHOP = 'https://whop.com/checkout/plan_wl0RBfMmENiah', CLUB = 'https://rodrix91.gumroad.com/l/kit-club';
   const cfg = readFileSync('src/config.ts', 'utf8');
   ok(/kitClubMonthly: 7\b/.test(cfg) && cfg.includes(`kitClub: '${WHOP}'`), 'Whop plan configured; Kit Club price unchanged ($7)');
-  const paid = readdirSync('src/content/kits').filter((f) => /tier: "paid"/.test(readFileSync('src/content/kits/' + f, 'utf8'))).map((f) => `kits/${f.replace(/\.md$/, '')}/`);
+  const paid = readdirSync('src/content/kits').filter((f) => /tier: "paid"/.test(readFileSync('src/content/kits/' + f, 'utf8')) && !pendingCheckoutKit(f)).map((f) => `kits/${f.replace(/\.md$/, '')}/`);
   for (const p of ['pricing/', ...paid].flatMap((x) => [x, 'es/' + x])) {
     const h = readFileSync(`dist/${p}index.html`, 'utf8');
     const clubs = h.match(new RegExp(`<a[^>]*href="${CLUB}"[^>]*>`, 'g')) || [];
@@ -604,7 +632,7 @@ for (const l of ['', 'es/']) {
 {
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
   await stubGc(mctx); const mp = await mctx.newPage();
-  const paid = readdirSync('src/content/kits').filter((f) => /^tier:\s*"?paid/m.test(readFileSync(`src/content/kits/${f}`, 'utf8'))).map((f) => `/kits/${f.replace(/\.md$/, '')}/`);
+  const paid = readdirSync('src/content/kits').filter((f) => /^tier:\s*"?paid/m.test(readFileSync(`src/content/kits/${f}`, 'utf8')) && !pendingCheckoutKit(f)).map((f) => `/kits/${f.replace(/\.md$/, '')}/`);
   for (const p of ['/pricing/', ...paid].flatMap((x) => [x, '/es' + x])) {
     await mp.goto(ORIGIN + B + p, { waitUntil: 'load' });
     const above = await mp.$$eval('a[href*="gumroad.com"]', (as) => as.some((a) => { const b = a.getBoundingClientRect(); return b.height > 0 && b.bottom + scrollY <= innerHeight && getComputedStyle(a).visibility !== 'hidden'; }));
